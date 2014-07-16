@@ -6,12 +6,15 @@ import (
 	"log"
 	"os"
 	"sort"
+	//	"strconv"
 	"strings"
 )
 
 const STYPE = "_Type"
 
 var globalTagAttributes map[string](map[string]bool)
+var nameSpaceIds map[string]int
+var nameSpaceTagMap map[string]string = make(map[string]string)
 
 func main() {
 	//xmlFile, err := os.Open("pubmed_xml_12550251")
@@ -33,9 +36,12 @@ func main() {
 	depth := 0
 
 	root := new(Node)
-	root.initialize("root", "", nil)
+	root.initialize("root", "", "", nil)
 
 	globalTagAttributes = make(map[string](map[string]bool))
+	nameSpaceIds = make(map[string]int)
+
+	startingNameSpaceId := 0
 
 	this := root
 	var last *Node
@@ -58,6 +64,22 @@ func main() {
 		case xml.StartElement:
 			name := startElement.Name.Local
 			space := startElement.Name.Space
+			fmt.Println("===========================================")
+			fmt.Printf("%+v\n", token)
+			//fmt.Println(token, "  |||  ", name, "  |||  ", space)
+
+			findNewNameSpaces(startElement.Attr)
+
+			for _, attr := range startElement.Attr {
+				fmt.Println(attr.Name.Local, attr.Name.Space, attr.Value)
+			}
+
+			_, ok := nameSpaceIds[space]
+			if !ok {
+				nameSpaceIds[space] = startingNameSpaceId
+				startingNameSpaceId += 1
+			}
+
 			//fmt.Println(space, name)
 			//for _, att := range startElement.Attr {
 			//fmt.Println(att.Name.Space, "|", att.Name.Local, "|", att.Value)
@@ -68,21 +90,25 @@ func main() {
 			}
 			var child *Node
 			var attributes map[string]bool
-			child, ok := this.children[name]
+			child, ok = this.children[space+name]
 			if ok {
-				this.childCount[name] += 1
-				attributes = globalTagAttributes[name]
+				this.childCount[space+name] += 1
+				attributes = globalTagAttributes[space+name]
 				//fmt.Println("Exists", name)
 			} else {
 				//fmt.Println("!Exists", name)
 				newNode := new(Node)
-				newNode.initialize(name, space, this)
+				spaceTag, _ := nameSpaceTagMap[space]
+				// if !ok {
+				// 	spaceTag = ""
+				// }
+				newNode.initialize(name, space, spaceTag, this)
 				child = newNode
-				this.children[name] = child
-				this.childCount[name] = 1
+				this.children[space+name] = child
+				this.childCount[space+name] = 1
 
 				attributes = make(map[string]bool)
-				globalTagAttributes[name] = attributes
+				globalTagAttributes[space+name] = attributes
 			}
 
 			for _, attr := range startElement.Attr {
@@ -126,6 +152,8 @@ func main() {
 	alreadyPrinted := make(map[string]bool)
 	printStruct(root, "Document", true, alreadyPrinted)
 
+	fmt.Printf("%+v\n", nameSpaceTagMap)
+
 }
 
 func printTree(n *Node, d int, startName string, foundStartString bool) {
@@ -152,13 +180,13 @@ func printStruct(n *Node, startName string, foundStartString bool, alreadyPrinte
 		return
 	}
 
-	alreadyPrinted[n.name] = true
+	alreadyPrinted[n.space+n.name] = true
 
-	if n.name == startName {
+	if n.space+n.name == startName {
 		foundStartString = true
 	}
 
-	attributes := globalTagAttributes[n.name]
+	attributes := globalTagAttributes[n.space+n.name]
 	if n.parent != nil && foundStartString {
 		//if len(n.children) > 0 || len(n.attributes) > 0 {
 		if len(n.children) > 0 || len(attributes) > 0 {
@@ -218,25 +246,44 @@ func makeType(nti *NodeTypeInfo) string {
 }
 
 func printStruct0(n *Node) {
+
+	//nameSpaceId, ok := nameSpaceIds[n.space]
+	// var nameSpaceIdString string
+	// if ok {
+	// 	nameSpaceIdString = strconv.Itoa(nameSpaceId)
+	// } else {
+	// 	nameSpaceIdString = ""
+	// }
 	//fmt.Printf("11 %+v\n", n)
 	//fmt.Printf("22 %+v\n", n.nodeTypeInfo)
-	fmt.Println("type " + capitalizeFirstLetter(n.name) + STYPE + " struct {")
+	fmt.Println("type " + n.makeType() + " struct {")
 
 	//fields := makeAttributes(n.attributes)
-	attributes := globalTagAttributes[n.name]
+	attributes := globalTagAttributes[n.space+n.name]
 	fields := makeAttributes(attributes)
-
-	xmlName := "\tXMLName  xml.Name `xml:\"" + n.name + ",omitempty\" json:\",omitempty\"`"
+	var xmlName string
+	if n.space != "" {
+		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"
+	} else {
+		xmlName = "\tXMLName  xml.Name `xml:\"" + n.name + ",omitempty\" json:\",omitempty\"`"
+	}
 	fields = append(fields, xmlName)
 
 	//fmt.Println(fields)
 
 	var field string
 	for _, v := range n.children {
-		name := capitalizeFirstLetter(v.name)
-		field = "\t" + name + " "
+		//nameSpaceId, ok := nameSpaceIds[v.space]
+		// if ok {
+		// 	nameSpaceIdString = strconv.Itoa(nameSpaceId)
+		// } else {
+		// 	nameSpaceIdString = ""
+		// }
+		//name := capitalizeFirstLetter(v.name)
+		//field = "\t" + name + nameSpaceIdString + " "
+		field = "\t" + v.makeName() + " "
 		//fmt.Print()
-		childAttributes := globalTagAttributes[v.name]
+		childAttributes := globalTagAttributes[v.space+v.name]
 		//if len(v.children) == 0 && len(v.attributes) == 0 {
 		if len(v.children) == 0 && len(childAttributes) == 0 {
 			if v.repeats {
@@ -251,10 +298,16 @@ func printStruct0(n *Node) {
 				field += "[]"
 				//fmt.Print("[]")
 			}
-			field += name + STYPE
+			//field += name + STYPE
+			field += v.makeType()
 			//fmt.Print()
 		}
-		xmlString := " `xml:\"" + v.name + ",omitempty\" json:\",omitempty\"`"
+		var xmlString string
+		if v.space != "" {
+			xmlString = " `xml:\"" + v.space + " " + v.name + ",omitempty\" json:\",omitempty\"`"
+		} else {
+			xmlString = " `xml:\"" + v.name + ",omitempty\" json:\",omitempty\"`"
+		}
 
 		field += xmlString
 
@@ -265,7 +318,7 @@ func printStruct0(n *Node) {
 
 	//if len(n.children) == 0 && len(n.attributes) > 0 {
 	if len(n.children) == 0 && len(attributes) > 0 {
-		xmlString := " `xml:\"chardata,omitempty\" json:\",omitempty\"`"
+		xmlString := " `xml:\",chardata\" json:\",omitempty\"`"
 		//charField := "\t" + capitalizeFirstLetter(n.name) + " string" + xmlString
 		charField := "\t" + "Text" + " string" + xmlString
 		fields = append(fields, charField)
@@ -301,4 +354,13 @@ func indent(d int) string {
 
 func capitalizeFirstLetter(s string) string {
 	return strings.ToUpper(s[0:1]) + s[1:]
+}
+
+func findNewNameSpaces(attrs []xml.Attr) {
+	for _, attr := range attrs {
+		if attr.Name.Space == "xmlns" {
+			nameSpaceTagMap[attr.Value] = attr.Name.Local
+		}
+	}
+
 }
