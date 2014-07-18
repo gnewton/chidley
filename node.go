@@ -32,10 +32,10 @@ func (n *Node) makeName() string {
 	return capitalizeFirstLetter(n.name) + spaceTag
 }
 
-func (n *Node) makeType() string {
+func (n *Node) makeType(prefix string, suffix string) string {
 	spaceTag := ""
 	if n.spaceTag != "" {
 		spaceTag = "__" + n.spaceTag + "_"
 	}
-	return capitalizeFirstLetter(n.name) + spaceTag + STYPE
+	return prefix + capitalizeFirstLetter(n.name) + spaceTag + nameSuffix
 }
