@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:gx="http://www.google.com/kml/ext/2.2">
+	<Document>
+		<name>MODIS Imagery Overlays</name>
+		<Snippet maxLines="1">Deepwater Horizon Oil Spill</Snippet>
+		<open>1</open>
+		<atom:author><atom:name>Google Crisis Response</atom:name></atom:author>
+		<description>
+        <![CDATA[<p>This folder contains <a href="http://modis.gsfc.nasa.gov/">MODIS</a> imagery of the oil spill in the gulf of Mexico in April 2010, caused by the sinking of the Deepwater Horizon oil rig. </p><p>Select dates in the Layers Panel on the left to see imagery from all the available dates.</p><p style="color:gray;text-align:center">Data courtesy of NASA<br />KML layer courtesy of Google Crisis Resposne</p>]]>
+		</description>
+		
+		<Style id="style_MainDoc">
+			<ListStyle>
+				<listItemType>radioFolder</listItemType>
+			</ListStyle>
+		</Style>
+		<Style id="style_ModisOverlay">
+			<ListStyle>
+				<listItemType>checkHideChildren</listItemType>
+			</ListStyle>
+		</Style>
+		<styleUrl>#style_MainDoc</styleUrl>
+		<LookAt>
+			<longitude>-87.95</longitude>
+			<latitude>28.80</latitude>
+			<altitude>0</altitude>
+			<range>743000</range>
+			<tilt>0.00</tilt>
+			<heading>0.00</heading>
+		</LookAt>
+		<NetworkLink>
+			<name>2010-06-19 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>1</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-19/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-18 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-18/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-17 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-17/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-14 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-14/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-12 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-12/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-11 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-11/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-10 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-10/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-09 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-09/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-08 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-08/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-06-07 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_2010-06-07/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-27 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/modis_05_27_2010_aqua/doc.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-26 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_05-26-2010/doc.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-25 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/MODIS_0525_v13/doc.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-23 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/Modis_2010-05-23/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-22 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/Modis_2010-05-22/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-20 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-05-20/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-17 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/gulf_oil_spill/Modis_Oil_Spill-2010_05_17/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-11 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_250m_20100511/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>		
+		<NetworkLink>
+			<name>2010-05-10 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/MODIS_2010-05-10_v2/MODIS_2010-05-10_v2.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-09 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/Modis_2010-05-09/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-08 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/Modis_2010-04-08/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-07 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Oil_Spill_2010/Modis_Oil_Spill-2010_05_07/doc.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-05 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_250m_20100505/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-05-04 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+            <visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-05-04/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-04-29 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-29/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-04-28 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-28/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-04-27 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-27/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>	
+		<NetworkLink>
+			<name>2010-04-26 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-26/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>	
+		<NetworkLink>
+			<name>2010-04-25 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-25/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>	
+		<NetworkLink>
+			<name>2010-04-22 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-22/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>				
+		</NetworkLink>
+		<NetworkLink>
+			<name>2010-04-21 - MODIS</name>
+			<styleUrl>#style_ModisOverlay</styleUrl>
+			<visibility>0</visibility>
+			<Link>
+				<href>http://mw1.google.com/mw-earth-vectordb/disaster/Gulf_Spill_2010/MODIS_2010-04-21/index.kml</href>
+			</Link>
+			<LookAt>
+				<longitude>-88.25</longitude>
+				<latitude>29.94</latitude>
+				<range>2000000</range>
+			</LookAt>	
+		</NetworkLink>
+
+	</Document>
+</kml>

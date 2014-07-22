@@ -29,7 +29,7 @@ func (n *Node) makeName() string {
 	if n.spaceTag != "" {
 		spaceTag = "_" + n.spaceTag
 	}
-	return capitalizeFirstLetter(n.name) + spaceTag
+	return capitalizeFirstLetter(cleanName(n.name)) + spaceTag
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
@@ -37,5 +37,6 @@ func (n *Node) makeType(prefix string, suffix string) string {
 	if n.spaceTag != "" {
 		spaceTag = "__" + n.spaceTag + "_"
 	}
-	return prefix + capitalizeFirstLetter(n.name) + spaceTag + nameSuffix
+	//return prefix + capitalizeFirstLetter(n.name) + spaceTag + nameSuffix
+	return prefix + cleanName(n.name) + spaceTag + nameSuffix
 }
