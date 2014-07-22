@@ -1,0 +1,11 @@
+<!ENTITY c "Chris">
+<!ENTITY ch "&c; Herborth">
+
+<document>
+<b>
+  &c
+</b>
+<d>
+  &ch;
+</d>
+</document>

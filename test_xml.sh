@@ -11,7 +11,7 @@ do
 	./chidley -V $f
 	cd chidleyVerity
 	go build
-	./chidleyVerity
+	./chidleyVerity > /dev/null
 	cd ..
 done
 

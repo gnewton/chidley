@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -11,6 +12,7 @@ var nameSuffix = "_Type"
 var namePrefix = "Chi_"
 var attributePrefix = "Attr_"
 var VERIFY = false
+var DEBUG = false
 
 type Writer interface {
 	open(s string, lineChannel chan string) error
@@ -22,6 +24,7 @@ func init() {
 	flag.StringVar(&namePrefix, "p", namePrefix, "Prefix to element names")
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.BoolVar(&VERIFY, "V", VERIFY, "Do full code generation & see if it can decode the original source file")
+	flag.BoolVar(&DEBUG, "D", DEBUG, "Debug; prints out much information")
 }
 
 func handleParameters() bool {
@@ -38,9 +41,6 @@ func main() {
 		return
 	}
 	xmlFilename := flag.Args()[0]
-	//xmlFilename := "xml/bookCatalog.xml"
-	//xmlFilename := "xml/pubmed_xml_12750255"
-	//xmlFilename := "xml/b.xml"
 
 	extractor := Extractor{
 		namePrefix:  namePrefix,
@@ -53,6 +53,8 @@ func main() {
 
 	if err != nil {
 		log.Fatal(err)
+		fmt.Println("**********")
+		os.Exit(42)
 	}
 
 }

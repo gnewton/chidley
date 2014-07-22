@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!DOCTYPE Map[
+        <!ENTITY db_settings SYSTEM "db_settings">
+    ]>
+    <Map>
+        <Layer name="volcanos" status="on">
+            <StyleName>volcanos</StyleName>
+            <Datasource>
+
+                <Parameter name="table">volcanos</Parameter>
+
+                &db_settings;
+
+            </Datasource>
+        </Layer>
+    </Map>

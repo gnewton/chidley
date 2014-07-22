@@ -49,31 +49,51 @@ func (ex *Extractor) extract() error {
 	hasStartElements := false
 
 	for {
-		token, _ := decoder.Token()
+		token, err := decoder.Token()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			return err
+		}
 		if token == nil {
 			break
 		}
 		//fmt.Printf("token: %+v\n", token)
-		switch startElement := token.(type) {
+		switch element := token.(type) {
 		case xml.Comment:
-			//fmt.Printf("Comment: %+v\n", string(startElement))
+			if DEBUG {
+				fmt.Printf("Comment: %+v\n", string(element))
+			}
 		case xml.ProcInst:
-			//fmt.Printf("ProcInst: %+v\n", startElement)
+			if DEBUG {
+				fmt.Printf("ProcInst: %+v\n", element)
+			}
 		case xml.Directive:
-			//fmt.Printf("Directive: %+v\n", string(startElement))
+			if DEBUG {
+				fmt.Printf("Directive: %+v\n", string(element))
+			}
 		case xml.CharData:
-			//fmt.Printf("CharData: %+v\n", string(startElement))
-			this.nodeTypeInfo.checkFieldType(string(startElement))
+			if DEBUG {
+				fmt.Printf("CharData: %+v\n", string(element))
+			}
+			this.nodeTypeInfo.checkFieldType(string(element))
 		case xml.StartElement:
+			if DEBUG {
+				fmt.Printf("StartElement: %+v\n", element)
+			}
 			hasStartElements = true
-			//fmt.Printf("StartElement: %+v\n", startElement)
-			if startElement.Name.Local == "" {
+
+			if element.Name.Local == "" {
 				continue
 			}
-			this = ex.handleStartElement(startElement, this)
+			this = ex.handleStartElement(element, this)
 			depth += 1
 
 		case xml.EndElement:
+			if DEBUG {
+				fmt.Printf("endElement: %+v\n", element)
+			}
 			for key, c := range this.childCount {
 				if c > 1 {
 					this.children[key].repeats = true
@@ -151,7 +171,8 @@ func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName str
 		foundStartString = true
 	}
 	attributes := ex.globalTagAttributes[n.space+n.name]
-	if n.parent != nil && foundStartString {
+	//if n.parent != nil && foundStartString {
+	if foundStartString {
 		if len(n.children) > 0 || len(attributes) > 0 {
 			lineChannel <- "type " + n.makeType(namePrefix, nameSuffix) + " struct {"
 			ex.printInternalFields(n, lineChannel)
