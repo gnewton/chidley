@@ -1,5 +1,9 @@
 package main
 
+import (
+//"log"
+)
+
 type Node struct {
 	name         string
 	space        string
@@ -11,7 +15,11 @@ type Node struct {
 	nodeTypeInfo *NodeTypeInfo
 }
 
-type Attributes map[string]bool
+type NodeVisitor interface {
+	Visit(n *Node) bool
+	AlreadyVisited(n *Node) bool
+	SetAlreadyVisited(n *Node)
+}
 
 func (n *Node) initialize(name string, space string, spaceTag string, parent *Node) {
 	n.parent = parent
@@ -33,10 +41,14 @@ func (n *Node) makeName() string {
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
+	return makeTypeGeneric(n.name, n.spaceTag, prefix, suffix)
+}
+
+func makeTypeGeneric(name string, space string, prefix string, suffix string) string {
 	spaceTag := ""
-	if n.spaceTag != "" {
-		spaceTag = "__" + n.spaceTag + "_"
+	if space != "" {
+		spaceTag = "__" + space
 	}
-	//return prefix + capitalizeFirstLetter(n.name) + spaceTag + nameSuffix
-	return prefix + cleanName(n.name) + spaceTag + nameSuffix
+	return prefix + cleanName(name) + spaceTag + suffix
+
 }

@@ -8,11 +8,18 @@ import (
 	"strings"
 )
 
-var nameSuffix = "_Type"
-var namePrefix = "Chi_"
-var attributePrefix = "Attr_"
-var VERIFY = false
 var DEBUG = false
+var attributePrefix = "Attr_"
+var structsToStdout = true
+var prettyPrint = false
+var codeGenVerify = false
+var codeGenConvertToJson = false
+var codeGenDir = "codegen"
+var codeGenFilename = "CodeGenStructs.go"
+var namePrefix = "Chi_"
+var nameSuffix = "_Type"
+var url = false
+var useType = false
 
 type Writer interface {
 	open(s string, lineChannel chan string) error
@@ -20,11 +27,16 @@ type Writer interface {
 }
 
 func init() {
-	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to element names")
-	flag.StringVar(&namePrefix, "p", namePrefix, "Prefix to element names")
-	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
-	flag.BoolVar(&VERIFY, "V", VERIFY, "Do full code generation & see if it can decode the original source file")
 	flag.BoolVar(&DEBUG, "D", DEBUG, "Debug; prints out much information")
+	flag.BoolVar(&codeGenConvertToJson, "J", codeGenConvertToJson, "Do Go code generation to convert XML to JSON")
+	flag.BoolVar(&codeGenVerify, "V", codeGenVerify, "Do code generation of code that reads XML and counts every tag instance: space_prefix:tag")
+	flag.BoolVar(&prettyPrint, "P", prettyPrint, "Pretty-print json in generated code (if applicable)")
+	flag.BoolVar(&structsToStdout, "c", structsToStdout, "Write generated Go structs to stdout")
+	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
+	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
+	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
+	flag.StringVar(&namePrefix, "p", namePrefix, "Prefix to element names")
+	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to element names")
 }
 
 func handleParameters() bool {
@@ -36,26 +48,104 @@ func main() {
 	handleParameters()
 
 	if len(flag.Args()) != 1 {
-		fmt.Println("chidley <flags> xmlFileName")
+		fmt.Println("chidley <flags> xmlFileName|url")
+		fmt.Println("xmlFileName can be .gz or .bz2: uncompressed transparently")
 		flag.Usage()
 		return
 	}
-	xmlFilename := flag.Args()[0]
 
-	extractor := Extractor{
-		namePrefix:  namePrefix,
-		nameSuffix:  nameSuffix,
-		verify:      VERIFY,
-		xmlFilename: xmlFilename,
+	var sourceName string
+
+	sourceName = flag.Args()[0]
+
+	source, err := makeSourceReader(sourceName, url)
+	if err != nil {
+
+	}
+	defer source.Close()
+
+	ex := Extractor{
+		namePrefix: namePrefix,
+		nameSuffix: nameSuffix,
+		reader:     source.getReader(),
+		useType:    useType,
 	}
 
-	err := extractor.extract()
+	if DEBUG {
+		log.Print("extracting")
+	}
+	err = ex.extract()
 
 	if err != nil {
-		log.Fatal(err)
-		fmt.Println("**********")
+		log.Fatal("FATAL ERROR: " + err.Error())
 		os.Exit(42)
 	}
+
+	var writer Writer
+	lineChannel := make(chan string)
+
+	switch {
+	case codeGenVerify:
+		alreadyPrinted := make(map[string]bool)
+		var codegen *CodeGenerator
+		codegen = new(CodeGenerator)
+		newSource, err := source.copySource()
+		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
+		codegen.generateCodePre(ex.hasStartElements, url, false)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
+		codegen.generateVerifyCode(ex.hasStartElements, ex.globalTagAttributes, url)
+		break
+	case codeGenConvertToJson:
+		alreadyPrinted := make(map[string]bool)
+		var codegen *CodeGenerator
+		codegen = new(CodeGenerator)
+		newSource, err := source.copySource()
+		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		codegen.generateCodePre(ex.hasStartElements, url, true)
+		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
+		codegen.generateConvertToJsonCode(ex.firstNode, prettyPrint)
+		break
+	case structsToStdout:
+		writer = new(stdoutWriter)
+		writer.open("", lineChannel)
+		printStructVisitor := new(PrintStructVisitor)
+		printStructVisitor.init(lineChannel)
+		//visitNode(ex.root, printStructVisitor)
+		printStructVisitor.Visit(ex.root)
+		break
+	}
+	close(lineChannel)
+	writer.close()
+
+}
+
+func makeSourceReader(sourceName string, url bool) (Source, error) {
+	var source Source
+	if url {
+		source = new(UrlSource)
+		if DEBUG {
+			log.Print("Making UrlSource")
+		}
+	} else {
+		source = new(FileSource)
+		if DEBUG {
+			log.Print("Making FileSource")
+		}
+	}
+	if DEBUG {
+		log.Print("Making Source:[" + sourceName + "]")
+	}
+	err := source.newSource(sourceName)
+
+	return source, err
 
 }
 

@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/xml"
-	"fmt"
+	"io"
 	"log"
 	"sort"
-	"strings"
+	"strconv"
 )
 
 var nameMapper = map[string]string{
@@ -15,38 +15,33 @@ var nameMapper = map[string]string{
 
 type Extractor struct {
 	globalTagAttributes map[string](map[string]string)
-	globalNodeMap       map[string]*Node
-	namePrefix          string
-	nameSpaceTagMap     map[string]string
-	nameSuffix          string
-	verify              bool
-	xmlFilename         string
+	//globalTagAttributes map[string]([]FQN)
+	globalNodeMap    map[string]*Node
+	namePrefix       string
+	nameSpaceTagMap  map[string]string
+	nameSuffix       string
+	reader           io.Reader
+	root             *Node
+	firstNode        *Node
+	hasStartElements bool
+	useType          bool
 }
 
 func (ex *Extractor) extract() error {
-	reader, xmlFile, err := genericReader(ex.xmlFilename)
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	defer xmlFile.Close()
-
 	ex.globalTagAttributes = make(map[string](map[string]string))
 	ex.nameSpaceTagMap = make(map[string]string)
 	ex.globalNodeMap = make(map[string]*Node)
 
-	decoder := xml.NewDecoder(reader)
+	decoder := xml.NewDecoder(ex.reader)
 	depth := 0
 
-	root := new(Node)
-	root.initialize("root", "", "", nil)
+	ex.root = new(Node)
+	ex.root.initialize("root", "", "", nil)
 
-	this := root
-	//var last *Node
-	//last = nil
+	thisNode := ex.root
+	ex.hasStartElements = false
 
-	hasStartElements := false
+	first := true
 
 	for {
 		token, err := decoder.Token()
@@ -54,88 +49,77 @@ func (ex *Extractor) extract() error {
 			if err.Error() == "EOF" {
 				break
 			}
+
 			return err
 		}
 		if token == nil {
 			break
 		}
-		//fmt.Printf("token: %+v\n", token)
+
 		switch element := token.(type) {
 		case xml.Comment:
 			if DEBUG {
-				fmt.Printf("Comment: %+v\n", string(element))
+				log.Printf("Comment: %+v\n", string(element))
 			}
+
 		case xml.ProcInst:
 			if DEBUG {
-				fmt.Printf("ProcInst: %+v\n", element)
+				log.Printf("ProcInst: %+v\n", element)
 			}
+
 		case xml.Directive:
 			if DEBUG {
-				fmt.Printf("Directive: %+v\n", string(element))
+				log.Printf("Directive: %+v\n", string(element))
 			}
+
 		case xml.CharData:
 			if DEBUG {
-				fmt.Printf("CharData: %+v\n", string(element))
+				log.Printf("CharData: %+v\n", string(element))
 			}
-			this.nodeTypeInfo.checkFieldType(string(element))
+			thisNode.nodeTypeInfo.checkFieldType(string(element))
+
 		case xml.StartElement:
 			if DEBUG {
-				fmt.Printf("StartElement: %+v\n", element)
+				log.Printf("StartElement: %+v\n", element)
 			}
-			hasStartElements = true
+			ex.hasStartElements = true
 
 			if element.Name.Local == "" {
 				continue
 			}
-			this = ex.handleStartElement(element, this)
+			thisNode = ex.handleStartElement(element, thisNode)
+			if first {
+				first = false
+				ex.firstNode = thisNode
+			}
 			depth += 1
 
 		case xml.EndElement:
+			depth -= 1
 			if DEBUG {
-				fmt.Printf("endElement: %+v\n", element)
+				log.Printf("EndElement: %+v\n", element)
 			}
-			for key, c := range this.childCount {
+			for key, c := range thisNode.childCount {
 				if c > 1 {
-					this.children[key].repeats = true
+					thisNode.children[key].repeats = true
 				}
-				this.childCount[key] = 0
+				thisNode.childCount[key] = 0
 			}
-			if this.parent != nil {
-				this = this.parent
+			if thisNode.parent != nil {
+				thisNode = thisNode.parent
 			}
 		}
 	}
-
-	alreadyPrinted := make(map[string]bool)
-	var writer Writer
-
-	lineChannel := make(chan string)
-	var verify *Verify
-	if ex.verify {
-		verify = new(Verify)
-		writer, err = verify.init(root, namePrefix, nameSuffix, "chidleyVerity", "ChidleyVerify.go", ex.xmlFilename, lineChannel)
-		verify.generateCodePre(hasStartElements)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-
-	} else {
-		writer = new(stdoutWriter)
-		writer.open("", lineChannel)
-	}
-
-	ex.printStruct(root, lineChannel, "Document", true, alreadyPrinted)
-	if ex.verify {
-		verify.generatePost(hasStartElements, ex.globalTagAttributes)
-	}
-
-	//ex.printTree(root, lineChannel, 0, "", true)
-
-	close(lineChannel)
-	writer.close()
 
 	return nil
+}
+
+func space(n int) string {
+	s := strconv.Itoa(n) + ":"
+	for i := 0; i < n; i++ {
+		s += " "
+	}
+	return s
 }
 
 func (ex *Extractor) printTree(n *Node, lineChannel chan string, d int, startName string, foundStartString bool) {
@@ -147,7 +131,7 @@ func (ex *Extractor) printTree(n *Node, lineChannel chan string, d int, startNam
 		repeats = "*"
 	}
 	if foundStartString {
-		fmt.Println(indent(d) + n.name + repeats)
+		//fmt.Println(indent(d) + n.name + repeats)
 		lineChannel <- indent(d) + n.name + repeats
 		d += 1
 	}
@@ -158,19 +142,18 @@ func (ex *Extractor) printTree(n *Node, lineChannel chan string, d int, startNam
 }
 
 func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName string, foundStartString bool, alreadyPrinted map[string]bool) {
-	_, ok := alreadyPrinted[n.space+n.name]
+	//fmt.Println("------------ " + nk(n))
+	_, ok := alreadyPrinted[nk(n)]
 	if ok {
-		//fmt.Println("printStruct: already printed: " + n.space + ":" + n.name)
 		return
 	}
-	//fmt.Println(">> printStruct: printing: " + n.space + ":" + n.name)
+	alreadyPrinted[nk(n)] = true
 
-	alreadyPrinted[n.space+n.name] = true
-
-	if n.space+n.name == startName {
+	if nk(n) == startName {
 		foundStartString = true
 	}
-	attributes := ex.globalTagAttributes[n.space+n.name]
+	attributes := ex.globalTagAttributes[nk(n)]
+	log.Print(strconv.Itoa(len(n.children)) + ":" + nk(n))
 	//if n.parent != nil && foundStartString {
 	if foundStartString {
 		if len(n.children) > 0 || len(attributes) > 0 {
@@ -185,61 +168,8 @@ func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName str
 	}
 }
 
-func makeAttributes(attributes map[string]string) []string {
-	all := make([]string, 0)
-	for att, space := range attributes {
-		//name := capitalizeFirstLetter(att)
-		name := att
-		if space != "" {
-			space = space + " "
-		}
-		attStr := "\t" + attributePrefix + cleanName(name) + " string `xml:\"" + space + att + ",attr\"`"
-		all = append(all, attStr)
-		//fmt.Println("APPEND: ", all)
-		//fmt.Println(attStr)
-	}
-	return all
-}
-
-func findType(nti *NodeTypeInfo) string {
-	return "string"
-
-	if nti.alwaysBool {
-		return "bool"
-	}
-
-	if nti.alwaysInt08 {
-		return "int8"
-	}
-	if nti.alwaysInt16 {
-		return "int16"
-	}
-	if nti.alwaysInt32 {
-		return "int32"
-	}
-	if nti.alwaysInt64 {
-		return "int64"
-	}
-
-	if nti.alwaysInt0 {
-		return "int"
-	}
-
-	if nti.alwaysFloat32 {
-		return "float32"
-	}
-	if nti.alwaysFloat64 {
-		return "float64"
-	}
-
-	return "string"
-}
-
 func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
-	//fmt.Println("type " + n.makeType(namePrefix) + " struct {")
-
-	//fields := makeAttributes(n.attributes)
-	attributes := ex.globalTagAttributes[n.space+n.name]
+	attributes := ex.globalTagAttributes[nk(n)]
 	fields := makeAttributes(attributes)
 	var xmlName string
 	if n.space != "" {
@@ -252,13 +182,13 @@ func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 	var field string
 
 	for _, v := range n.children {
-		field = "\t " + v.makeType(namePrefix, namePrefix) + " "
-		childAttributes := ex.globalTagAttributes[v.space+v.name]
+		field = "\t " + v.makeType(namePrefix, nameSuffix) + " "
+		childAttributes := ex.globalTagAttributes[nk(v)]
 		if len(v.children) == 0 && len(childAttributes) == 0 {
 			if v.repeats {
 				field += "[]"
 			}
-			field += findType(v.nodeTypeInfo)
+			field += findType(v.nodeTypeInfo, ex.useType)
 
 		} else {
 			if v.repeats {
@@ -288,7 +218,6 @@ func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 
 	for i := 0; i < len(fields); i++ {
 		lineChannel <- fields[i]
-		//fmt.Println(fields[i])
 	}
 }
 
@@ -301,14 +230,7 @@ func (ex *Extractor) findNewNameSpaces(attrs []xml.Attr) {
 
 }
 
-func cleanName(name string) string {
-	for old, new := range nameMapper {
-		name = strings.Replace(name, old, new, -1)
-	}
-	return name
-}
-
-func (ex *Extractor) handleStartElement(startElement xml.StartElement, this *Node) *Node {
+func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode *Node) *Node {
 	name := startElement.Name.Local
 	space := startElement.Name.Space
 
@@ -316,37 +238,40 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, this *Nod
 
 	var child *Node
 	var attributes map[string]string
-	child, ok := this.children[space+name]
-	// Does this node already exist as child
+	key := nks(space, name)
+	child, ok := thisNode.children[key]
+	// Does thisNode node already exist as child
 	//fmt.Println(space, name)
+	if name == "imports" {
+		log.Print(name + ":" + space + "   88888888888888888888888")
+		log.Printf("%+v", startElement.Attr)
+	}
 	if ok {
-		this.childCount[space+name] += 1
-		attributes = ex.globalTagAttributes[space+name]
-		//fmt.Println("Exists", name)
+		thisNode.childCount[key] += 1
+		attributes, ok = ex.globalTagAttributes[nks(space, name)]
+		if !ok {
+			log.Print(name + ":" + space + "   88888888888888888888888")
+		}
 	} else {
-		// if this node does not exist as child, it may still exist as child on other node:
-		child, ok = ex.globalNodeMap[space+name]
+		// if thisNode node does not already exist as child, it may still exist as child on other node:
+		child, ok = ex.globalNodeMap[key]
 		if !ok {
 			child = new(Node)
-			ex.globalNodeMap[space+name] = child
+			ex.globalNodeMap[key] = child
 			spaceTag, _ := ex.nameSpaceTagMap[space]
-			child.initialize(name, space, spaceTag, this)
-			this.childCount[space+name] = 1
+			child.initialize(name, space, spaceTag, thisNode)
+			thisNode.childCount[key] = 1
 
 			attributes = make(map[string]string)
-			ex.globalTagAttributes[space+name] = attributes
+			ex.globalTagAttributes[key] = attributes
 		} else {
-			attributes = ex.globalTagAttributes[space+name]
-			//fmt.Println("Exists global:", space, name)
+			attributes = ex.globalTagAttributes[key]
 		}
-		this.children[space+name] = child
-
+		thisNode.children[key] = child
 	}
 
 	for _, attr := range startElement.Attr {
 		attributes[attr.Name.Local] = attr.Name.Space
-		//fmt.Println("Attr: name=" + attr.Name.Local + " Space=" + attr.Name.Space)
-		//fmt.Println(child.name + ":: " + attr.Name.Local)
 	}
 	return child
 }
