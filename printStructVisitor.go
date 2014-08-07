@@ -6,13 +6,13 @@ import (
 
 type PrintStructVisitor struct {
 	alreadyVisited      map[string]bool
-	globalTagAttributes map[string](map[string]string)
+	globalTagAttributes map[string]([]*FQN)
 	lineChannel         chan string
 }
 
 func (v *PrintStructVisitor) init(lineChannel chan string) {
 	v.alreadyVisited = make(map[string]bool)
-	v.globalTagAttributes = make(map[string](map[string]string))
+	v.globalTagAttributes = make(map[string]([]*FQN))
 	v.lineChannel = lineChannel
 
 }
@@ -24,11 +24,12 @@ func (v *PrintStructVisitor) Visit(node *Node) bool {
 	v.SetAlreadyVisited(node)
 
 	//attributes := v.globalTagAttributes[nk(node)]
-	//	if len(node.children) > 0 || len(attributes) > 0 {
-	v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
-	v.printInternalFields(node)
-	v.lineChannel <- "}\n"
-	//	}
+	//if len(node.children) > 0 || len(attributes) > 0 {
+	if true {
+		v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
+		v.printInternalFields(node)
+		v.lineChannel <- "}\n"
+	}
 	for _, child := range node.children {
 		v.Visit(child)
 	}
@@ -46,7 +47,8 @@ func (v *PrintStructVisitor) SetAlreadyVisited(n *Node) {
 
 func (pn *PrintStructVisitor) printInternalFields(n *Node) {
 	attributes := pn.globalTagAttributes[nk(n)]
-	fields := makeAttributes(attributes)
+	//fields := makeAttributes(attributes)
+	var fields []string
 	var xmlName string
 	if n.space != "" {
 		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"
@@ -57,21 +59,21 @@ func (pn *PrintStructVisitor) printInternalFields(n *Node) {
 	var field string
 
 	for _, v := range n.children {
-		field = "\t" + v.makeType(namePrefix, namePrefix) + " "
-		childAttributes := pn.globalTagAttributes[v.space+v.name]
-		if len(v.children) == 0 && len(childAttributes) == 0 {
+		field = "\t" + v.makeType(namePrefix, nameSuffix) + " "
+		//childAttributes := pn.globalTagAttributes[v.space+v.name]
+		//if len(v.children) == 0 && len(childAttributes) == 0 {
+		if false {
 			if v.repeats {
 				field += "[]"
 			}
 			field += findType(v.nodeTypeInfo, false)
-
 		} else {
 			if v.repeats {
 				field += "[]"
 			} else {
 				field += "*"
 			}
-			field += v.makeType(namePrefix, namePrefix)
+			field += v.makeType(namePrefix, nameSuffix)
 		}
 		var xmlString string
 		if v.space != "" {

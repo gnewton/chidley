@@ -14,6 +14,7 @@ var structsToStdout = true
 var prettyPrint = false
 var codeGenVerify = false
 var codeGenConvertToJson = false
+var codeGenConvertToXML = false
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
 var namePrefix = "Chi_"
@@ -29,6 +30,7 @@ type Writer interface {
 func init() {
 	flag.BoolVar(&DEBUG, "D", DEBUG, "Debug; prints out much information")
 	flag.BoolVar(&codeGenConvertToJson, "J", codeGenConvertToJson, "Do Go code generation to convert XML to JSON")
+	flag.BoolVar(&codeGenConvertToXML, "X", codeGenConvertToXML, "Do Go code generation to convert XML to XML (useful for validation)")
 	flag.BoolVar(&codeGenVerify, "V", codeGenVerify, "Do code generation of code that reads XML and counts every tag instance: space_prefix:tag")
 	flag.BoolVar(&prettyPrint, "P", prettyPrint, "Pretty-print json in generated code (if applicable)")
 	flag.BoolVar(&structsToStdout, "c", structsToStdout, "Write generated Go structs to stdout")
@@ -53,6 +55,9 @@ func main() {
 		flag.Usage()
 		return
 	}
+
+	x := make(map[string]interface{})
+	x["goo"] = x
 
 	var sourceName string
 
@@ -91,7 +96,7 @@ func main() {
 		codegen = new(CodeGenerator)
 		newSource, err := source.copySource()
 		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
-		codegen.generateCodePre(ex.hasStartElements, url, false)
+		codegen.generateCodePre(ex.hasStartElements, url, false, false)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -99,6 +104,7 @@ func main() {
 		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
 		codegen.generateVerifyCode(ex.hasStartElements, ex.globalTagAttributes, url)
 		break
+
 	case codeGenConvertToJson:
 		alreadyPrinted := make(map[string]bool)
 		var codegen *CodeGenerator
@@ -109,10 +115,27 @@ func main() {
 			log.Fatal(err)
 			return
 		}
-		codegen.generateCodePre(ex.hasStartElements, url, true)
+		codegen.generateCodePre(ex.hasStartElements, url, true, false)
 		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
-		codegen.generateConvertToJsonCode(ex.firstNode, prettyPrint)
+		codegen.generateConvertToCode(ex.firstNode, codeGenConvertToJson, codeGenConvertToXML, prettyPrint)
 		break
+
+	case codeGenConvertToXML:
+		alreadyPrinted := make(map[string]bool)
+		var codegen *CodeGenerator
+		codegen = new(CodeGenerator)
+		newSource, err := source.copySource()
+		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		codegen.generateCodePre(ex.hasStartElements, url, false, true)
+		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
+		codegen.generateConvertToCode(ex.firstNode, codeGenConvertToJson, codeGenConvertToXML, prettyPrint)
+		break
+		break
+
 	case structsToStdout:
 		writer = new(stdoutWriter)
 		writer.open("", lineChannel)

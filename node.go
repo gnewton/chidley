@@ -9,10 +9,12 @@ type Node struct {
 	space        string
 	spaceTag     string
 	parent       *Node
+	parents      []*Node
 	children     map[string]*Node
 	childCount   map[string]int
 	repeats      bool
 	nodeTypeInfo *NodeTypeInfo
+	hasCharData  bool
 }
 
 type NodeVisitor interface {
@@ -23,6 +25,8 @@ type NodeVisitor interface {
 
 func (n *Node) initialize(name string, space string, spaceTag string, parent *Node) {
 	n.parent = parent
+	n.parents = make([]*Node, 0, 0)
+	n.pushParent(parent)
 	n.name = name
 	n.space = space
 	n.spaceTag = spaceTag
@@ -30,6 +34,7 @@ func (n *Node) initialize(name string, space string, spaceTag string, parent *No
 	n.childCount = make(map[string]int)
 	n.nodeTypeInfo = new(NodeTypeInfo)
 	n.nodeTypeInfo.initialize()
+	n.hasCharData = false
 }
 
 func (n *Node) makeName() string {
@@ -42,6 +47,28 @@ func (n *Node) makeName() string {
 
 func (n *Node) makeType(prefix string, suffix string) string {
 	return makeTypeGeneric(n.name, n.spaceTag, prefix, suffix)
+}
+
+func (n *Node) peekParent() *Node {
+	if len(n.parents) == 0 {
+		return nil
+	}
+	a := n.parents
+	return a[len(a)-1]
+}
+
+func (n *Node) pushParent(parent *Node) {
+	n.parents = append(n.parents, parent)
+}
+
+func (n *Node) popParent() *Node {
+	if len(n.parents) == 0 {
+		return nil
+	}
+	var poppedNode *Node
+	a := n.parents
+	poppedNode, n.parents = a[len(a)-1], a[:len(a)-1]
+	return poppedNode
 }
 
 func makeTypeGeneric(name string, space string, prefix string, suffix string) string {

@@ -44,7 +44,7 @@ func (v *CodeGenerator) init(root *Node, globalNodeMap map[string]*Node, namePre
 
 }
 
-func (v *CodeGenerator) generateCodePre(hasStartElements bool, url bool, decodeJson bool) {
+func (v *CodeGenerator) generateCodePre(hasStartElements bool, url bool, writeJson bool, writeXml bool) {
 	v.lineChannel <- "package main"
 	v.lineChannel <- " "
 
@@ -59,8 +59,11 @@ func (v *CodeGenerator) generateCodePre(hasStartElements bool, url bool, decodeJ
 		v.lineChannel <- "	\"net/http\""
 	}
 	v.lineChannel <- "	\"encoding/xml\""
-	if decodeJson {
+	if writeJson {
 		v.lineChannel <- "\"encoding/json\""
+	}
+
+	if writeJson || writeXml {
 		v.lineChannel <- "	\"fmt\""
 	}
 	v.lineChannel <- "	\"os\""
@@ -82,14 +85,14 @@ func (v *CodeGenerator) makeName(name string) string {
 	return v.namePrefix + cleanName(name) + v.nameSuffix
 }
 
-func (v *CodeGenerator) generateConvertToJsonCode(firstNode *Node, prettyPrint bool) {
+func (v *CodeGenerator) generateConvertToCode(firstNode *Node, writeJson bool, writeXml bool, prettyPrint bool) {
 	v.lineChannel <- "func main(){"
 	v.lineChannel <- " "
-	v.makeDecoder(firstNode, true, prettyPrint)
+	v.makeDecoder(firstNode, writeJson, writeXml, prettyPrint)
 	v.lineChannel <- "}"
 }
 
-func (v *CodeGenerator) generateVerifyCode(hasStartElements bool, globalTagAttributes map[string](map[string]string), url bool) {
+func (v *CodeGenerator) generateVerifyCode(hasStartElements bool, globalTagAttributes map[string]([]*FQN), url bool) {
 	v.lineChannel <- "func main(){"
 	v.lineChannel <- " "
 	if !hasStartElements {
@@ -102,28 +105,44 @@ func (v *CodeGenerator) generateVerifyCode(hasStartElements bool, globalTagAttri
 	}
 
 	for _, node := range v.globalNodeMap {
-		v.makeDecoder(node, false, false)
+		v.makeDecoder(node, false, false, false)
 	}
 	v.lineChannel <- "}"
 
 }
 
-func (v *CodeGenerator) printTokenExtractor(name string, space string, spaceTag string, decodeJson bool, prettyPrint bool) {
+func (v *CodeGenerator) printTokenExtractor(name string, space string, spaceTag string, writeJson bool, writeXml bool, prettyPrint bool) {
 	v.lineChannel <- "			if se.Name.Local == \"" + name + "\" && se.Name.Space == \"" + space + "\" {"
-	if !decodeJson {
+	if !writeJson && !writeXml {
 		v.lineChannel <- "				count += 1"
 	}
 	v.lineChannel <- "				var item " + makeTypeGeneric(name, spaceTag, v.namePrefix, v.nameSuffix)
 	v.lineChannel <- "				decoder.DecodeElement(&item, &se)"
-	if decodeJson {
+	if writeJson {
 		if prettyPrint {
 			v.lineChannel <- "				b, err := json.MarshalIndent(item, \"\", \" \")"
 		} else {
 			v.lineChannel <- "				b, err := json.Marshal(item)"
 		}
+	} else {
+		if writeXml {
+			v.lineChannel <- "				tmp := struct {"
+			v.lineChannel <- "				" + "C_PubmedArticle"
+			v.lineChannel <- "				XMLName struct{} `xml:\"" + "PubmedArticle" + "\"`"
+			v.lineChannel <- "				}{" + "C_PubmedArticle" + ": item}"
+
+			v.lineChannel <- "				if err := enc.Encode(tmp); err != nil {"
+			v.lineChannel <- "				    fmt.Printf(\"error: %v\\n\", err)"
+			v.lineChannel <- "				}"
+		}
+	}
+
+	if writeJson || writeXml {
 		v.lineChannel <- "				if err != nil {"
 		v.lineChannel <- "				    log.Fatal(err)"
 		v.lineChannel <- "				}"
+	}
+	if writeJson {
 		v.lineChannel <- "				fmt.Println(string(b))"
 	}
 	v.lineChannel <- ""
@@ -185,12 +204,20 @@ func (v *CodeGenerator) makeTagSpaceTagMap(nameSpaceTagMap map[string]string, va
 	return s
 }
 
-func (v *CodeGenerator) makeDecoder(node *Node, decodeJson bool, prettyPrint bool) {
+func (v *CodeGenerator) makeDecoder(node *Node, writeJson bool, writeXml bool, prettyPrint bool) {
 	v.lineChannel <- "     {"
-	if !decodeJson {
+	if !writeJson && !writeXml {
 		v.lineChannel <- "       count:= 0"
 	}
+
 	v.makeReader(url)
+	if writeXml {
+		v.lineChannel <- "enc := xml.NewEncoder(os.Stdout)"
+		if prettyPrint {
+			v.lineChannel <- "enc.Indent(\"  \", \"    \")"
+		}
+	}
+
 	v.lineChannel <- "decoder := xml.NewDecoder(reader)"
 
 	v.lineChannel <- "	for{"
@@ -201,7 +228,7 @@ func (v *CodeGenerator) makeDecoder(node *Node, decodeJson bool, prettyPrint boo
 	v.lineChannel <- "		switch se := token.(type) {"
 	v.lineChannel <- "		case xml.StartElement:"
 
-	v.printTokenExtractor(node.name, node.space, node.spaceTag, decodeJson, prettyPrint)
+	v.printTokenExtractor(node.name, node.space, node.spaceTag, writeJson, writeXml, prettyPrint)
 	v.lineChannel <- "	   }"
 	v.lineChannel <- "        }"
 	spaceTag := ""
@@ -209,7 +236,7 @@ func (v *CodeGenerator) makeDecoder(node *Node, decodeJson bool, prettyPrint boo
 		spaceTag = node.spaceTag + ":"
 	}
 
-	if !decodeJson {
+	if !writeJson && !writeXml {
 		v.lineChannel <- "     log.Print(\"Number of " + spaceTag + node.name + "= \", count)"
 	}
 

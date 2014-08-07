@@ -6,13 +6,13 @@ import (
 
 type PrintCodeVisitor struct {
 	alreadyVisited      map[string]bool
-	globalTagAttributes map[string](map[string]string)
+	globalTagAttributes map[string]([]*FQN)
 	lineChannel         chan string
 }
 
 func (v *PrintCodeVisitor) init(lineChannel chan string) {
 	v.alreadyVisited = make(map[string]bool)
-	v.globalTagAttributes = make(map[string](map[string]string))
+	v.globalTagAttributes = make(map[string]([]*FQN))
 	v.lineChannel = lineChannel
 
 }
@@ -47,7 +47,8 @@ func (v *PrintCodeVisitor) SetAlreadyVisited(n *Node) {
 
 func (pn *PrintCodeVisitor) printInternalFields(n *Node) {
 	attributes := pn.globalTagAttributes[nk(n)]
-	fields := makeAttributes(attributes)
+	//fields := makeAttributes(attributes)
+	var fields []string
 	var xmlName string
 	if n.space != "" {
 		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"

@@ -71,14 +71,18 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 	return "string"
 }
 
-func makeAttributes(attributes map[string]string) []string {
+func makeAttributes(attributes []*FQN, nameSpaceTagMap map[string]string) []string {
 	all := make([]string, 0)
-	for att, space := range attributes {
-		name := att
-		if space != "" {
-			space = space + " "
+	for _, fqn := range attributes {
+		name := fqn.name
+		space := fqn.space
+
+		spaceTag, ok := nameSpaceTagMap[space]
+		if ok && spaceTag != "" {
+			spaceTag = "__" + spaceTag
 		}
-		attStr := "\t" + attributePrefix + cleanName(name) + " string `xml:\"" + space + att + ",attr\"`"
+
+		attStr := "\t" + attributePrefix + cleanName(name) + spaceTag + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
 		all = append(all, attStr)
 	}
 	return all

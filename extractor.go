@@ -6,6 +6,7 @@ import (
 	"log"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 var nameMapper = map[string]string{
@@ -14,21 +15,23 @@ var nameMapper = map[string]string{
 }
 
 type Extractor struct {
-	globalTagAttributes map[string](map[string]string)
-	//globalTagAttributes map[string]([]FQN)
-	globalNodeMap    map[string]*Node
-	namePrefix       string
-	nameSpaceTagMap  map[string]string
-	nameSuffix       string
-	reader           io.Reader
-	root             *Node
-	firstNode        *Node
-	hasStartElements bool
-	useType          bool
+	//globalTagAttributes map[string](map[string]string)
+	globalTagAttributes    map[string]([]*FQN)
+	globalTagAttributesMap map[string]bool
+	globalNodeMap          map[string]*Node
+	namePrefix             string
+	nameSpaceTagMap        map[string]string
+	nameSuffix             string
+	reader                 io.Reader
+	root                   *Node
+	firstNode              *Node
+	hasStartElements       bool
+	useType                bool
 }
 
 func (ex *Extractor) extract() error {
-	ex.globalTagAttributes = make(map[string](map[string]string))
+	ex.globalTagAttributes = make(map[string]([]*FQN))
+	ex.globalTagAttributesMap = make(map[string]bool)
 	ex.nameSpaceTagMap = make(map[string]string)
 	ex.globalNodeMap = make(map[string]*Node)
 
@@ -59,6 +62,7 @@ func (ex *Extractor) extract() error {
 		switch element := token.(type) {
 		case xml.Comment:
 			if DEBUG {
+				log.Print(thisNode.name)
 				log.Printf("Comment: %+v\n", string(element))
 			}
 
@@ -73,10 +77,15 @@ func (ex *Extractor) extract() error {
 			}
 
 		case xml.CharData:
+
 			if DEBUG {
-				log.Printf("CharData: %+v\n", string(element))
+				log.Print(thisNode.name)
+				log.Printf("CharData: [%+v]\n", string(element))
 			}
-			thisNode.nodeTypeInfo.checkFieldType(string(element))
+			if !isJustSpacesAndLinefeeds(string(element)) {
+				thisNode.nodeTypeInfo.checkFieldType(string(element))
+				thisNode.hasCharData = true
+			}
 
 		case xml.StartElement:
 			if DEBUG {
@@ -105,8 +114,10 @@ func (ex *Extractor) extract() error {
 				}
 				thisNode.childCount[key] = 0
 			}
-			if thisNode.parent != nil {
-				thisNode = thisNode.parent
+			//if thisNode.parent != nil {
+			if thisNode.peekParent() != nil {
+				//thisNode = thisNode.parent
+				thisNode = thisNode.popParent()
 			}
 		}
 	}
@@ -142,7 +153,6 @@ func (ex *Extractor) printTree(n *Node, lineChannel chan string, d int, startNam
 }
 
 func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName string, foundStartString bool, alreadyPrinted map[string]bool) {
-	//fmt.Println("------------ " + nk(n))
 	_, ok := alreadyPrinted[nk(n)]
 	if ok {
 		return
@@ -152,11 +162,8 @@ func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName str
 	if nk(n) == startName {
 		foundStartString = true
 	}
-	attributes := ex.globalTagAttributes[nk(n)]
-	log.Print(strconv.Itoa(len(n.children)) + ":" + nk(n))
-	//if n.parent != nil && foundStartString {
 	if foundStartString {
-		if len(n.children) > 0 || len(attributes) > 0 {
+		if len(n.children) > 0 {
 			lineChannel <- "type " + n.makeType(namePrefix, nameSuffix) + " struct {"
 			ex.printInternalFields(n, lineChannel)
 			lineChannel <- "}\n"
@@ -170,7 +177,7 @@ func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName str
 
 func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 	attributes := ex.globalTagAttributes[nk(n)]
-	fields := makeAttributes(attributes)
+	fields := makeAttributes(attributes, ex.nameSpaceTagMap)
 	var xmlName string
 	if n.space != "" {
 		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"
@@ -183,8 +190,9 @@ func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 
 	for _, v := range n.children {
 		field = "\t " + v.makeType(namePrefix, nameSuffix) + " "
-		childAttributes := ex.globalTagAttributes[nk(v)]
-		if len(v.children) == 0 && len(childAttributes) == 0 {
+		//childAttributes := ex.globalTagAttributes[nk(v)]
+		//if len(v.children) == 0 && len(childAttributes) == 0 {
+		if len(v.children) == 0 {
 			if v.repeats {
 				field += "[]"
 			}
@@ -196,7 +204,7 @@ func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 			} else {
 				field += "*"
 			}
-			field += v.makeType(namePrefix, namePrefix)
+			field += v.makeType(namePrefix, nameSuffix)
 		}
 		var xmlString string
 		if v.space != "" {
@@ -208,7 +216,7 @@ func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 		fields = append(fields, field)
 	}
 
-	if len(n.children) == 0 && len(attributes) > 0 {
+	if len(n.children) == 0 && len(attributes) > 0 || n.hasCharData {
 		xmlString := " `xml:\",chardata\" json:\",omitempty\"`"
 		//charField := "\t" + capitalizeFirstLetter(n.name) + " string" + xmlString
 		charField := "\t" + "Text" + " string" + xmlString
@@ -227,8 +235,9 @@ func (ex *Extractor) findNewNameSpaces(attrs []xml.Attr) {
 			ex.nameSpaceTagMap[attr.Value] = attr.Name.Local
 		}
 	}
-
 }
+
+var full struct{}
 
 func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode *Node) *Node {
 	name := startElement.Name.Local
@@ -237,21 +246,14 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 	ex.findNewNameSpaces(startElement.Attr)
 
 	var child *Node
-	var attributes map[string]string
+	var attributes []*FQN
 	key := nks(space, name)
 	child, ok := thisNode.children[key]
 	// Does thisNode node already exist as child
 	//fmt.Println(space, name)
-	if name == "imports" {
-		log.Print(name + ":" + space + "   88888888888888888888888")
-		log.Printf("%+v", startElement.Attr)
-	}
 	if ok {
 		thisNode.childCount[key] += 1
-		attributes, ok = ex.globalTagAttributes[nks(space, name)]
-		if !ok {
-			log.Print(name + ":" + space + "   88888888888888888888888")
-		}
+		attributes, ok = ex.globalTagAttributes[key]
 	} else {
 		// if thisNode node does not already exist as child, it may still exist as child on other node:
 		child, ok = ex.globalNodeMap[key]
@@ -262,16 +264,32 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 			child.initialize(name, space, spaceTag, thisNode)
 			thisNode.childCount[key] = 1
 
-			attributes = make(map[string]string)
+			attributes = make([]*FQN, 0, 2)
 			ex.globalTagAttributes[key] = attributes
 		} else {
 			attributes = ex.globalTagAttributes[key]
 		}
 		thisNode.children[key] = child
 	}
+	child.pushParent(thisNode)
 
 	for _, attr := range startElement.Attr {
-		attributes[attr.Name.Local] = attr.Name.Space
+		bigKey := key + "_" + attr.Name.Space + "_" + attr.Name.Local
+		_, ok := ex.globalTagAttributesMap[bigKey]
+		//_, _ = ex.globalTagAttributesMap[bigKey]
+		if !ok {
+			fqn := new(FQN)
+			fqn.name = attr.Name.Local
+			fqn.space = attr.Name.Space
+			attributes = append(attributes, fqn)
+			ex.globalTagAttributesMap[bigKey] = true
+		}
 	}
+	ex.globalTagAttributes[key] = attributes
 	return child
+}
+
+func isJustSpacesAndLinefeeds(s string) bool {
+
+	return len(strings.TrimSpace(s)) == 0
 }
