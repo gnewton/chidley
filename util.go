@@ -79,10 +79,10 @@ func makeAttributes(attributes []*FQN, nameSpaceTagMap map[string]string) []stri
 
 		spaceTag, ok := nameSpaceTagMap[space]
 		if ok && spaceTag != "" {
-			spaceTag = "__" + spaceTag
+			spaceTag = spaceTag + "_"
 		}
 
-		attStr := "\t" + attributePrefix + cleanName(name) + spaceTag + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
+		attStr := "\t" + attributePrefix + "_" + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
 		all = append(all, attStr)
 	}
 	return all

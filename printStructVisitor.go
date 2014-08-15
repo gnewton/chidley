@@ -84,7 +84,7 @@ func (pn *PrintStructVisitor) printInternalFields(n *Node) {
 		field += xmlString
 		fields = append(fields, field)
 	}
-	if len(n.children) == 0 && len(attributes) > 0 {
+	if (len(n.children) == 0 && len(attributes) > 0) || n.hasCharData {
 		xmlString := " `xml:\",chardata\" json:\",omitempty\"`"
 		//charField := "\t" + capitalizeFirstLetter(n.name) + " string" + xmlString
 		charField := "\t" + "Text" + " string" + xmlString

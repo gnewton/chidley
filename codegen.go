@@ -116,7 +116,8 @@ func (v *CodeGenerator) printTokenExtractor(name string, space string, spaceTag 
 	if !writeJson && !writeXml {
 		v.lineChannel <- "				count += 1"
 	}
-	v.lineChannel <- "				var item " + makeTypeGeneric(name, spaceTag, v.namePrefix, v.nameSuffix)
+	structName := makeTypeGeneric(name, spaceTag, v.namePrefix, v.nameSuffix)
+	v.lineChannel <- "				var item " + structName
 	v.lineChannel <- "				decoder.DecodeElement(&item, &se)"
 	if writeJson {
 		if prettyPrint {
@@ -127,9 +128,9 @@ func (v *CodeGenerator) printTokenExtractor(name string, space string, spaceTag 
 	} else {
 		if writeXml {
 			v.lineChannel <- "				tmp := struct {"
-			v.lineChannel <- "				" + "C_PubmedArticle"
-			v.lineChannel <- "				XMLName struct{} `xml:\"" + "PubmedArticle" + "\"`"
-			v.lineChannel <- "				}{" + "C_PubmedArticle" + ": item}"
+			v.lineChannel <- "				" + structName
+			v.lineChannel <- "				XMLName struct{} `xml:\"" + name + "\"`"
+			v.lineChannel <- "				}{" + structName + ": item}"
 
 			v.lineChannel <- "				if err := enc.Encode(tmp); err != nil {"
 			v.lineChannel <- "				    fmt.Printf(\"error: %v\\n\", err)"

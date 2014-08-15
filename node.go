@@ -15,6 +15,7 @@ type Node struct {
 	repeats      bool
 	nodeTypeInfo *NodeTypeInfo
 	hasCharData  bool
+	tempCharData string
 }
 
 type NodeVisitor interface {
@@ -74,8 +75,15 @@ func (n *Node) popParent() *Node {
 func makeTypeGeneric(name string, space string, prefix string, suffix string) string {
 	spaceTag := ""
 	if space != "" {
-		spaceTag = "__" + space
+		spaceTag = space + "_"
 	}
-	return prefix + cleanName(name) + spaceTag + suffix
+	if prefix != "" {
+		prefix = prefix + "_"
+	}
+
+	if suffix != "" {
+		suffix = "_" + suffix
+	}
+	return prefix + spaceTag + cleanName(name) + suffix
 
 }

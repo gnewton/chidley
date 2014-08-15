@@ -27,6 +27,7 @@ type Extractor struct {
 	firstNode              *Node
 	hasStartElements       bool
 	useType                bool
+	progress               bool
 }
 
 func (ex *Extractor) extract() error {
@@ -36,15 +37,16 @@ func (ex *Extractor) extract() error {
 	ex.globalNodeMap = make(map[string]*Node)
 
 	decoder := xml.NewDecoder(ex.reader)
-	depth := 0
 
 	ex.root = new(Node)
 	ex.root.initialize("root", "", "", nil)
 
-	thisNode := ex.root
 	ex.hasStartElements = false
 
-	first := true
+	tokenChannel := make(chan xml.Token, 3000)
+	handleTokensDoneChannel := make(chan bool)
+
+	go handleTokens(tokenChannel, ex, handleTokensDoneChannel)
 
 	for {
 		token, err := decoder.Token()
@@ -52,13 +54,25 @@ func (ex *Extractor) extract() error {
 			if err.Error() == "EOF" {
 				break
 			}
-
 			return err
 		}
 		if token == nil {
 			break
 		}
+		tokenChannel <- token
+	}
+	close(tokenChannel)
+	_ = <-handleTokensDoneChannel
+	return nil
+}
 
+func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChannel chan bool) {
+	depth := 0
+	thisNode := ex.root
+	first := true
+	var progressCounter int64 = 0
+
+	for token := range tChannel {
 		switch element := token.(type) {
 		case xml.Comment:
 			if DEBUG {
@@ -76,18 +90,9 @@ func (ex *Extractor) extract() error {
 				log.Printf("Directive: %+v\n", string(element))
 			}
 
-		case xml.CharData:
-
-			if DEBUG {
-				log.Print(thisNode.name)
-				log.Printf("CharData: [%+v]\n", string(element))
-			}
-			if !isJustSpacesAndLinefeeds(string(element)) {
-				thisNode.nodeTypeInfo.checkFieldType(string(element))
-				thisNode.hasCharData = true
-			}
-
 		case xml.StartElement:
+			thisNode.tempCharData = ""
+			progressCounter += 1
 			if DEBUG {
 				log.Printf("StartElement: %+v\n", element)
 			}
@@ -102,8 +107,37 @@ func (ex *Extractor) extract() error {
 				ex.firstNode = thisNode
 			}
 			depth += 1
+			if progress {
+				if progressCounter%50000 == 0 {
+					log.Print(progressCounter)
+				}
+			}
+
+		case xml.CharData:
+			if DEBUG {
+				log.Print(thisNode.name)
+				log.Printf("CharData: [%+v]\n", string(element))
+			}
+			/*
+				if !isJustSpacesAndLinefeeds(string(element)) {
+					thisNode.nodeTypeInfo.checkFieldType(string(element))
+					thisNode.hasCharData = true
+				}
+			*/
+			if !thisNode.hasCharData {
+				thisNode.tempCharData += strings.TrimSpace(string(element))
+			}
+			if thisNode.name == "RDF" {
+				log.Print("[" + string(element) + "]")
+			}
 
 		case xml.EndElement:
+			if !thisNode.hasCharData && !isJustSpacesAndLinefeeds(thisNode.tempCharData) {
+				thisNode.nodeTypeInfo.checkFieldType(thisNode.tempCharData)
+				thisNode.hasCharData = true
+				thisNode.tempCharData = ""
+			}
+
 			depth -= 1
 			if DEBUG {
 				log.Printf("EndElement: %+v\n", element)
@@ -121,8 +155,8 @@ func (ex *Extractor) extract() error {
 			}
 		}
 	}
-
-	return nil
+	handleTokensDoneChannel <- true
+	close(handleTokensDoneChannel)
 }
 
 func space(n int) string {
@@ -142,7 +176,6 @@ func (ex *Extractor) printTree(n *Node, lineChannel chan string, d int, startNam
 		repeats = "*"
 	}
 	if foundStartString {
-		//fmt.Println(indent(d) + n.name + repeats)
 		lineChannel <- indent(d) + n.name + repeats
 		d += 1
 	}
@@ -182,7 +215,7 @@ func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 	if n.space != "" {
 		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"
 	} else {
-		//xmlName = "\tXMLName  xml.Name `xml:\"" + n.name + ",omitempty\" json:\",omitempty\"`"
+		xmlName = "\tXMLName  xml.Name `xml:\"" + n.name + ",omitempty\" json:\",omitempty\"`"
 	}
 	fields = append(fields, xmlName)
 
@@ -290,6 +323,7 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 }
 
 func isJustSpacesAndLinefeeds(s string) bool {
-
+	s = strings.Replace(s, "\\n", "", -1)
+	s = strings.Replace(s, "\n", "", -1)
 	return len(strings.TrimSpace(s)) == 0
 }

@@ -29,7 +29,6 @@ func (nti *NodeTypeInfo) initialize() {
 
 func (n *NodeTypeInfo) checkFieldType(v string) {
 	v = strings.TrimSpace(v)
-	//fmt.Println("=== [" + v + "]")
 
 	if _, err := strconv.ParseBool(v); err != nil {
 		n.alwaysBool = false
@@ -62,7 +61,5 @@ func (n *NodeTypeInfo) checkFieldType(v string) {
 	if _, err := strconv.ParseInt(v, 10, 64); err != nil {
 		n.alwaysInt64 = false
 	}
-
-	//fmt.Printf("---- %+v\n", n)
 
 }

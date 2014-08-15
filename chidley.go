@@ -5,20 +5,22 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
+	"text/template"
 )
 
 var DEBUG = false
-var attributePrefix = "Attr_"
-var structsToStdout = true
+var progress = false
+var attributePrefix = "Attr"
+var structsToStdout = false
 var prettyPrint = false
-var codeGenVerify = false
-var codeGenConvertToJson = false
-var codeGenConvertToXML = false
+var codeGenCounter = false
+var codeGenConvert = false
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
-var namePrefix = "Chi_"
-var nameSuffix = "_Type"
+var namePrefix = "Chi"
+var nameSuffix = "Type"
 var url = false
 var useType = false
 
@@ -27,12 +29,17 @@ type Writer interface {
 	close()
 }
 
+var outputs = []*bool{
+	&codeGenCounter,
+	&codeGenConvert,
+}
+
 func init() {
 	flag.BoolVar(&DEBUG, "D", DEBUG, "Debug; prints out much information")
-	flag.BoolVar(&codeGenConvertToJson, "J", codeGenConvertToJson, "Do Go code generation to convert XML to JSON")
-	flag.BoolVar(&codeGenConvertToXML, "X", codeGenConvertToXML, "Do Go code generation to convert XML to XML (useful for validation)")
-	flag.BoolVar(&codeGenVerify, "V", codeGenVerify, "Do code generation of code that reads XML and counts every tag instance: space_prefix:tag")
+	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation)")
+	flag.BoolVar(&codeGenCounter, "C", codeGenCounter, "Generate Go code that counts bumber of each unique XML tag in XML file")
 	flag.BoolVar(&prettyPrint, "P", prettyPrint, "Pretty-print json in generated code (if applicable)")
+	flag.BoolVar(&progress, "R", progress, "Progress: every 50000 elements")
 	flag.BoolVar(&structsToStdout, "c", structsToStdout, "Write generated Go structs to stdout")
 	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
@@ -41,13 +48,29 @@ func init() {
 	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to element names")
 }
 
-func handleParameters() bool {
+func handleParameters() error {
 	flag.Parse()
-	return true
+
+	numBoolsSet := countNumberOfBoolsSet(outputs)
+	if numBoolsSet > 1 {
+		log.Print("  ERROR: Only one of -W -J -X -V -c can be set")
+		return nil
+	}
+	if numBoolsSet == 0 {
+		log.Print("  ERROR: At least one of -W -J -X -V -c must be set")
+		return nil
+	}
+	return nil
 }
 
 func main() {
-	handleParameters()
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	err := handleParameters()
+
+	if err != nil {
+		flag.Usage()
+		return
+	}
 
 	if len(flag.Args()) != 1 {
 		fmt.Println("chidley <flags> xmlFileName|url")
@@ -56,16 +79,13 @@ func main() {
 		return
 	}
 
-	x := make(map[string]interface{})
-	x["goo"] = x
-
 	var sourceName string
 
 	sourceName = flag.Args()[0]
 
 	source, err := makeSourceReader(sourceName, url)
 	if err != nil {
-
+		return
 	}
 	defer source.Close()
 
@@ -74,6 +94,7 @@ func main() {
 		nameSuffix: nameSuffix,
 		reader:     source.getReader(),
 		useType:    useType,
+		progress:   progress,
 	}
 
 	if DEBUG {
@@ -90,7 +111,7 @@ func main() {
 	lineChannel := make(chan string)
 
 	switch {
-	case codeGenVerify:
+	case codeGenCounter:
 		alreadyPrinted := make(map[string]bool)
 		var codegen *CodeGenerator
 		codegen = new(CodeGenerator)
@@ -105,35 +126,29 @@ func main() {
 		codegen.generateVerifyCode(ex.hasStartElements, ex.globalTagAttributes, url)
 		break
 
-	case codeGenConvertToJson:
-		alreadyPrinted := make(map[string]bool)
-		var codegen *CodeGenerator
-		codegen = new(CodeGenerator)
-		newSource, err := source.copySource()
-		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		codegen.generateCodePre(ex.hasStartElements, url, true, false)
-		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
-		codegen.generateConvertToCode(ex.firstNode, codeGenConvertToJson, codeGenConvertToXML, prettyPrint)
-		break
+	case codeGenConvert:
+		sWriter := new(stringWriter)
+		writer = sWriter
+		writer.open("", lineChannel)
+		printStructVisitor := new(PrintStructVisitor)
+		printStructVisitor.init(lineChannel)
+		printStructVisitor.Visit(ex.root)
 
-	case codeGenConvertToXML:
-		alreadyPrinted := make(map[string]bool)
-		var codegen *CodeGenerator
-		codegen = new(CodeGenerator)
-		newSource, err := source.copySource()
-		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
-		if err != nil {
-			log.Fatal(err)
-			return
+		x := XmlType{
+			NameType:     ex.firstNode.makeType(namePrefix, nameSuffix),
+			XMLName:      ex.firstNode.name,
+			XMLNameUpper: capitalizeFirstLetter(ex.firstNode.name),
+			XMLSpace:     ex.firstNode.space,
+			Filename:     sourceName,
+			Structs:      sWriter.s,
 		}
-		codegen.generateCodePre(ex.hasStartElements, url, false, true)
-		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
-		codegen.generateConvertToCode(ex.firstNode, codeGenConvertToJson, codeGenConvertToXML, prettyPrint)
-		break
+
+		t := template.Must(template.New("letter").Parse(codeTemplate))
+
+		err := t.Execute(os.Stdout, x)
+		if err != nil {
+			log.Println("executing template:", err)
+		}
 		break
 
 	case structsToStdout:
@@ -146,7 +161,7 @@ func main() {
 		break
 	}
 	close(lineChannel)
-	writer.close()
+	//writer.close()
 
 }
 
@@ -191,4 +206,14 @@ func indent(d int) string {
 
 func capitalizeFirstLetter(s string) string {
 	return strings.ToUpper(s[0:1]) + s[1:]
+}
+
+func countNumberOfBoolsSet(a []*bool) int {
+	counter := 0
+	for i := 0; i < len(a); i++ {
+		if *a[i] {
+			counter += 1
+		}
+	}
+	return counter
 }
