@@ -120,7 +120,11 @@ func main() {
 		printStructVisitor := new(PrintStructVisitor)
 		printStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
 		printStructVisitor.Visit(ex.root)
+		//printChildrenChildren(ex.root)
 		close(lineChannel)
+		sWriter.close()
+
+		fmt.Println(sWriter.s)
 
 		x := XmlType{
 			NameType:     ex.firstNode.makeType(namePrefix, nameSuffix),
@@ -205,4 +209,11 @@ func countNumberOfBoolsSet(a []*bool) int {
 		}
 	}
 	return counter
+}
+
+func printChildrenChildren(node *Node) {
+	for k, v := range node.children {
+		log.Print(k)
+		log.Printf("children: %+v\n", v.children)
+	}
 }
