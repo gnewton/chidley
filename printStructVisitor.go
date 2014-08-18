@@ -11,9 +11,10 @@ type PrintStructVisitor struct {
 	maxDepth            int
 	depth               int
 	nameSpaceTagMap     map[string]string
+	useType             bool
 }
 
-func (v *PrintStructVisitor) init(lineChannel chan string, maxDepth int, globalTagAttributes map[string]([]*FQN), nameSpaceTagMap map[string]string) {
+func (v *PrintStructVisitor) init(lineChannel chan string, maxDepth int, globalTagAttributes map[string]([]*FQN), nameSpaceTagMap map[string]string, useType bool) {
 	v.alreadyVisited = make(map[string]bool)
 	v.globalTagAttributes = make(map[string]([]*FQN))
 	v.globalTagAttributes = globalTagAttributes
@@ -21,7 +22,7 @@ func (v *PrintStructVisitor) init(lineChannel chan string, maxDepth int, globalT
 	v.maxDepth = maxDepth
 	v.depth = 0
 	v.nameSpaceTagMap = nameSpaceTagMap
-
+	v.useType = useType
 }
 
 func (v *PrintStructVisitor) Visit(node *Node) bool {
@@ -89,7 +90,7 @@ func (pn *PrintStructVisitor) printInternalFields(n *Node) {
 			if v.repeats {
 				field += "[]"
 			}
-			field += findType(v.nodeTypeInfo, false)
+			field += findType(v.nodeTypeInfo, useType)
 		} else {
 			if v.repeats {
 				field += "[]"
@@ -111,7 +112,9 @@ func (pn *PrintStructVisitor) printInternalFields(n *Node) {
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" json:\",omitempty\"`"
 		//charField := "\t" + capitalizeFirstLetter(n.name) + " string" + xmlString
-		charField := "\t" + "Text" + " string" + xmlString
+
+		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
+		//charField := "\t" + "Text" + " string" + xmlString
 		fields = append(fields, charField)
 	}
 	sort.Strings(fields)

@@ -16,7 +16,6 @@ var progress = false
 var attributePrefix = "Attr"
 var structsToStdout = false
 var prettyPrint = false
-var codeGenCounter = false
 var codeGenConvert = false
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
@@ -38,10 +37,10 @@ var outputs = []*bool{
 func init() {
 	flag.BoolVar(&DEBUG, "D", DEBUG, "Debug; prints out much information")
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation)")
-	flag.BoolVar(&codeGenCounter, "C", codeGenCounter, "Generate Go code that counts bumber of each unique XML tag in XML file")
+	flag.BoolVar(&structsToStdout, "c", structsToStdout, "Write generated Go structs to stdout")
+
 	flag.BoolVar(&prettyPrint, "P", prettyPrint, "Pretty-print json in generated code (if applicable)")
 	flag.BoolVar(&progress, "R", progress, "Progress: every 50000 elements")
-	flag.BoolVar(&structsToStdout, "c", structsToStdout, "Write generated Go structs to stdout")
 	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
@@ -110,7 +109,7 @@ func main() {
 	}
 
 	var writer Writer
-	lineChannel := make(chan string)
+	lineChannel := make(chan string, 100)
 
 	switch {
 
@@ -119,7 +118,7 @@ func main() {
 		writer = sWriter
 		writer.open("", lineChannel)
 		printStructVisitor := new(PrintStructVisitor)
-		printStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap)
+		printStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
 		printStructVisitor.Visit(ex.root)
 		close(lineChannel)
 
@@ -144,7 +143,7 @@ func main() {
 		writer = new(stdoutWriter)
 		writer.open("", lineChannel)
 		printStructVisitor := new(PrintStructVisitor)
-		printStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap)
+		printStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
 		//visitNode(ex.root, printStructVisitor)
 		printStructVisitor.Visit(ex.root)
 		close(lineChannel)

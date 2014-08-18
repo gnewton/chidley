@@ -43,11 +43,11 @@ func (ex *Extractor) extract() error {
 
 	ex.hasStartElements = false
 
-	tokenChannel := make(chan xml.Token, 3000)
+	tokenChannel := make(chan xml.Token, 100)
 	handleTokensDoneChannel := make(chan bool)
 
 	go handleTokens(tokenChannel, ex, handleTokensDoneChannel)
-
+	//counter := 0
 	for {
 		token, err := decoder.Token()
 		if err != nil {
@@ -60,6 +60,10 @@ func (ex *Extractor) extract() error {
 			break
 		}
 		tokenChannel <- token
+		// counter += 1
+		// if counter%10000 == 0 {
+		// 	log.Print("tokenChannel.size=", len(tokenChannel))
+		// }
 	}
 	close(tokenChannel)
 	_ = <-handleTokensDoneChannel
@@ -82,7 +86,7 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 
 		case xml.ProcInst:
 			if DEBUG {
-				log.Printf("ProcInst: %+v\n", element)
+				log.Println("ProcInst: Target=" + element.Target + "  Inst=[" + string(element.Inst) + "]")
 			}
 
 		case xml.Directive:
@@ -91,7 +95,6 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 			}
 
 		case xml.StartElement:
-			thisNode.tempCharData = ""
 			progressCounter += 1
 			if DEBUG {
 				log.Printf("StartElement: %+v\n", element)
@@ -102,6 +105,7 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 				continue
 			}
 			thisNode = ex.handleStartElement(element, thisNode)
+			thisNode.tempCharData = ""
 			if first {
 				first = false
 				ex.firstNode = thisNode
@@ -119,9 +123,9 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 				log.Printf("CharData: [%+v]\n", string(element))
 			}
 
-			if !thisNode.hasCharData {
-				thisNode.tempCharData += strings.TrimSpace(string(element))
-			}
+			//if !thisNode.hasCharData {
+			thisNode.tempCharData += strings.TrimSpace(string(element))
+		//}
 
 		case xml.EndElement:
 			if !thisNode.hasCharData && !isJustSpacesAndLinefeeds(thisNode.tempCharData) {
