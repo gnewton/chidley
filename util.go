@@ -5,6 +5,7 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"io"
+	"log"
 	"os"
 	"strings"
 )
@@ -71,8 +72,8 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 	return "string"
 }
 
-func makeAttributes(attributes []*FQN, nameSpaceTagMap map[string]string) []string {
-	all := make([]string, 0)
+func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap map[string]string) {
+
 	for _, fqn := range attributes {
 		name := fqn.name
 		space := fqn.space
@@ -82,10 +83,8 @@ func makeAttributes(attributes []*FQN, nameSpaceTagMap map[string]string) []stri
 			spaceTag = spaceTag + "_"
 		}
 
-		attStr := "\t" + attributePrefix + "_" + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
-		all = append(all, attStr)
+		lineChannel <- "\t" + attributePrefix + "_" + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
 	}
-	return all
 }
 
 // node key
@@ -95,4 +94,13 @@ func nk(n *Node) string {
 
 func nks(space, name string) string {
 	return space + "___" + name
+}
+
+func getFullPath(filename string) string {
+	file, err := os.Open(filename) // For read access.
+	if err != nil {
+		log.Print("Error openin: " + filename)
+		log.Fatal(err)
+	}
+	return file.Name()
 }

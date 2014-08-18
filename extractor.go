@@ -118,17 +118,9 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 				log.Print(thisNode.name)
 				log.Printf("CharData: [%+v]\n", string(element))
 			}
-			/*
-				if !isJustSpacesAndLinefeeds(string(element)) {
-					thisNode.nodeTypeInfo.checkFieldType(string(element))
-					thisNode.hasCharData = true
-				}
-			*/
+
 			if !thisNode.hasCharData {
 				thisNode.tempCharData += strings.TrimSpace(string(element))
-			}
-			if thisNode.name == "RDF" {
-				log.Print("[" + string(element) + "]")
 			}
 
 		case xml.EndElement:
@@ -148,9 +140,7 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 				}
 				thisNode.childCount[key] = 0
 			}
-			//if thisNode.parent != nil {
 			if thisNode.peekParent() != nil {
-				//thisNode = thisNode.parent
 				thisNode = thisNode.popParent()
 			}
 		}
@@ -210,7 +200,8 @@ func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName str
 
 func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
 	attributes := ex.globalTagAttributes[nk(n)]
-	fields := makeAttributes(attributes, ex.nameSpaceTagMap)
+	//fields := makeAttributes(attributes, ex.nameSpaceTagMap)
+	var fields []string
 	var xmlName string
 	if n.space != "" {
 		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"

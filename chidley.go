@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
@@ -30,8 +31,8 @@ type Writer interface {
 }
 
 var outputs = []*bool{
-	&codeGenCounter,
 	&codeGenConvert,
+	&structsToStdout,
 }
 
 func init() {
@@ -81,13 +82,15 @@ func main() {
 
 	var sourceName string
 
-	sourceName = flag.Args()[0]
+	sourceName, err = filepath.Abs(flag.Args()[0])
+	if err != nil {
+		log.Fatal("FATAL ERROR: " + err.Error())
+	}
 
 	source, err := makeSourceReader(sourceName, url)
 	if err != nil {
-		return
+		log.Fatal("FATAL ERROR: " + err.Error())
 	}
-	defer source.Close()
 
 	ex := Extractor{
 		namePrefix: namePrefix,
@@ -104,42 +107,28 @@ func main() {
 
 	if err != nil {
 		log.Fatal("FATAL ERROR: " + err.Error())
-		os.Exit(42)
 	}
 
 	var writer Writer
 	lineChannel := make(chan string)
 
 	switch {
-	case codeGenCounter:
-		alreadyPrinted := make(map[string]bool)
-		var codegen *CodeGenerator
-		codegen = new(CodeGenerator)
-		newSource, err := source.copySource()
-		writer, err = codegen.init(ex.firstNode, ex.globalNodeMap, namePrefix, ex.nameSpaceTagMap, nameSuffix, codeGenDir, codeGenFilename, newSource, lineChannel)
-		codegen.generateCodePre(ex.hasStartElements, url, false, false)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		ex.printStruct(ex.firstNode, lineChannel, "", true, alreadyPrinted)
-		codegen.generateVerifyCode(ex.hasStartElements, ex.globalTagAttributes, url)
-		break
 
 	case codeGenConvert:
 		sWriter := new(stringWriter)
 		writer = sWriter
 		writer.open("", lineChannel)
 		printStructVisitor := new(PrintStructVisitor)
-		printStructVisitor.init(lineChannel)
+		printStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap)
 		printStructVisitor.Visit(ex.root)
+		close(lineChannel)
 
 		x := XmlType{
 			NameType:     ex.firstNode.makeType(namePrefix, nameSuffix),
 			XMLName:      ex.firstNode.name,
 			XMLNameUpper: capitalizeFirstLetter(ex.firstNode.name),
 			XMLSpace:     ex.firstNode.space,
-			Filename:     sourceName,
+			Filename:     getFullPath(sourceName),
 			Structs:      sWriter.s,
 		}
 
@@ -155,12 +144,13 @@ func main() {
 		writer = new(stdoutWriter)
 		writer.open("", lineChannel)
 		printStructVisitor := new(PrintStructVisitor)
-		printStructVisitor.init(lineChannel)
+		printStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap)
 		//visitNode(ex.root, printStructVisitor)
 		printStructVisitor.Visit(ex.root)
+		close(lineChannel)
 		break
 	}
-	close(lineChannel)
+
 	//writer.close()
 
 }
