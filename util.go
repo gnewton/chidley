@@ -97,9 +97,12 @@ func nks(space, name string) string {
 }
 
 func getFullPath(filename string) string {
+	if filename == "" {
+		return ""
+	}
 	file, err := os.Open(filename) // For read access.
 	if err != nil {
-		log.Print("Error openin: " + filename)
+		log.Print("Error opening: " + filename)
 		log.Fatal(err)
 	}
 	return file.Name()

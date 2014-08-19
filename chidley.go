@@ -17,6 +17,7 @@ var attributePrefix = "Attr"
 var structsToStdout = false
 var prettyPrint = false
 var codeGenConvert = false
+var readFromStandardIn = false
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
 var namePrefix = "Chi"
@@ -35,16 +36,17 @@ var outputs = []*bool{
 }
 
 func init() {
-	flag.BoolVar(&DEBUG, "D", DEBUG, "Debug; prints out much information")
-	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation)")
-	flag.BoolVar(&structsToStdout, "c", structsToStdout, "Write generated Go structs to stdout")
+	flag.BoolVar(&DEBUG, "d", DEBUG, "Debug; prints out much information")
+	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
+	flag.BoolVar(&structsToStdout, "G", structsToStdout, "Only write generated Go structs to stdout")
+	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
 
-	flag.BoolVar(&prettyPrint, "P", prettyPrint, "Pretty-print json in generated code (if applicable)")
-	flag.BoolVar(&progress, "R", progress, "Progress: every 50000 elements")
+	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")
+	flag.BoolVar(&progress, "r", progress, "Progress: every 50000 elements")
 	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
-	flag.StringVar(&namePrefix, "p", namePrefix, "Prefix to element names")
+	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to element names")
 	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to element names")
 }
 
@@ -67,12 +69,14 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	err := handleParameters()
 
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	if err != nil {
 		flag.Usage()
 		return
 	}
 
-	if len(flag.Args()) != 1 {
+	if len(flag.Args()) != 1 && !readFromStandardIn {
 		fmt.Println("chidley <flags> xmlFileName|url")
 		fmt.Println("xmlFileName can be .gz or .bz2: uncompressed transparently")
 		flag.Usage()
@@ -81,12 +85,17 @@ func main() {
 
 	var sourceName string
 
-	sourceName, err = filepath.Abs(flag.Args()[0])
-	if err != nil {
-		log.Fatal("FATAL ERROR: " + err.Error())
+	if !readFromStandardIn {
+		sourceName = flag.Args()[0]
+	}
+	if !url && !readFromStandardIn {
+		sourceName, err = filepath.Abs(sourceName)
+		if err != nil {
+			log.Fatal("FATAL ERROR: " + err.Error())
+		}
 	}
 
-	source, err := makeSourceReader(sourceName, url)
+	source, err := makeSourceReader(sourceName, url, readFromStandardIn)
 	if err != nil {
 		log.Fatal("FATAL ERROR: " + err.Error())
 	}
@@ -154,7 +163,9 @@ func main() {
 
 }
 
-func makeSourceReader(sourceName string, url bool) (Source, error) {
+func makeSourceReader(sourceName string, url bool, standardIn bool) (Source, error) {
+	var err error
+
 	var source Source
 	if url {
 		source = new(UrlSource)
@@ -162,23 +173,27 @@ func makeSourceReader(sourceName string, url bool) (Source, error) {
 			log.Print("Making UrlSource")
 		}
 	} else {
-		source = new(FileSource)
-		if DEBUG {
-			log.Print("Making FileSource")
+		if standardIn {
+			source = new(StdinSource)
+			if DEBUG {
+				log.Print("Making StdinSource")
+			}
+		} else {
+			source = new(FileSource)
+			if DEBUG {
+				log.Print("Making FileSource")
+			}
 		}
 	}
 	if DEBUG {
 		log.Print("Making Source:[" + sourceName + "]")
 	}
-	err := source.newSource(sourceName)
-
+	err = source.newSource(sourceName)
 	return source, err
-
 }
 
 func attributes(atts map[string]bool) string {
 	ret := ": "
-
 	for k, _ := range atts {
 		ret = ret + k + ", "
 	}

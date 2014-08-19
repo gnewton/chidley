@@ -55,9 +55,9 @@ var filename = "{{.Filename}}"
 
 
 func init() {
-	flag.BoolVar(&toJson, "J", toJson, "Convert to JSON")
-	flag.BoolVar(&toXml, "X", toXml, "Convert to XML")
-	flag.BoolVar(&countAll, "C", countAll, "Count each instance of XML tags")
+	flag.BoolVar(&toJson, "j", toJson, "Convert to JSON")
+	flag.BoolVar(&toXml, "x", toXml, "Convert to XML")
+	flag.BoolVar(&countAll, "c", countAll, "Count each instance of XML tags")
 	flag.BoolVar(&oneLevelDown, "s", oneLevelDown, "Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/")
 	flag.BoolVar(&musage, "h", musage, "Usage")
 	flag.StringVar(&filename, "f", filename, "XML file or URL to read in")
@@ -92,7 +92,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	defer xmlFile.Close()
+
 	decoder := xml.NewDecoder(reader)
 	counters = make(map[string]*int)
 	for {
@@ -105,7 +105,9 @@ func main() {
 			handleFeed(se, decoder, outFlag)
 		}
 	}
-
+        if xmlFile != nil{
+	    defer xmlFile.Close()
+        }
 	if countAll {
 		for k, v := range counters {
 			fmt.Println(*v, k)
@@ -182,6 +184,9 @@ func writeXml(item interface{}) {
 }
 
 func genericReader(filename string) (io.Reader, *os.File, error) {
+	if filename == "" {
+		return bufio.NewReader(os.Stdin), nil, nil
+	}
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, nil, err

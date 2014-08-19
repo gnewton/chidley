@@ -5,4 +5,5 @@
     xmlns:p2="http://www.opentox.org/algorithmTypes.owl#">
   <doc p1:foo="hello" dc:foo="bye">47</doc>
   <doc p2:foo="smith" dc:foo="fox">4000</doc>
+  <doc p2:foo="zzz" dc:foo="QQQ"/>
 </docs>

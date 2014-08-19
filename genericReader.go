@@ -94,25 +94,25 @@ func openIfExistsIsFileIsReadable(fileName string) (*os.File, error) {
 	fm := fi.Mode()
 	if !fm.IsRegular() {
 		error := new(InternalError)
-		error.errorString = "Is directory, needs to be file: " + fileName
-		log.Print(error.errorString)
+		error.ErrorString = "Is directory, needs to be file: " + fileName
+		log.Print(error.ErrorString)
 		return nil, error
 	}
 
 	log.Print(fm.Perm().String())
 	if fm.Perm().String()[7] != 'r' {
 		error := new(InternalError)
-		error.errorString = "Exists but unable to read: " + fileName
-		log.Print(error.errorString)
+		error.ErrorString = "Exists but unable to read: " + fileName
+		log.Print(error.ErrorString)
 		return nil, error
 	}
 	return file, nil
 }
 
 type InternalError struct {
-	errorString string
+	ErrorString string
 }
 
 func (ie *InternalError) Error() string {
-	return "Error: " + ie.errorString
+	return "Error: " + ie.ErrorString
 }

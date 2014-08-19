@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"io"
 	"log"
 	"net/http"
@@ -27,6 +28,34 @@ type FileSource struct {
 
 type UrlSource struct {
 	GenericSource
+}
+
+type StdinSource struct {
+	GenericSource
+}
+
+//StdInSource impl
+func (us *StdinSource) copySource() (Source, error) {
+	err := new(InternalError)
+	//error.ErrorString = "copySource not supported"
+	return nil, err
+}
+
+func (us *StdinSource) getName() string {
+	return ""
+}
+
+func (us *StdinSource) newSource(name string) error {
+	us.reader = bufio.NewReader(os.Stdin)
+	return nil
+}
+
+func (us *StdinSource) Close() error {
+	return nil
+}
+
+func (us *StdinSource) getReader() io.Reader {
+	return us.reader
 }
 
 //UrlSource impl
@@ -91,7 +120,7 @@ func (fs *FileSource) newSource(name string) error {
 	return err
 }
 
-func (fs FileSource) Close() error {
+func (fs *FileSource) Close() error {
 	return fs.file.Close()
 }
 

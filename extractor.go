@@ -59,7 +59,8 @@ func (ex *Extractor) extract() error {
 		if token == nil {
 			break
 		}
-		tokenChannel <- token
+
+		tokenChannel <- xml.CopyToken(token)
 		// counter += 1
 		// if counter%10000 == 0 {
 		// 	log.Print("tokenChannel.size=", len(tokenChannel))
@@ -128,10 +129,17 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 		//}
 
 		case xml.EndElement:
+			if isJustSpacesAndLinefeeds(thisNode.tempCharData) {
+				if DEBUG {
+					log.Printf("EndElement: " + thisNode.name + " EMPTY TEXT [" + thisNode.tempCharData + "]")
+				}
+			}
 			if !thisNode.hasCharData && !isJustSpacesAndLinefeeds(thisNode.tempCharData) {
 				thisNode.nodeTypeInfo.checkFieldType(thisNode.tempCharData)
 				thisNode.hasCharData = true
 				thisNode.tempCharData = ""
+			} else {
+
 			}
 
 			depth -= 1
