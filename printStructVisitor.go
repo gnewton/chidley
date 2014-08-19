@@ -39,7 +39,8 @@ func (v *PrintStructVisitor) Visit(node *Node) bool {
 
 	attributes := v.globalTagAttributes[nk(node)]
 
-	if len(node.children) > 0 || len(attributes) > 0 {
+	//if len(node.children) > 0 || len(attributes) > 0 {
+	if true {
 		//if true {
 		//if len(node.children) > 0 {
 
@@ -83,8 +84,9 @@ func (pn *PrintStructVisitor) printInternalFields(n *Node) {
 	for _, v := range n.children {
 		field = "\t" + v.makeType(namePrefix, nameSuffix) + " "
 
-		childAttributes := pn.globalTagAttributes[nk(v)]
-		if len(v.children) == 0 && len(childAttributes) == 0 {
+		//childAttributes := pn.globalTagAttributes[nk(v)]
+		//if len(v.children) == 0 && len(childAttributes) == 0 {
+		if false {
 			//if false {
 			//if len(v.children) == 0 {
 			if v.repeats {

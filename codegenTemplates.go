@@ -1,7 +1,13 @@
 package main
 
-type XmlType struct {
-	NameType, XMLName, XMLNameUpper, XMLSpace, Structs, Filename string
+type XmlInfo struct {
+	BaseXML           *XMLType
+	OneLevelDownXML   []*XMLType
+	Structs, Filename string
+}
+
+type XMLType struct {
+	NameType, XMLName, XMLNameUpper, XMLSpace string
 }
 
 const codeTemplate = `
@@ -35,6 +41,7 @@ const (
 
 var toJson bool = false
 var toXml bool = false
+var oneLevelDown bool = false
 var countAll bool = false
 var musage bool = false
 
@@ -51,6 +58,7 @@ func init() {
 	flag.BoolVar(&toJson, "J", toJson, "Convert to JSON")
 	flag.BoolVar(&toXml, "X", toXml, "Convert to XML")
 	flag.BoolVar(&countAll, "C", countAll, "Count each instance of XML tags")
+	flag.BoolVar(&oneLevelDown, "s", oneLevelDown, "Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/")
 	flag.BoolVar(&musage, "h", musage, "Usage")
 	flag.StringVar(&filename, "f", filename, "XML file or URL to read in")
 }
@@ -109,16 +117,31 @@ func handleFeed(se xml.StartElement, decoder *xml.Decoder, outFlag *bool) {
 	if outFlag == &countAll {
 		incrementCounter(se.Name.Space, se.Name.Local)
 	} else {
-		if se.Name.Local == "{{.XMLName}}" && se.Name.Space == "{{.XMLSpace}}" {
-			var item {{.NameType}}
-			decoder.DecodeElement(&item, &se)
-			switch outFlag {
-			case &toJson:
-				writeJson(item)
-			case &toXml:
-				writeXml(item)
-			}
-		}
+                if !oneLevelDown{
+        		if se.Name.Local == "{{.BaseXML.XMLName}}" && se.Name.Space == "{{.BaseXML.XMLSpace}}" {
+	        	      var item {{.BaseXML.NameType}}
+			      decoder.DecodeElement(&item, &se)
+			      switch outFlag {
+			      case &toJson:
+				      writeJson(item)
+			      case &toXml:
+				      writeXml(item)
+			      }
+		      }
+                }else{
+                   {{ range .OneLevelDownXML }}
+        		if se.Name.Local == "{{.XMLName}}" && se.Name.Space == "{{.XMLSpace}}" {
+	        	      var item {{.NameType}}
+			      decoder.DecodeElement(&item, &se)
+			      switch outFlag {
+			      case &toJson:
+				      writeJson(item)
+			      case &toXml:
+				      writeXml(item)
+			      }
+		      }
+                   {{ end }}
+               }
 	}
 }
 

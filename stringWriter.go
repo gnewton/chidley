@@ -7,7 +7,6 @@ type stringWriter struct {
 func (w *stringWriter) open(s string, lineChannel chan string) error {
 	doneChannel = make(chan bool)
 	go w.writer(lineChannel, doneChannel)
-
 	return nil
 }
 

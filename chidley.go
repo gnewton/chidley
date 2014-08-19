@@ -112,7 +112,6 @@ func main() {
 	lineChannel := make(chan string, 100)
 
 	switch {
-
 	case codeGenConvert:
 		sWriter := new(stringWriter)
 		writer = sWriter
@@ -120,21 +119,21 @@ func main() {
 		printStructVisitor := new(PrintStructVisitor)
 		printStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
 		printStructVisitor.Visit(ex.root)
-		//printChildrenChildren(ex.root)
 		close(lineChannel)
 		sWriter.close()
 
-		fmt.Println(sWriter.s)
-
-		x := XmlType{
-			NameType:     ex.firstNode.makeType(namePrefix, nameSuffix),
+		xt := XMLType{NameType: ex.firstNode.makeType(namePrefix, nameSuffix),
 			XMLName:      ex.firstNode.name,
 			XMLNameUpper: capitalizeFirstLetter(ex.firstNode.name),
 			XMLSpace:     ex.firstNode.space,
-			Filename:     getFullPath(sourceName),
-			Structs:      sWriter.s,
 		}
 
+		x := XmlInfo{
+			BaseXML:         &xt,
+			OneLevelDownXML: makeOneLevelDown(ex.root),
+			Filename:        getFullPath(sourceName),
+			Structs:         sWriter.s,
+		}
 		t := template.Must(template.New("letter").Parse(codeTemplate))
 
 		err := t.Execute(os.Stdout, x)
@@ -148,13 +147,10 @@ func main() {
 		writer.open("", lineChannel)
 		printStructVisitor := new(PrintStructVisitor)
 		printStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
-		//visitNode(ex.root, printStructVisitor)
 		printStructVisitor.Visit(ex.root)
 		close(lineChannel)
 		break
 	}
-
-	//writer.close()
 
 }
 
@@ -211,6 +207,26 @@ func countNumberOfBoolsSet(a []*bool) int {
 	return counter
 }
 
+func makeOneLevelDown(node *Node) []*XMLType {
+	var children []*XMLType
+
+	for _, np := range node.children {
+		if np == nil {
+			continue
+		}
+		for _, n := range np.children {
+			if n == nil {
+				continue
+			}
+			x := XMLType{NameType: n.makeType(namePrefix, nameSuffix),
+				XMLName:      n.name,
+				XMLNameUpper: capitalizeFirstLetter(n.name),
+				XMLSpace:     n.space}
+			children = append(children, &x)
+		}
+	}
+	return children
+}
 func printChildrenChildren(node *Node) {
 	for k, v := range node.children {
 		log.Print(k)
