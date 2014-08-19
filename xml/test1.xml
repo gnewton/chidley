@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<docs>
+  <doc type="book">
+    <title>Dune</title>
+    <author>
+      <lastName>Herbert</lastName>
+      <firstName>Frank</firstName>
+    </author>
+  </doc>
+  <doc type="article">
+    <title>Brave New Wold</title>
+    <author>
+      <lastName>Huxley</lastName>
+      <firstName>Aldous</firstName>
+    </author>
+  </doc>
+</docs>

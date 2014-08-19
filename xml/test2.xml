@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<docs
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:p1="http://www.w3.org/1998/Math/MathML"
+    xmlns:p2="http://www.opentox.org/algorithmTypes.owl#">
+  <doc p1:foo="hello" dc:foo="bye">47</doc>
+  <doc p2:foo="smith" dc:foo="fox">4000</doc>
+</docs>

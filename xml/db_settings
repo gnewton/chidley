@@ -1,5 +1,0 @@
-<Parameter name="type">postgis</Parameter>
-    <Parameter name="host">www.example.org</Parameter>
-    <Parameter name="port">5433</Parameter>     
-    <Parameter name="user">david</Parameter>
-    <Parameter name="dbname">geo</Parameter>
