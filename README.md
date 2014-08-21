@@ -6,7 +6,7 @@
 
 ## Usage
 ```
-`$ chidley -h
+$ chidley -h
 Usage of ./chidley:
   -G=false: Only write generated Go structs to stdout
   -W=false: Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout
@@ -25,6 +25,7 @@ Usage of ./chidley:
 ###Example:
 ```
 $ chidley -W 
+```
 
 ##Usage of compiled code
 If the output of `chidley` is directed to `chidCodeGen/C.go`, and `cd chidCodeGen; go build` is run, the compiled Go binary `chidCodeGen` is created.
