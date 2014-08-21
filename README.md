@@ -27,12 +27,19 @@ Usage of ./chidley:
 $ chidley -W 
 ```
 
-##Usage of compiled code
+##Usage of *compiled code* binary
 If the output of `chidley` is directed to `chidCodeGen/C.go`, and `cd chidCodeGen; go build` is run, the compiled Go binary `chidCodeGen` is created.
 
 
 
+##Limitations
+`chidley` is constrained by the underlying Go [xml package](http://golang.org/pkg/encoding/xml/)
+Some of these limitations include:
+* The default encoding supported by `encoder/xml` is UTF-8. 
+It is possible to make an xml decoder that handles charsets other than UTF-8 (see https://stackoverflow.com/questions/6002619/unmarshal-an-iso-8859-1-xml-input-in-go). 
+It is possible that this method might used to extend `chidley` to include a small set of popular charsets.
+* g
 
 ##Name
-`chidley` is names after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley)
+`chidley` is names after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
 
