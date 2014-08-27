@@ -827,6 +827,7 @@ $
 ####Generated program: count tags
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -c | sort -n
+0:36.58 10460
 1 _:Edition
 1 _:Identifier
 1 _:PubmedArticleSet
@@ -941,7 +942,6 @@ $ /usr/bin/time -f "%E %M" ./pubmed -c | sort -n
 350116 _:Year
 439020 _:DescriptorName
 439020 _:MeshHeading
-0:36.58 10460
 $
 ```
 
