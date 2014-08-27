@@ -27,7 +27,10 @@ $
 ```
 
 ### Specific Usages:
-* `chidley -W ...`: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled.
+* `chidley -W ...`: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
+** convert the XML file to JSON
+** or convert the XML file to XML (useful for validation)
+** or count the # of elements (space, local) in the XML file
 * `chidley -G ...`: writes just the Go structs that represent the input XML. For incorporation into the user's code base.
 
 
