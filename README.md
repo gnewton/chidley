@@ -1279,7 +1279,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
  "MedlineCitation": {
 ```
 
-##### Sample of generated JSON
+##### Sample of generated XML to XML
 ```
 $ ./pubmed -x -s |head -100
   <Chi_PubmedArticle>
