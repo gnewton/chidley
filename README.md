@@ -121,7 +121,7 @@ $ ./test1 -c
 ###Example `chidley -G`:
 Just prints out the Go structs to standard out:
 ```
-chidley -G xml/test1.xml
+$ chidley -G xml/test1.xml
 type Chi_root struct {
 	Chi_docs *Chi_docs`xml:" docs,omitempty" json:"docs,omitempty"`
 }
@@ -158,16 +158,17 @@ type Chi_firstName struct {
 XML names can contain dots `.` and hyphens or dashes `-`. These do not work as valid Go struct identifiers. These are mapped as:
 * `"-": "_"`
 * `".": "_dot_"`
+
 Note that the original XML names are used in the struct xml annotations for the element.
 
 ### Go struct name prefix
-`chidley` by default prepends a prefix to struct identifiers. The default is "Chi" but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
+`chidley` by default prepends a prefix to struct identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
 
 ##Limitations
 `chidley` is constrained by the underlying Go [xml package](http://golang.org/pkg/encoding/xml/)
 Some of these limitations include:
 * The default encoding supported by `encoder/xml` is UTF-8. Right now `chidley` does not support additional charsets. 
-An xml decoder that handles charsets other than UTF-8 (see https://stackoverflow.com/questions/6002619/unmarshal-an-iso-8859-1-xml-input-in-go). 
+An xml decoder that handles charsets other than UTF-8 is possible (see example https://stackoverflow.com/questions/6002619/unmarshal-an-iso-8859-1-xml-input-in-go). 
 It is possible that this method might be used in the future to extend `chidley` to include a small set of popular charsets.
 * For vanilla XML with no namespaces, there should be no problem using `chidley`
 
@@ -949,6 +950,8 @@ $
 57 seconds for 337MB XML; resident size: 2.9GB
 
 ##### With streaming `-s`
+Streaming decodes using the XML elements that are one level down from the top level container element.
+```
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
 0:58.72 15944
 ```
