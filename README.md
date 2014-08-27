@@ -5,6 +5,8 @@
 * or will just generate the Go structs that represent the input XML
 * or converts XML to XML (useful for validation) 
 
+Author: G. Newton
+
 ## Usage
 ```
 $ chidley -h
@@ -117,6 +119,8 @@ $ ./test1 -c
 2 _:last-name
 2 _:firstName
 ```
+
+Note the underscore before the colon indicates there is no (or the default) namespace for the element.
 
 ###Example `chidley -G`:
 Just prints out the Go structs to standard out:
@@ -937,6 +941,9 @@ $ /usr/bin/time -f "%E %M" ./pubmed -c
 0:36.58 10460
 $
 ```
+
+Note the underscore before the colon indicates there is no (or the default) namespace for the element.
+
 36 seconds for 337MB XML; resident size: 10.5MB
 
 ####Generated program: convert XML to JSON
@@ -1270,4 +1277,109 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
 }
 {
  "MedlineCitation": {
+```
+
+##### Sample of generated JSON
+```
+$ ./pubmed -x -s |head -100
+  <Chi_PubmedArticle>
+      <MedlineCitation Owner="NLM" Status="MEDLINE" VersionDate="" VersionID="">
+          <Article PubModel="Print">
+              <Abstract>
+                  <AbstractText Label="" NlmCategory="">A review on the operative methods for prophylaxis of urological complications (fistulas and strictures) due to radical hysterectomy with systemic dissection of lymph nodes is described. The authors recommend the method of T. H. Green as the most effective method. A new method for protection of the ureter with flaps, formed as a &#34;leg&#34; from omentum majus, is proposed. The modification has been used in 20 patients without postoperative complications. The method is recommended in cases, when postoperative stenosis or strictures of the ureters are expected as well as when postoperative irradiation is forthcoming.</AbstractText>
+              </Abstract>
+              <ArticleTitle>[A method for preventing the urologic complications connected with the surgical treatment of cancer of the cervix uteri].</ArticleTitle>
+              <AuthorList CompleteYN="Y" Type="">
+                  <Author ValidYN="Y">
+                      <ForeName>T</ForeName>
+                      <Initials>T</Initials>
+                      <LastName>Kŭrlov</LastName>
+                  </Author>
+                  <Author ValidYN="Y">
+                      <ForeName>N</ForeName>
+                      <Initials>N</Initials>
+                      <LastName>Vasilev</LastName>
+                  </Author>
+              </AuthorList>
+              <Journal>
+                  <ISOAbbreviation>Akush Ginekol (Sofiia)</ISOAbbreviation>
+                  <ISSN IssnType="Print">0324-0959</ISSN>
+                  <JournalIssue CitedMedium="Print">
+                      <Issue>1</Issue>
+                      <PubDate>
+                          <Year>1990</Year>
+                      </PubDate>
+                      <Volume>29</Volume>
+                  </JournalIssue>
+                  <Title>Akusherstvo i ginekologii͡a</Title>
+              </Journal>
+              <Language>bul</Language>
+              <Pagination>
+                  <MedlinePgn>55-7</MedlinePgn>
+              </Pagination>
+              <PublicationTypeList>
+                  <PublicationType>English Abstract</PublicationType>
+                  <PublicationType>Journal Article</PublicationType>
+              </PublicationTypeList>
+              <VernacularTitle>Metod za profilaktika na urologichnite uslozhneniia, svŭrzani s operativnoto lechenie na raka na matochnata shiĭka.</VernacularTitle>
+          </Article>
+          <CitationSubset>IM</CitationSubset>
+          <DateCompleted>
+              <Day>22</Day>
+              <Month>08</Month>
+              <Year>1990</Year>
+          </DateCompleted>
+          <DateCreated>
+              <Day>22</Day>
+              <Month>08</Month>
+              <Year>1990</Year>
+          </DateCreated>
+          <DateRevised>
+              <Day>15</Day>
+              <Month>11</Month>
+              <Year>2006</Year>
+          </DateRevised>
+          <MedlineJournalInfo>
+              <Country>BULGARIA</Country>
+              <ISSNLinking>0324-0959</ISSNLinking>
+              <MedlineTA>Akush Ginekol (Sofiia)</MedlineTA>
+              <NlmUniqueID>0370455</NlmUniqueID>
+          </MedlineJournalInfo>
+          <MeshHeadingList>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Female</DescriptorName>
+              </MeshHeading>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Humans</DescriptorName>
+              </MeshHeading>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Hysterectomy</DescriptorName>
+                  <QualifierName MajorTopicYN="N">methods</QualifierName>
+              </MeshHeading>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Lymph Node Excision</DescriptorName>
+                  <QualifierName MajorTopicYN="N">methods</QualifierName>
+              </MeshHeading>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Postoperative Complications</DescriptorName>
+                  <QualifierName MajorTopicYN="N">etiology</QualifierName>
+                  <QualifierName MajorTopicYN="Y">prevention &amp; control</QualifierName>
+              </MeshHeading>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Urologic Diseases</DescriptorName>
+                  <QualifierName MajorTopicYN="N">etiology</QualifierName>
+                  <QualifierName MajorTopicYN="Y">prevention &amp; control</QualifierName>
+              </MeshHeading>
+              <MeshHeading>
+                  <DescriptorName MajorTopicYN="N" Type="">Uterine Cervical Neoplasms</DescriptorName>
+                  <QualifierName MajorTopicYN="N">complications</QualifierName>
+                  <QualifierName MajorTopicYN="Y">surgery</QualifierName>
+              </MeshHeading>
+          </MeshHeadingList>
+          <PMID Version="1">2372101</PMID>
+      </MedlineCitation>
+      <PubmedData>
+          <ArticleIdList>
+              <ArticleId IdType="pubmed">2372101</ArticleId>
+          </ArticleIdList>
 ```
