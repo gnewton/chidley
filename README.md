@@ -166,7 +166,7 @@ XML names can contain dots `.` and hyphens or dashes `-`. These do not work as v
 * `"-": "_"`
 * `".": "_dot_"`
 
-Note that the original XML names are used in the struct xml annotations for the element.
+Note that the original XML names are used in the struct XML and JSON annotations for the element.
 
 ### Go struct name prefix
 `chidley` by default prepends a prefix to struct identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
