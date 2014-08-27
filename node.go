@@ -77,13 +77,6 @@ func makeTypeGeneric(name string, space string, prefix string, suffix string) st
 	if space != "" {
 		spaceTag = space + "_"
 	}
-	if prefix != "" {
-		prefix = prefix + "_"
-	}
-
-	if suffix != "" {
-		suffix = "_" + suffix
-	}
 	return prefix + spaceTag + cleanName(name) + suffix
 
 }

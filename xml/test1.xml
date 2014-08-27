@@ -3,14 +3,14 @@
   <doc type="book">
     <title>Dune</title>
     <author>
-      <lastName>Herbert</lastName>
+      <last-name>Herbert</last-name>
       <firstName>Frank</firstName>
     </author>
   </doc>
   <doc type="article">
     <title>Brave New Wold</title>
     <author>
-      <lastName>Huxley</lastName>
+      <last-name>Huxley</last-name>
       <firstName>Aldous</firstName>
     </author>
   </doc>

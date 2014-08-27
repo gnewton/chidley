@@ -15,13 +15,15 @@ var DEBUG = false
 var progress = false
 var attributePrefix = "Attr"
 var structsToStdout = false
+var nameSpaceInJsonName = false
 var prettyPrint = false
 var codeGenConvert = false
 var readFromStandardIn = false
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
-var namePrefix = "Chi"
-var nameSuffix = "Type"
+var namePrefix = "Chi_"
+var nameSuffix = ""
+var xmlName = false
 var url = false
 var useType = false
 
@@ -42,12 +44,15 @@ func init() {
 	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
 
 	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")
-	flag.BoolVar(&progress, "r", progress, "Progress: every 50000 elements")
+	flag.BoolVar(&progress, "r", progress, "Progress: every 50000 input tags (elements)")
 	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
-	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to element names")
-	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to element names")
+	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
+	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to struct (element) names")
+	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
+	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
+
 }
 
 func handleParameters() error {
@@ -125,9 +130,9 @@ func main() {
 		sWriter := new(stringWriter)
 		writer = sWriter
 		writer.open("", lineChannel)
-		printStructVisitor := new(PrintStructVisitor)
-		printStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
-		printStructVisitor.Visit(ex.root)
+		printGoStructVisitor := new(PrintGoStructVisitor)
+		printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+		printGoStructVisitor.Visit(ex.root)
 		close(lineChannel)
 		sWriter.close()
 
@@ -143,7 +148,7 @@ func main() {
 			Filename:        getFullPath(sourceName),
 			Structs:         sWriter.s,
 		}
-		t := template.Must(template.New("letter").Parse(codeTemplate))
+		t := template.Must(template.New("chidleyGen").Parse(codeTemplate))
 
 		err := t.Execute(os.Stdout, x)
 		if err != nil {
@@ -154,10 +159,11 @@ func main() {
 	case structsToStdout:
 		writer = new(stdoutWriter)
 		writer.open("", lineChannel)
-		printStructVisitor := new(PrintStructVisitor)
-		printStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType)
-		printStructVisitor.Visit(ex.root)
+		printGoStructVisitor := new(PrintGoStructVisitor)
+		printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+		printGoStructVisitor.Visit(ex.root)
 		close(lineChannel)
+		writer.close()
 		break
 	}
 

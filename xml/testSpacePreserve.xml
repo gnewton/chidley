@@ -1,0 +1,12 @@
+<poem xml:space="default">
+<!-- From http://msdn.microsoft.com/en-us/library/ms256097%28v=vs.110%29.aspx  -->
+  <author xml:space="default">
+    <givenName xml:space="default">Alix</givenName>
+    <familyName xml:space="default">Krakowski</familyName>
+  </author>
+  <verse xml:space="preserve">
+    <line xml:space="preserve">  Roses   are  red,</line>
+    <line xml:space="preserve">  Violets  are  blue.  </line>
+    <signature xml:space="default">-Alix</signature>
+  </verse>
+</poem>

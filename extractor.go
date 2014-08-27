@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"io"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -15,7 +14,6 @@ var nameMapper = map[string]string{
 }
 
 type Extractor struct {
-	//globalTagAttributes map[string](map[string]string)
 	globalTagAttributes    map[string]([]*FQN)
 	globalTagAttributesMap map[string]bool
 	globalNodeMap          map[string]*Node
@@ -47,7 +45,7 @@ func (ex *Extractor) extract() error {
 	handleTokensDoneChannel := make(chan bool)
 
 	go handleTokens(tokenChannel, ex, handleTokensDoneChannel)
-	//counter := 0
+
 	for {
 		token, err := decoder.Token()
 		if err != nil {
@@ -59,12 +57,7 @@ func (ex *Extractor) extract() error {
 		if token == nil {
 			break
 		}
-
 		tokenChannel <- xml.CopyToken(token)
-		// counter += 1
-		// if counter%10000 == 0 {
-		// 	log.Print("tokenChannel.size=", len(tokenChannel))
-		// }
 	}
 	close(tokenChannel)
 	_ = <-handleTokensDoneChannel
@@ -129,23 +122,22 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 		//}
 
 		case xml.EndElement:
-			if isJustSpacesAndLinefeeds(thisNode.tempCharData) {
-				if DEBUG {
-					log.Printf("EndElement: " + thisNode.name + " EMPTY TEXT [" + thisNode.tempCharData + "]")
-				}
+			thisNode.nodeTypeInfo.checkFieldType(thisNode.tempCharData)
+
+			if DEBUG {
+				log.Printf("EndElement: %+v\n", element)
+				log.Printf("[[" + thisNode.tempCharData + "]]")
+				log.Printf("Char is empty: ", isJustSpacesAndLinefeeds(thisNode.tempCharData))
 			}
 			if !thisNode.hasCharData && !isJustSpacesAndLinefeeds(thisNode.tempCharData) {
-				thisNode.nodeTypeInfo.checkFieldType(thisNode.tempCharData)
 				thisNode.hasCharData = true
-				thisNode.tempCharData = ""
+
 			} else {
 
 			}
-
+			thisNode.tempCharData = ""
 			depth -= 1
-			if DEBUG {
-				log.Printf("EndElement: %+v\n", element)
-			}
+
 			for key, c := range thisNode.childCount {
 				if c > 1 {
 					thisNode.children[key].repeats = true
@@ -169,102 +161,6 @@ func space(n int) string {
 	return s
 }
 
-func (ex *Extractor) printTree(n *Node, lineChannel chan string, d int, startName string, foundStartString bool) {
-	if n.name == startName {
-		foundStartString = true
-	}
-	repeats := ""
-	if n.repeats {
-		repeats = "*"
-	}
-	if foundStartString {
-		lineChannel <- indent(d) + n.name + repeats
-		d += 1
-	}
-
-	for _, v := range n.children {
-		ex.printTree(v, lineChannel, d, startName, foundStartString)
-	}
-}
-
-func (ex *Extractor) printStruct(n *Node, lineChannel chan string, startName string, foundStartString bool, alreadyPrinted map[string]bool) {
-	_, ok := alreadyPrinted[nk(n)]
-	if ok {
-		return
-	}
-	alreadyPrinted[nk(n)] = true
-
-	if nk(n) == startName {
-		foundStartString = true
-	}
-	if foundStartString {
-		if len(n.children) > 0 {
-			lineChannel <- "type " + n.makeType(namePrefix, nameSuffix) + " struct {"
-			ex.printInternalFields(n, lineChannel)
-			lineChannel <- "}\n"
-		}
-	}
-
-	for _, v := range n.children {
-		ex.printStruct(v, lineChannel, startName, foundStartString, alreadyPrinted)
-	}
-}
-
-func (ex *Extractor) printInternalFields(n *Node, lineChannel chan string) {
-	attributes := ex.globalTagAttributes[nk(n)]
-	//fields := makeAttributes(attributes, ex.nameSpaceTagMap)
-	var fields []string
-	var xmlName string
-	if n.space != "" {
-		xmlName = "\tXMLName  xml.Name `xml:\"" + n.space + " " + n.name + ",omitempty\" json:\",omitempty\"`"
-	} else {
-		xmlName = "\tXMLName  xml.Name `xml:\"" + n.name + ",omitempty\" json:\",omitempty\"`"
-	}
-	fields = append(fields, xmlName)
-
-	var field string
-
-	for _, v := range n.children {
-		field = "\t " + v.makeType(namePrefix, nameSuffix) + " "
-		//childAttributes := ex.globalTagAttributes[nk(v)]
-		//if len(v.children) == 0 && len(childAttributes) == 0 {
-		if len(v.children) == 0 {
-			if v.repeats {
-				field += "[]"
-			}
-			field += findType(v.nodeTypeInfo, ex.useType)
-
-		} else {
-			if v.repeats {
-				field += "[]"
-			} else {
-				field += "*"
-			}
-			field += v.makeType(namePrefix, nameSuffix)
-		}
-		var xmlString string
-		if v.space != "" {
-			xmlString = " `xml:\"" + v.space + " " + v.name + ",omitempty\" json:\",omitempty\"`"
-		} else {
-			xmlString = " `xml:\"" + v.name + ",omitempty\" json:\",omitempty\"`"
-		}
-		field += xmlString
-		fields = append(fields, field)
-	}
-
-	if len(n.children) == 0 && len(attributes) > 0 || n.hasCharData {
-		xmlString := " `xml:\",chardata\" json:\",omitempty\"`"
-		//charField := "\t" + capitalizeFirstLetter(n.name) + " string" + xmlString
-		charField := "\t" + "Text" + " string" + xmlString
-		fields = append(fields, charField)
-	}
-	sort.Strings(fields)
-
-	for i := 0; i < len(fields); i++ {
-		lineChannel <- fields[i]
-	}
-}
-
 func (ex *Extractor) findNewNameSpaces(attrs []xml.Attr) {
 	for _, attr := range attrs {
 		if attr.Name.Space == "xmlns" {
@@ -284,6 +180,7 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 	var child *Node
 	var attributes []*FQN
 	key := nks(space, name)
+
 	child, ok := thisNode.children[key]
 	// Does thisNode node already exist as child
 	//fmt.Println(space, name)
@@ -312,7 +209,6 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 	for _, attr := range startElement.Attr {
 		bigKey := key + "_" + attr.Name.Space + "_" + attr.Name.Local
 		_, ok := ex.globalTagAttributesMap[bigKey]
-		//_, _ = ex.globalTagAttributesMap[bigKey]
 		if !ok {
 			fqn := new(FQN)
 			fqn.name = attr.Name.Local

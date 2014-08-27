@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<docs>
+  <doc>number one</doc>
+  <p1:doc xmlns:p1="http://test.org/1">number two</p1:doc>
+</docs>

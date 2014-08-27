@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- From question in golang Google groups https://groups.google.com/d/msg/golang-nuts/IzlH_ZLWC4A/F6jOMR-EWvIJ 
+     Original XML at: http://docs.aws.amazon.com/AmazonCloudFront/latest/APIReference/GetDistribution.html
+     Corrected as indicated in: https://groups.google.com/d/msg/golang-nuts/IzlH_ZLWC4A/uU2hNH_4idMJ
+-->
+<Distribution xmlns="http://cloudfront.amazonaws.com/doc/2014-05-31/">
+   <Id>ID for the distribution</Id>
+   <Status>Deployed | InProgress</Status>
+   <LastModifiedTime>creation date and time in 
+      ISO 8601 format</LastModifiedTime>
+   <InProgressInvalidationBatches>number of invalidation batches being 
+      processed for this distribution</InProgressInvalidationBatches>
+   <DomainName>CloudFront domain name assigned to the 
+      distribution</DomainName>
+   <ActiveTrustedSigners>
+      <Enabled>true | false</Enabled>
+      <Quantity>number of unique trusted signers from 
+         all cache behaviors</Quantity>
+      <Items>
+         <Signer>
+            <AwsAccountNumber>self | AWS account number</AwsAccountNumber>
+            <KeyPairIds>
+               <Quantity>number of active key pairs for 
+                  AwsAccountNumber</Quantity>
+               <Items>
+                  <KeyPairId>active key pair associated with 
+                     AwsAccountNumber</KeyPairId>
+               </Items>
+            </KeyPairIds>
+         </Signer>
+      </Items>
+   </ActiveTrustedSigners>
+   <DistributionConfig>
+      <CallerReference>unique description for this
+         distribution config</CallerReference>
+      <Aliases>
+         <Quantity>number of CNAME aliases</Quantity>
+         <!-- Optional. Omitted when Quantity = 0. -->
+         <Items>
+            <CNAME>CNAME alias</CNAME>
+         </Items>
+      </Aliases>
+      <DefaultRootObject>URL for default root object</DefaultRootObject>
+      <Origins>
+         <Quantity>number of origins</Quantity>
+         <Items>
+            <Origin>
+               <Id>unique identifier for this origin</Id>
+               <DomainName>domain name of origin</DomainName>
+               <!-- CloudFront returns the S3OriginConfig element 
+                  only if you use an Amazon S3 origin. --> 
+               <S3OriginConfig>
+                  <OriginAccessIdentity>origin-access-identity/
+                     cloudfront/Id</OriginAccessIdentity>
+               </S3OriginConfig>
+               <!-- CloudFront returns the CustomOriginConfig element 
+                  only if you use a custom origin. -->
+               <CustomOriginConfig>
+                  <HTTPPort>HTTP port that the custom origin 
+                     listens on</HTTPPort>
+                  <HTTPSPort>HTTPS port that the custom origin 
+                     listens on</HTTPSPort>
+                  <OriginProtocolPolicy>http-only | 
+                     match-viewer</OriginProtocolPolicy>
+               </CustomOriginConfig>
+            </Origin>
+         </Items>
+      </Origins>
+      <DefaultCacheBehavior>
+         <TargetOriginId>ID of the origin that the default cache behavior 
+            applies to</TargetOriginId>
+         <ForwardedValues>
+            <QueryString>true | false</QueryString>
+            <Cookies>
+               <Forward>all | whitelist | none</Forward>
+               <!-- Required when Forward = whitelist, omitted otherwise. -->
+               <WhitelistedNames>
+                  <Quantity>number of cookie names to 
+                     forward to origin</Quantity>
+                  <Items>
+                     <Name>name of a cookie to forward to the origin</Name>
+                  </Items>
+               </WhitelistedNames>
+            </Cookies>
+            <Headers>
+               <Quantity>number of headers to forward to origin</Quantity>
+               <Items>
+                  <Name>header</Name>
+               </Items>
+            </Headers>
+         </ForwardedValues>
+         <TrustedSigners>
+            <Enabled>true | false</Enabled>
+            <Quantity>number of trusted signers</Quantity>
+            <!-- Optional. Omitted when Quantity = 0. -->
+            <Items>
+               <AwsAccountNumber>self | AWS account that can create 
+                  signed URLs</AwsAccountNumber>
+            </Items>
+         </TrustedSigners>
+         <ViewerProtocolPolicy>allow-all | 
+            redirect-to-https | https-only</ViewerProtocolPolicy>
+         <MinTTL>minimum TTL for objects in seconds</MinTTL>
+         <AllowedMethods>
+            <Quantity>2 | 7</Quantity>
+            <Items>
+               <!-- If you only want to use CloudFront to serve your content 
+                  from edge locations, specify only GET and HEAD. -->
+               <Method>GET</Method>
+               <Method>HEAD</Method>
+               <!-- If you want to use any methods in addition to 
+                  GET and HEAD, you must specify all methods. -->
+               <Method>DELETE</Method>
+               <Method>GET</Method>
+               <Method>HEAD</Method>
+               <Method>OPTIONS</Method>
+               <Method>PATCH</Method>
+               <Method>POST</Method>
+               <Method>PUT</Method>
+            </Items>
+         </AllowedMethods>
+         <SmoothStreaming>true | false</SmoothStreaming>
+      </DefaultCacheBehavior>
+      <CacheBehaviors>
+         <Quantity>number of cache behaviors</Quantity>
+         <!-- Optional. Omitted when Quantity = 0. -->
+         <Items>
+            <CacheBehavior>
+               <PathPattern>pattern that specifies files that this 
+                  cache behavior applies to</PathPattern>
+               <TargetOriginId>ID of the origin that this cache behavior 
+                  applies to</TargetOriginId>
+               <ForwardedValues>
+                  <QueryString>true | false</QueryString>
+                  <Cookies>
+                     <Forward>all | whitelist | none</Forward>
+                     <!-- Required when Forward = whitelist, 
+                        omitted otherwise. -->
+                     <WhitelistedNames>
+                        <Quantity>number of cookie names to 
+                           forward to origin</Quantity>
+                        <Items>
+                           <Name>name of a cookie to forward to 
+                              the origin</Name>
+                        </Items>
+                     </WhitelistedNames>
+                  </Cookies>
+                  <Headers>
+                     <Quantity>number of headers to forward to origin</Quantity>
+                     <Items>
+                        <Name>header</Name>
+                     </Items>
+                  </Headers>
+               </ForwardedValues>
+               <TrustedSigners>
+                  <Enabled>true | false</Enabled>
+                  <Quantity>number of trusted signers</Quantity>
+                  <!-- Optional. Omitted when Quantity = 0. -->
+                  <Items>
+                     <AwsAccountNumber>self | AWS account that can create 
+                        signed URLs</AwsAccountNumber>
+                  </Items>
+               </TrustedSigners>
+               <ViewerProtocolPolicy>allow-all | 
+                  redirect-to-https | https-only</ViewerProtocolPolicy>
+               <MinTTL>minimum TTL in seconds for files 
+                  specified by PathPattern</MinTTL>
+               <AllowedMethods>
+                  <Quantity>2 | 7</Quantity>
+                  <Items>
+                    <!-- If you only want to use CloudFront to serve your 
+                        content from edge locations, specify only 
+                        GET and HEAD. -->
+                     <Method>GET</Method>
+                     <Method>HEAD</Method>
+                     <!-- If you want to use any methods in addition to 
+                        GET and HEAD, you must specify all methods. -->
+                     <Method>DELETE</Method>
+                     <Method>GET</Method>
+                     <Method>HEAD</Method>
+                     <Method>OPTIONS</Method>
+                     <Method>PATCH</Method>
+                     <Method>POST</Method>
+                     <Method>PUT</Method>
+                  </Items>
+               </AllowedMethods>
+               <SmoothStreaming>true | false</SmoothStreaming>
+            </CacheBehavior>
+         </Items>
+      </CacheBehaviors>
+      <CustomErrorResponses>
+         <Quantity>number of custom error responses</Quantity>
+         <Items>
+            <CustomErrorResponse>
+               <ErrorCode>HTTP status code for which you want to 
+                  customize the response</ErrorCode>
+               <ResponsePagePath>path to custom error page</ResponsePagePath>
+               <ResponseCode>HTTP status code that you want CloudFront 
+                  to return along with the custom error page</ResponseCode>
+               <ErrorCachingMinTTL>minimum TTL for this 
+                  ErrorCode</ErrorCachingMinTTL>
+            </CustomErrorResponse>
+         </Items>
+      </CustomErrorResponses>
+      <Restrictions>
+         <GeoRestriction>
+            <RestrictionType>blacklist | whitelist | none</RestrictionType>
+            <Quantity>number of countries 
+               in the blacklist or whitelist</Quantity>
+            <!-- Optional. Omit when Quantity = 0. -->
+            <Items>
+               <Location>two-letter country code in upper case</Location>
+            </Items>
+         </GeoRestriction>
+      </Restrictions>
+      <Comment>comment about the distribution</Comment>
+      <Logging>
+         <Enabled>true | false</Enabled>
+         <IncludeCookies>true | false</IncludeCookies>
+         <Bucket>Amazon S3 bucket to save logs in</Bucket>
+         <Prefix>prefix for log filenames</Prefix>
+      </Logging>
+      <ViewerCertificate>
+         <IAMCertificateId>IAM certificate ID</IAMCertificateId> | 
+            <CloudFrontDefaultCertificate>true</CloudFrontDefaultCertificate>
+         <SSLSupportMethod>vip | sni-only</SSLSupportMethod>
+      </ViewerCertificate>
+      <PriceClass>maximum price class for the distribution</PriceClass>
+      <Enabled>true | false</Enabled>
+   </DistributionConfig>
+</Distribution>

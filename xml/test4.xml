@@ -1,0 +1,11 @@
+<docs 
+    xmlns:book="http://fake.org/book"
+    xmlns:article="http://fake.org/article"
+>
+  <book:doc>
+    A book entry
+  </book:doc>
+  <article:doc>
+    A article entry
+  </article:doc>
+</docs>
