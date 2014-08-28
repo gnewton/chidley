@@ -1487,3 +1487,6 @@ $ ./pubmed -x -s |head -100
               <ArticleId IdType="pubmed">2372101</ArticleId>
           </ArticleIdList>
 ```
+
+
+Copyright 2014 Glen Newton
