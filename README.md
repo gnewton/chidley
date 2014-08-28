@@ -1,5 +1,5 @@
 # `chidley`
-## `chidley` converts *any* XML to JSON.
+## `chidley` converts *any* XML to Go structs (and therefor to JSON)
 * By *any*, any XML that can be read by the Go [xml package](http://golang.org/pkg/encoding/xml/) decoder. 
 * Where *convert* means, generates Go code that when compiled, will convert the XML to JSON
 * or will just generate the Go structs that represent the input XML
