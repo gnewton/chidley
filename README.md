@@ -8,8 +8,10 @@
 Author: G. Newton
 
 ##How does it work (with such a small memory footprint)
-`chidley` uses the input XML to build a model of each XML element (or tag).
-It examines each instance of a tag, and builds a prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
+`chidley` uses the input XML to build a model of each XML element (aka tag).
+It examines each instance of a tag, and builds a (single) prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
+So even if there are million instances of a specific tag, there is only one model tag representation.
+Note that a tag is unique by its namespace+tagname combination (in the Go xml package parlance, [`space + local`](http://golang.org/pkg/encoding/xml/#Name).
 
 ##`chidley` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
