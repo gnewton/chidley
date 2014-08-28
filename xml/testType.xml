@@ -1,0 +1,16 @@
+
+<people>
+
+  <person>
+    <name>bill</name>
+    <age>37</age>
+    <married>true</married>
+  </person>
+
+  <person>
+    <name>sarah</name>
+    <age>24</age>
+    <married>false</married>
+  </person>
+
+</people>

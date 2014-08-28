@@ -85,7 +85,7 @@ func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
 		jsonAnnotation := makeJsonAnnotation(v.spaceTag, pn.nameSpaceInJsonName, v.name)
 		xmlAnnotation := makeXmlAnnotation(v.space, false, v.name)
 
-		annotation := "`" + xmlAnnotation + " " + jsonAnnotation + "`"
+		annotation := " `" + xmlAnnotation + " " + jsonAnnotation + "`"
 
 		field += annotation
 		fields = append(fields, field)

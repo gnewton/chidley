@@ -1,17 +1,22 @@
 #`chidley`
+
 ##`chidley` converts *any* XML to Go structs (and therefor to JSON)
 * By *any*, any XML that can be read by the Go [xml package](http://golang.org/pkg/encoding/xml/) decoder. 
 * Where *convert* means, generates Go code that when compiled, will convert the XML to JSON
 * or will just generate the Go structs that represent the input XML
 * or converts XML to XML (useful for validation) 
 
-Author: G. Newton
+Author: Glen Newton
 
 ##How does it work (with such a small memory footprint)
 `chidley` uses the input XML to build a model of each XML element (aka tag).
 It examines each instance of a tag, and builds a (single) prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
 So even if there are million instances of a specific tag, there is only one model tag representation.
 Note that a tag is unique by its namespace+tagname combination (in the Go xml package parlance, [`space + local`](http://golang.org/pkg/encoding/xml/#Name).
+###Types
+`chidley` by default makes everything a string (which is always valid for XML content), but it has a flag (`-t`) where it will detect and use the most appropriate type. 
+`chidley` tries to fit the **smallest** type. 
+That is, if all instances of a tag contain a number, and all instances are -128 to 127, then it will use an `int8` in the Go struct.
 
 ##`chidley` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
@@ -139,17 +144,17 @@ Just prints out the Go structs to standard out:
 ```
 $ chidley -G xml/test1.xml
 type Chi_root struct {
-	Chi_docs *Chi_docs`xml:" docs,omitempty" json:"docs,omitempty"`
+	Chi_docs *Chi_docs `xml:" docs,omitempty" json:"docs,omitempty"`
 }
 
 type Chi_docs struct {
-	Chi_doc []*Chi_doc`xml:" doc,omitempty" json:"doc,omitempty"`
+	Chi_doc []*Chi_doc `xml:" doc,omitempty" json:"doc,omitempty"`
 }
 
 type Chi_doc struct {
 	Attr_type string `xml:" type,attr"  json:",omitempty"`
-	Chi_author *Chi_author`xml:" author,omitempty" json:"author,omitempty"`
-	Chi_title *Chi_title`xml:" title,omitempty" json:"title,omitempty"`
+	Chi_author *Chi_author `xml:" author,omitempty" json:"author,omitempty"`
+	Chi_title *Chi_title `xml:" title,omitempty" json:"title,omitempty"`
 }
 
 type Chi_title struct {
@@ -157,8 +162,8 @@ type Chi_title struct {
 }
 
 type Chi_author struct {
-	Chi_firstName *Chi_firstName`xml:" firstName,omitempty" json:"firstName,omitempty"`
-	Chi_last_name *Chi_last_name`xml:" last-name,omitempty" json:"last-name,omitempty"`
+	Chi_firstName *Chi_firstName `xml:" firstName,omitempty" json:"firstName,omitempty"`
+	Chi_last_name *Chi_last_name `xml:" last-name,omitempty" json:"last-name,omitempty"`
 }
 
 type Chi_last_name struct {
@@ -177,7 +182,86 @@ XML names can contain dots `.` and hyphens or dashes `-`. These do not work as v
 
 Note that the original XML names are used in the struct XML and JSON annotations for the element.
 
-###Go struct name prefix
+##Type example
+```
+<people>
+
+  <person>
+    <name>bill</name>
+    <age>37</age>
+    <married>true</married>
+  </person>
+
+  <person>
+    <name>sarah</name>
+    <age>24</age>
+    <married>false</married>
+  </person>
+
+</people>
+```
+
+####Default
+```
+$ ./chidley -G xml/testType.xml
+type Chi_root struct {
+	Chi_people *Chi_people `xml:" people,omitempty" json:"people,omitempty"`
+}
+
+type Chi_people struct {
+	Chi_person []*Chi_person `xml:" person,omitempty" json:"person,omitempty"`
+}
+
+type Chi_person struct {
+	Chi_age *Chi_age `xml:" age,omitempty" json:"age,omitempty"`
+	Chi_married *Chi_married `xml:" married,omitempty" json:"married,omitempty"`
+	Chi_name *Chi_name `xml:" name,omitempty" json:"name,omitempty"`
+}
+
+type Chi_name struct {
+	Text string `xml:",chardata" json:",omitempty"`
+}
+
+type Chi_age struct {
+	Text string `xml:",chardata" json:",omitempty"`
+}
+
+type Chi_married struct {
+	Text string `xml:",chardata" json:",omitempty"`
+}
+```
+
+####Types turned on `-t`
+```
+$ ./chidley -G -t xml/testType.xml
+$ type Chi_root struct {
+	Chi_people *Chi_people `xml:" people,omitempty" json:"people,omitempty"`
+}
+
+type Chi_people struct {
+	Chi_person []*Chi_person `xml:" person,omitempty" json:"person,omitempty"`
+}
+
+type Chi_person struct {
+	Chi_age *Chi_age `xml:" age,omitempty" json:"age,omitempty"`
+	Chi_married *Chi_married `xml:" married,omitempty" json:"married,omitempty"`
+	Chi_name *Chi_name `xml:" name,omitempty" json:"name,omitempty"`
+}
+
+type Chi_name struct {
+	Text string `xml:",chardata" json:",omitempty"`
+}
+
+type Chi_age struct {
+	Text int8 `xml:",chardata" json:",omitempty"`
+}
+
+type Chi_married struct {
+	Text bool `xml:",chardata" json:",omitempty"`
+}
+```
+
+##Go struct name prefix
 `chidley` by default prepends a prefix to struct identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
 
 ##Warning
@@ -199,7 +283,7 @@ It is possible that this method might be used in the future to extend `chidley` 
 ##Name
 `chidley` is named after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
 
-##Larger & more complex examples
+##Larger & more complex example
 Using the file `xml/pubmed_xml_12750255.xml.bz2`. 
 * Compressed size: 27M
 * uncompressed size: 337M
@@ -209,17 +293,17 @@ Using the file `xml/pubmed_xml_12750255.xml.bz2`.
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -G xml/pubmed_xml_12750255.xml.bz2 
 type Chi_root struct {
-	Chi_PubmedArticleSet *Chi_PubmedArticleSet`xml:" PubmedArticleSet,omitempty" json:"PubmedArticleSet,omitempty"`
+	Chi_PubmedArticleSet *Chi_PubmedArticleSet `xml:" PubmedArticleSet,omitempty" json:"PubmedArticleSet,omitempty"`
 }
 
 type Chi_PubmedArticleSet struct {
-	Chi_PubmedArticle []*Chi_PubmedArticle`xml:" PubmedArticle,omitempty" json:"PubmedArticle,omitempty"`
-	Chi_PubmedBookArticle []*Chi_PubmedBookArticle`xml:" PubmedBookArticle,omitempty" json:"PubmedBookArticle,omitempty"`
+	Chi_PubmedArticle []*Chi_PubmedArticle `xml:" PubmedArticle,omitempty" json:"PubmedArticle,omitempty"`
+	Chi_PubmedBookArticle []*Chi_PubmedBookArticle `xml:" PubmedBookArticle,omitempty" json:"PubmedBookArticle,omitempty"`
 }
 
 type Chi_PubmedArticle struct {
-	Chi_MedlineCitation *Chi_MedlineCitation`xml:" MedlineCitation,omitempty" json:"MedlineCitation,omitempty"`
-	Chi_PubmedData *Chi_PubmedData`xml:" PubmedData,omitempty" json:"PubmedData,omitempty"`
+	Chi_MedlineCitation *Chi_MedlineCitation `xml:" MedlineCitation,omitempty" json:"MedlineCitation,omitempty"`
+	Chi_PubmedData *Chi_PubmedData `xml:" PubmedData,omitempty" json:"PubmedData,omitempty"`
 }
 
 type Chi_MedlineCitation struct {
@@ -227,26 +311,26 @@ type Chi_MedlineCitation struct {
 	Attr_Status string `xml:" Status,attr"  json:",omitempty"`
 	Attr_VersionDate string `xml:" VersionDate,attr"  json:",omitempty"`
 	Attr_VersionID string `xml:" VersionID,attr"  json:",omitempty"`
-	Chi_Article *Chi_Article`xml:" Article,omitempty" json:"Article,omitempty"`
-	Chi_ChemicalList *Chi_ChemicalList`xml:" ChemicalList,omitempty" json:"ChemicalList,omitempty"`
-	Chi_CitationSubset []*Chi_CitationSubset`xml:" CitationSubset,omitempty" json:"CitationSubset,omitempty"`
-	Chi_CommentsCorrectionsList *Chi_CommentsCorrectionsList`xml:" CommentsCorrectionsList,omitempty" json:"CommentsCorrectionsList,omitempty"`
-	Chi_DateCompleted *Chi_DateCompleted`xml:" DateCompleted,omitempty" json:"DateCompleted,omitempty"`
-	Chi_DateCreated *Chi_DateCreated`xml:" DateCreated,omitempty" json:"DateCreated,omitempty"`
-	Chi_DateRevised *Chi_DateRevised`xml:" DateRevised,omitempty" json:"DateRevised,omitempty"`
-	Chi_GeneSymbolList *Chi_GeneSymbolList`xml:" GeneSymbolList,omitempty" json:"GeneSymbolList,omitempty"`
-	Chi_GeneralNote []*Chi_GeneralNote`xml:" GeneralNote,omitempty" json:"GeneralNote,omitempty"`
-	Chi_InvestigatorList *Chi_InvestigatorList`xml:" InvestigatorList,omitempty" json:"InvestigatorList,omitempty"`
-	Chi_KeywordList *Chi_KeywordList`xml:" KeywordList,omitempty" json:"KeywordList,omitempty"`
-	Chi_MedlineJournalInfo *Chi_MedlineJournalInfo`xml:" MedlineJournalInfo,omitempty" json:"MedlineJournalInfo,omitempty"`
-	Chi_MeshHeadingList *Chi_MeshHeadingList`xml:" MeshHeadingList,omitempty" json:"MeshHeadingList,omitempty"`
-	Chi_NumberOfReferences *Chi_NumberOfReferences`xml:" NumberOfReferences,omitempty" json:"NumberOfReferences,omitempty"`
-	Chi_OtherAbstract *Chi_OtherAbstract`xml:" OtherAbstract,omitempty" json:"OtherAbstract,omitempty"`
-	Chi_OtherID []*Chi_OtherID`xml:" OtherID,omitempty" json:"OtherID,omitempty"`
-	Chi_PMID *Chi_PMID`xml:" PMID,omitempty" json:"PMID,omitempty"`
-	Chi_PersonalNameSubjectList *Chi_PersonalNameSubjectList`xml:" PersonalNameSubjectList,omitempty" json:"PersonalNameSubjectList,omitempty"`
-	Chi_SpaceFlightMission []*Chi_SpaceFlightMission`xml:" SpaceFlightMission,omitempty" json:"SpaceFlightMission,omitempty"`
-	Chi_SupplMeshList *Chi_SupplMeshList`xml:" SupplMeshList,omitempty" json:"SupplMeshList,omitempty"`
+	Chi_Article *Chi_Article `xml:" Article,omitempty" json:"Article,omitempty"`
+	Chi_ChemicalList *Chi_ChemicalList `xml:" ChemicalList,omitempty" json:"ChemicalList,omitempty"`
+	Chi_CitationSubset []*Chi_CitationSubset `xml:" CitationSubset,omitempty" json:"CitationSubset,omitempty"`
+	Chi_CommentsCorrectionsList *Chi_CommentsCorrectionsList `xml:" CommentsCorrectionsList,omitempty" json:"CommentsCorrectionsList,omitempty"`
+	Chi_DateCompleted *Chi_DateCompleted `xml:" DateCompleted,omitempty" json:"DateCompleted,omitempty"`
+	Chi_DateCreated *Chi_DateCreated `xml:" DateCreated,omitempty" json:"DateCreated,omitempty"`
+	Chi_DateRevised *Chi_DateRevised `xml:" DateRevised,omitempty" json:"DateRevised,omitempty"`
+	Chi_GeneSymbolList *Chi_GeneSymbolList `xml:" GeneSymbolList,omitempty" json:"GeneSymbolList,omitempty"`
+	Chi_GeneralNote []*Chi_GeneralNote `xml:" GeneralNote,omitempty" json:"GeneralNote,omitempty"`
+	Chi_InvestigatorList *Chi_InvestigatorList `xml:" InvestigatorList,omitempty" json:"InvestigatorList,omitempty"`
+	Chi_KeywordList *Chi_KeywordList `xml:" KeywordList,omitempty" json:"KeywordList,omitempty"`
+	Chi_MedlineJournalInfo *Chi_MedlineJournalInfo `xml:" MedlineJournalInfo,omitempty" json:"MedlineJournalInfo,omitempty"`
+	Chi_MeshHeadingList *Chi_MeshHeadingList `xml:" MeshHeadingList,omitempty" json:"MeshHeadingList,omitempty"`
+	Chi_NumberOfReferences *Chi_NumberOfReferences `xml:" NumberOfReferences,omitempty" json:"NumberOfReferences,omitempty"`
+	Chi_OtherAbstract *Chi_OtherAbstract `xml:" OtherAbstract,omitempty" json:"OtherAbstract,omitempty"`
+	Chi_OtherID []*Chi_OtherID `xml:" OtherID,omitempty" json:"OtherID,omitempty"`
+	Chi_PMID *Chi_PMID `xml:" PMID,omitempty" json:"PMID,omitempty"`
+	Chi_PersonalNameSubjectList *Chi_PersonalNameSubjectList `xml:" PersonalNameSubjectList,omitempty" json:"PersonalNameSubjectList,omitempty"`
+	Chi_SpaceFlightMission []*Chi_SpaceFlightMission `xml:" SpaceFlightMission,omitempty" json:"SpaceFlightMission,omitempty"`
+	Chi_SupplMeshList *Chi_SupplMeshList `xml:" SupplMeshList,omitempty" json:"SupplMeshList,omitempty"`
 }
 
 type Chi_PMID struct {
@@ -255,9 +339,9 @@ type Chi_PMID struct {
 }
 
 type Chi_DateCreated struct {
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_Day struct {
@@ -273,16 +357,16 @@ type Chi_Month struct {
 }
 
 type Chi_DateRevised struct {
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_MedlineJournalInfo struct {
-	Chi_Country *Chi_Country`xml:" Country,omitempty" json:"Country,omitempty"`
-	Chi_ISSNLinking *Chi_ISSNLinking`xml:" ISSNLinking,omitempty" json:"ISSNLinking,omitempty"`
-	Chi_MedlineTA *Chi_MedlineTA`xml:" MedlineTA,omitempty" json:"MedlineTA,omitempty"`
-	Chi_NlmUniqueID *Chi_NlmUniqueID`xml:" NlmUniqueID,omitempty" json:"NlmUniqueID,omitempty"`
+	Chi_Country *Chi_Country `xml:" Country,omitempty" json:"Country,omitempty"`
+	Chi_ISSNLinking *Chi_ISSNLinking `xml:" ISSNLinking,omitempty" json:"ISSNLinking,omitempty"`
+	Chi_MedlineTA *Chi_MedlineTA `xml:" MedlineTA,omitempty" json:"MedlineTA,omitempty"`
+	Chi_NlmUniqueID *Chi_NlmUniqueID `xml:" NlmUniqueID,omitempty" json:"NlmUniqueID,omitempty"`
 }
 
 type Chi_Country struct {
@@ -311,7 +395,7 @@ type Chi_NumberOfReferences struct {
 
 type Chi_KeywordList struct {
 	Attr_Owner string `xml:" Owner,attr"  json:",omitempty"`
-	Chi_Keyword []*Chi_Keyword`xml:" Keyword,omitempty" json:"Keyword,omitempty"`
+	Chi_Keyword []*Chi_Keyword `xml:" Keyword,omitempty" json:"Keyword,omitempty"`
 }
 
 type Chi_Keyword struct {
@@ -322,8 +406,8 @@ type Chi_Keyword struct {
 type Chi_OtherAbstract struct {
 	Attr_Type string `xml:" Type,attr"  json:",omitempty"`
 	Attr_Language string `xml:" Language,attr"  json:",omitempty"`
-	Chi_AbstractText []*Chi_AbstractText`xml:" AbstractText,omitempty" json:"AbstractText,omitempty"`
-	Chi_CopyrightInformation *Chi_CopyrightInformation`xml:" CopyrightInformation,omitempty" json:"CopyrightInformation,omitempty"`
+	Chi_AbstractText []*Chi_AbstractText `xml:" AbstractText,omitempty" json:"AbstractText,omitempty"`
+	Chi_CopyrightInformation *Chi_CopyrightInformation `xml:" CopyrightInformation,omitempty" json:"CopyrightInformation,omitempty"`
 }
 
 type Chi_AbstractText struct {
@@ -337,14 +421,14 @@ type Chi_CopyrightInformation struct {
 }
 
 type Chi_PersonalNameSubjectList struct {
-	Chi_PersonalNameSubject []*Chi_PersonalNameSubject`xml:" PersonalNameSubject,omitempty" json:"PersonalNameSubject,omitempty"`
+	Chi_PersonalNameSubject []*Chi_PersonalNameSubject `xml:" PersonalNameSubject,omitempty" json:"PersonalNameSubject,omitempty"`
 }
 
 type Chi_PersonalNameSubject struct {
-	Chi_ForeName *Chi_ForeName`xml:" ForeName,omitempty" json:"ForeName,omitempty"`
-	Chi_Initials *Chi_Initials`xml:" Initials,omitempty" json:"Initials,omitempty"`
-	Chi_LastName *Chi_LastName`xml:" LastName,omitempty" json:"LastName,omitempty"`
-	Chi_Suffix *Chi_Suffix`xml:" Suffix,omitempty" json:"Suffix,omitempty"`
+	Chi_ForeName *Chi_ForeName `xml:" ForeName,omitempty" json:"ForeName,omitempty"`
+	Chi_Initials *Chi_Initials `xml:" Initials,omitempty" json:"Initials,omitempty"`
+	Chi_LastName *Chi_LastName `xml:" LastName,omitempty" json:"LastName,omitempty"`
+	Chi_Suffix *Chi_Suffix `xml:" Suffix,omitempty" json:"Suffix,omitempty"`
 }
 
 type Chi_LastName struct {
@@ -364,7 +448,7 @@ type Chi_Suffix struct {
 }
 
 type Chi_GeneSymbolList struct {
-	Chi_GeneSymbol []*Chi_GeneSymbol`xml:" GeneSymbol,omitempty" json:"GeneSymbol,omitempty"`
+	Chi_GeneSymbol []*Chi_GeneSymbol `xml:" GeneSymbol,omitempty" json:"GeneSymbol,omitempty"`
 }
 
 type Chi_GeneSymbol struct {
@@ -372,7 +456,7 @@ type Chi_GeneSymbol struct {
 }
 
 type Chi_SupplMeshList struct {
-	Chi_SupplMeshName []*Chi_SupplMeshName`xml:" SupplMeshName,omitempty" json:"SupplMeshName,omitempty"`
+	Chi_SupplMeshName []*Chi_SupplMeshName `xml:" SupplMeshName,omitempty" json:"SupplMeshName,omitempty"`
 }
 
 type Chi_SupplMeshName struct {
@@ -381,29 +465,29 @@ type Chi_SupplMeshName struct {
 }
 
 type Chi_DateCompleted struct {
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_Article struct {
 	Attr_PubModel string `xml:" PubModel,attr"  json:",omitempty"`
-	Chi_Abstract *Chi_Abstract`xml:" Abstract,omitempty" json:"Abstract,omitempty"`
-	Chi_ArticleDate *Chi_ArticleDate`xml:" ArticleDate,omitempty" json:"ArticleDate,omitempty"`
-	Chi_ArticleTitle *Chi_ArticleTitle`xml:" ArticleTitle,omitempty" json:"ArticleTitle,omitempty"`
-	Chi_AuthorList []*Chi_AuthorList`xml:" AuthorList,omitempty" json:"AuthorList,omitempty"`
-	Chi_DataBankList *Chi_DataBankList`xml:" DataBankList,omitempty" json:"DataBankList,omitempty"`
-	Chi_ELocationID []*Chi_ELocationID`xml:" ELocationID,omitempty" json:"ELocationID,omitempty"`
-	Chi_GrantList *Chi_GrantList`xml:" GrantList,omitempty" json:"GrantList,omitempty"`
-	Chi_Journal *Chi_Journal`xml:" Journal,omitempty" json:"Journal,omitempty"`
-	Chi_Language []*Chi_Language`xml:" Language,omitempty" json:"Language,omitempty"`
-	Chi_Pagination *Chi_Pagination`xml:" Pagination,omitempty" json:"Pagination,omitempty"`
-	Chi_PublicationTypeList *Chi_PublicationTypeList`xml:" PublicationTypeList,omitempty" json:"PublicationTypeList,omitempty"`
-	Chi_VernacularTitle *Chi_VernacularTitle`xml:" VernacularTitle,omitempty" json:"VernacularTitle,omitempty"`
+	Chi_Abstract *Chi_Abstract `xml:" Abstract,omitempty" json:"Abstract,omitempty"`
+	Chi_ArticleDate *Chi_ArticleDate `xml:" ArticleDate,omitempty" json:"ArticleDate,omitempty"`
+	Chi_ArticleTitle *Chi_ArticleTitle `xml:" ArticleTitle,omitempty" json:"ArticleTitle,omitempty"`
+	Chi_AuthorList []*Chi_AuthorList `xml:" AuthorList,omitempty" json:"AuthorList,omitempty"`
+	Chi_DataBankList *Chi_DataBankList `xml:" DataBankList,omitempty" json:"DataBankList,omitempty"`
+	Chi_ELocationID []*Chi_ELocationID `xml:" ELocationID,omitempty" json:"ELocationID,omitempty"`
+	Chi_GrantList *Chi_GrantList `xml:" GrantList,omitempty" json:"GrantList,omitempty"`
+	Chi_Journal *Chi_Journal `xml:" Journal,omitempty" json:"Journal,omitempty"`
+	Chi_Language []*Chi_Language `xml:" Language,omitempty" json:"Language,omitempty"`
+	Chi_Pagination *Chi_Pagination `xml:" Pagination,omitempty" json:"Pagination,omitempty"`
+	Chi_PublicationTypeList *Chi_PublicationTypeList `xml:" PublicationTypeList,omitempty" json:"PublicationTypeList,omitempty"`
+	Chi_VernacularTitle *Chi_VernacularTitle `xml:" VernacularTitle,omitempty" json:"VernacularTitle,omitempty"`
 }
 
 type Chi_Pagination struct {
-	Chi_MedlinePgn *Chi_MedlinePgn`xml:" MedlinePgn,omitempty" json:"MedlinePgn,omitempty"`
+	Chi_MedlinePgn *Chi_MedlinePgn `xml:" MedlinePgn,omitempty" json:"MedlinePgn,omitempty"`
 }
 
 type Chi_MedlinePgn struct {
@@ -413,18 +497,18 @@ type Chi_MedlinePgn struct {
 type Chi_AuthorList struct {
 	Attr_CompleteYN string `xml:" CompleteYN,attr"  json:",omitempty"`
 	Attr_Type string `xml:" Type,attr"  json:",omitempty"`
-	Chi_Author []*Chi_Author`xml:" Author,omitempty" json:"Author,omitempty"`
+	Chi_Author []*Chi_Author `xml:" Author,omitempty" json:"Author,omitempty"`
 }
 
 type Chi_Author struct {
 	Attr_ValidYN string `xml:" ValidYN,attr"  json:",omitempty"`
-	Chi_Affiliation *Chi_Affiliation`xml:" Affiliation,omitempty" json:"Affiliation,omitempty"`
-	Chi_CollectiveName *Chi_CollectiveName`xml:" CollectiveName,omitempty" json:"CollectiveName,omitempty"`
-	Chi_ForeName *Chi_ForeName`xml:" ForeName,omitempty" json:"ForeName,omitempty"`
-	Chi_Identifier *Chi_Identifier`xml:" Identifier,omitempty" json:"Identifier,omitempty"`
-	Chi_Initials *Chi_Initials`xml:" Initials,omitempty" json:"Initials,omitempty"`
-	Chi_LastName *Chi_LastName`xml:" LastName,omitempty" json:"LastName,omitempty"`
-	Chi_Suffix *Chi_Suffix`xml:" Suffix,omitempty" json:"Suffix,omitempty"`
+	Chi_Affiliation *Chi_Affiliation `xml:" Affiliation,omitempty" json:"Affiliation,omitempty"`
+	Chi_CollectiveName *Chi_CollectiveName `xml:" CollectiveName,omitempty" json:"CollectiveName,omitempty"`
+	Chi_ForeName *Chi_ForeName `xml:" ForeName,omitempty" json:"ForeName,omitempty"`
+	Chi_Identifier *Chi_Identifier `xml:" Identifier,omitempty" json:"Identifier,omitempty"`
+	Chi_Initials *Chi_Initials `xml:" Initials,omitempty" json:"Initials,omitempty"`
+	Chi_LastName *Chi_LastName `xml:" LastName,omitempty" json:"LastName,omitempty"`
+	Chi_Suffix *Chi_Suffix `xml:" Suffix,omitempty" json:"Suffix,omitempty"`
 }
 
 type Chi_Affiliation struct {
@@ -445,10 +529,10 @@ type Chi_Language struct {
 }
 
 type Chi_Journal struct {
-	Chi_ISOAbbreviation *Chi_ISOAbbreviation`xml:" ISOAbbreviation,omitempty" json:"ISOAbbreviation,omitempty"`
-	Chi_ISSN *Chi_ISSN`xml:" ISSN,omitempty" json:"ISSN,omitempty"`
-	Chi_JournalIssue *Chi_JournalIssue`xml:" JournalIssue,omitempty" json:"JournalIssue,omitempty"`
-	Chi_Title *Chi_Title`xml:" Title,omitempty" json:"Title,omitempty"`
+	Chi_ISOAbbreviation *Chi_ISOAbbreviation `xml:" ISOAbbreviation,omitempty" json:"ISOAbbreviation,omitempty"`
+	Chi_ISSN *Chi_ISSN `xml:" ISSN,omitempty" json:"ISSN,omitempty"`
+	Chi_JournalIssue *Chi_JournalIssue `xml:" JournalIssue,omitempty" json:"JournalIssue,omitempty"`
+	Chi_Title *Chi_Title `xml:" Title,omitempty" json:"Title,omitempty"`
 }
 
 type Chi_ISSN struct {
@@ -458,9 +542,9 @@ type Chi_ISSN struct {
 
 type Chi_JournalIssue struct {
 	Attr_CitedMedium string `xml:" CitedMedium,attr"  json:",omitempty"`
-	Chi_Issue *Chi_Issue`xml:" Issue,omitempty" json:"Issue,omitempty"`
-	Chi_PubDate *Chi_PubDate`xml:" PubDate,omitempty" json:"PubDate,omitempty"`
-	Chi_Volume *Chi_Volume`xml:" Volume,omitempty" json:"Volume,omitempty"`
+	Chi_Issue *Chi_Issue `xml:" Issue,omitempty" json:"Issue,omitempty"`
+	Chi_PubDate *Chi_PubDate `xml:" PubDate,omitempty" json:"PubDate,omitempty"`
+	Chi_Volume *Chi_Volume `xml:" Volume,omitempty" json:"Volume,omitempty"`
 }
 
 type Chi_Volume struct {
@@ -472,11 +556,11 @@ type Chi_Issue struct {
 }
 
 type Chi_PubDate struct {
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_MedlineDate *Chi_MedlineDate`xml:" MedlineDate,omitempty" json:"MedlineDate,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Season *Chi_Season`xml:" Season,omitempty" json:"Season,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_MedlineDate *Chi_MedlineDate `xml:" MedlineDate,omitempty" json:"MedlineDate,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Season *Chi_Season `xml:" Season,omitempty" json:"Season,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_MedlineDate struct {
@@ -502,12 +586,12 @@ type Chi_ArticleTitle struct {
 }
 
 type Chi_Abstract struct {
-	Chi_AbstractText []*Chi_AbstractText`xml:" AbstractText,omitempty" json:"AbstractText,omitempty"`
-	Chi_CopyrightInformation *Chi_CopyrightInformation`xml:" CopyrightInformation,omitempty" json:"CopyrightInformation,omitempty"`
+	Chi_AbstractText []*Chi_AbstractText `xml:" AbstractText,omitempty" json:"AbstractText,omitempty"`
+	Chi_CopyrightInformation *Chi_CopyrightInformation `xml:" CopyrightInformation,omitempty" json:"CopyrightInformation,omitempty"`
 }
 
 type Chi_PublicationTypeList struct {
-	Chi_PublicationType []*Chi_PublicationType`xml:" PublicationType,omitempty" json:"PublicationType,omitempty"`
+	Chi_PublicationType []*Chi_PublicationType `xml:" PublicationType,omitempty" json:"PublicationType,omitempty"`
 }
 
 type Chi_PublicationType struct {
@@ -526,12 +610,12 @@ type Chi_ELocationID struct {
 
 type Chi_DataBankList struct {
 	Attr_CompleteYN string `xml:" CompleteYN,attr"  json:",omitempty"`
-	Chi_DataBank []*Chi_DataBank`xml:" DataBank,omitempty" json:"DataBank,omitempty"`
+	Chi_DataBank []*Chi_DataBank `xml:" DataBank,omitempty" json:"DataBank,omitempty"`
 }
 
 type Chi_DataBank struct {
-	Chi_AccessionNumberList *Chi_AccessionNumberList`xml:" AccessionNumberList,omitempty" json:"AccessionNumberList,omitempty"`
-	Chi_DataBankName *Chi_DataBankName`xml:" DataBankName,omitempty" json:"DataBankName,omitempty"`
+	Chi_AccessionNumberList *Chi_AccessionNumberList `xml:" AccessionNumberList,omitempty" json:"AccessionNumberList,omitempty"`
+	Chi_DataBankName *Chi_DataBankName `xml:" DataBankName,omitempty" json:"DataBankName,omitempty"`
 }
 
 type Chi_DataBankName struct {
@@ -539,7 +623,7 @@ type Chi_DataBankName struct {
 }
 
 type Chi_AccessionNumberList struct {
-	Chi_AccessionNumber []*Chi_AccessionNumber`xml:" AccessionNumber,omitempty" json:"AccessionNumber,omitempty"`
+	Chi_AccessionNumber []*Chi_AccessionNumber `xml:" AccessionNumber,omitempty" json:"AccessionNumber,omitempty"`
 }
 
 type Chi_AccessionNumber struct {
@@ -548,21 +632,21 @@ type Chi_AccessionNumber struct {
 
 type Chi_ArticleDate struct {
 	Attr_DateType string `xml:" DateType,attr"  json:",omitempty"`
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_GrantList struct {
 	Attr_CompleteYN string `xml:" CompleteYN,attr"  json:",omitempty"`
-	Chi_Grant []*Chi_Grant`xml:" Grant,omitempty" json:"Grant,omitempty"`
+	Chi_Grant []*Chi_Grant `xml:" Grant,omitempty" json:"Grant,omitempty"`
 }
 
 type Chi_Grant struct {
-	Chi_Acronym *Chi_Acronym`xml:" Acronym,omitempty" json:"Acronym,omitempty"`
-	Chi_Agency *Chi_Agency`xml:" Agency,omitempty" json:"Agency,omitempty"`
-	Chi_Country *Chi_Country`xml:" Country,omitempty" json:"Country,omitempty"`
-	Chi_GrantID *Chi_GrantID`xml:" GrantID,omitempty" json:"GrantID,omitempty"`
+	Chi_Acronym *Chi_Acronym `xml:" Acronym,omitempty" json:"Acronym,omitempty"`
+	Chi_Agency *Chi_Agency `xml:" Agency,omitempty" json:"Agency,omitempty"`
+	Chi_Country *Chi_Country `xml:" Country,omitempty" json:"Country,omitempty"`
+	Chi_GrantID *Chi_GrantID `xml:" GrantID,omitempty" json:"GrantID,omitempty"`
 }
 
 type Chi_GrantID struct {
@@ -578,12 +662,12 @@ type Chi_Agency struct {
 }
 
 type Chi_MeshHeadingList struct {
-	Chi_MeshHeading []*Chi_MeshHeading`xml:" MeshHeading,omitempty" json:"MeshHeading,omitempty"`
+	Chi_MeshHeading []*Chi_MeshHeading `xml:" MeshHeading,omitempty" json:"MeshHeading,omitempty"`
 }
 
 type Chi_MeshHeading struct {
-	Chi_DescriptorName *Chi_DescriptorName`xml:" DescriptorName,omitempty" json:"DescriptorName,omitempty"`
-	Chi_QualifierName []*Chi_QualifierName`xml:" QualifierName,omitempty" json:"QualifierName,omitempty"`
+	Chi_DescriptorName *Chi_DescriptorName `xml:" DescriptorName,omitempty" json:"DescriptorName,omitempty"`
+	Chi_QualifierName []*Chi_QualifierName `xml:" QualifierName,omitempty" json:"QualifierName,omitempty"`
 }
 
 type Chi_DescriptorName struct {
@@ -598,12 +682,12 @@ type Chi_QualifierName struct {
 }
 
 type Chi_ChemicalList struct {
-	Chi_Chemical []*Chi_Chemical`xml:" Chemical,omitempty" json:"Chemical,omitempty"`
+	Chi_Chemical []*Chi_Chemical `xml:" Chemical,omitempty" json:"Chemical,omitempty"`
 }
 
 type Chi_Chemical struct {
-	Chi_NameOfSubstance *Chi_NameOfSubstance`xml:" NameOfSubstance,omitempty" json:"NameOfSubstance,omitempty"`
-	Chi_RegistryNumber *Chi_RegistryNumber`xml:" RegistryNumber,omitempty" json:"RegistryNumber,omitempty"`
+	Chi_NameOfSubstance *Chi_NameOfSubstance `xml:" NameOfSubstance,omitempty" json:"NameOfSubstance,omitempty"`
+	Chi_RegistryNumber *Chi_RegistryNumber `xml:" RegistryNumber,omitempty" json:"RegistryNumber,omitempty"`
 }
 
 type Chi_RegistryNumber struct {
@@ -615,14 +699,14 @@ type Chi_NameOfSubstance struct {
 }
 
 type Chi_CommentsCorrectionsList struct {
-	Chi_CommentsCorrections []*Chi_CommentsCorrections`xml:" CommentsCorrections,omitempty" json:"CommentsCorrections,omitempty"`
+	Chi_CommentsCorrections []*Chi_CommentsCorrections `xml:" CommentsCorrections,omitempty" json:"CommentsCorrections,omitempty"`
 }
 
 type Chi_CommentsCorrections struct {
 	Attr_RefType string `xml:" RefType,attr"  json:",omitempty"`
-	Chi_Note *Chi_Note`xml:" Note,omitempty" json:"Note,omitempty"`
-	Chi_PMID *Chi_PMID`xml:" PMID,omitempty" json:"PMID,omitempty"`
-	Chi_RefSource *Chi_RefSource`xml:" RefSource,omitempty" json:"RefSource,omitempty"`
+	Chi_Note *Chi_Note `xml:" Note,omitempty" json:"Note,omitempty"`
+	Chi_PMID *Chi_PMID `xml:" PMID,omitempty" json:"PMID,omitempty"`
+	Chi_RefSource *Chi_RefSource `xml:" RefSource,omitempty" json:"RefSource,omitempty"`
 }
 
 type Chi_RefSource struct {
@@ -644,16 +728,16 @@ type Chi_GeneralNote struct {
 }
 
 type Chi_InvestigatorList struct {
-	Chi_Investigator []*Chi_Investigator`xml:" Investigator,omitempty" json:"Investigator,omitempty"`
+	Chi_Investigator []*Chi_Investigator `xml:" Investigator,omitempty" json:"Investigator,omitempty"`
 }
 
 type Chi_Investigator struct {
 	Attr_ValidYN string `xml:" ValidYN,attr"  json:",omitempty"`
-	Chi_Affiliation *Chi_Affiliation`xml:" Affiliation,omitempty" json:"Affiliation,omitempty"`
-	Chi_ForeName *Chi_ForeName`xml:" ForeName,omitempty" json:"ForeName,omitempty"`
-	Chi_Initials *Chi_Initials`xml:" Initials,omitempty" json:"Initials,omitempty"`
-	Chi_LastName *Chi_LastName`xml:" LastName,omitempty" json:"LastName,omitempty"`
-	Chi_Suffix *Chi_Suffix`xml:" Suffix,omitempty" json:"Suffix,omitempty"`
+	Chi_Affiliation *Chi_Affiliation `xml:" Affiliation,omitempty" json:"Affiliation,omitempty"`
+	Chi_ForeName *Chi_ForeName `xml:" ForeName,omitempty" json:"ForeName,omitempty"`
+	Chi_Initials *Chi_Initials `xml:" Initials,omitempty" json:"Initials,omitempty"`
+	Chi_LastName *Chi_LastName `xml:" LastName,omitempty" json:"LastName,omitempty"`
+	Chi_Suffix *Chi_Suffix `xml:" Suffix,omitempty" json:"Suffix,omitempty"`
 }
 
 type Chi_SpaceFlightMission struct {
@@ -661,22 +745,22 @@ type Chi_SpaceFlightMission struct {
 }
 
 type Chi_PubmedData struct {
-	Chi_ArticleIdList *Chi_ArticleIdList`xml:" ArticleIdList,omitempty" json:"ArticleIdList,omitempty"`
-	Chi_History *Chi_History`xml:" History,omitempty" json:"History,omitempty"`
-	Chi_PublicationStatus *Chi_PublicationStatus`xml:" PublicationStatus,omitempty" json:"PublicationStatus,omitempty"`
+	Chi_ArticleIdList *Chi_ArticleIdList `xml:" ArticleIdList,omitempty" json:"ArticleIdList,omitempty"`
+	Chi_History *Chi_History `xml:" History,omitempty" json:"History,omitempty"`
+	Chi_PublicationStatus *Chi_PublicationStatus `xml:" PublicationStatus,omitempty" json:"PublicationStatus,omitempty"`
 }
 
 type Chi_History struct {
-	Chi_PubMedPubDate []*Chi_PubMedPubDate`xml:" PubMedPubDate,omitempty" json:"PubMedPubDate,omitempty"`
+	Chi_PubMedPubDate []*Chi_PubMedPubDate `xml:" PubMedPubDate,omitempty" json:"PubMedPubDate,omitempty"`
 }
 
 type Chi_PubMedPubDate struct {
 	Attr_PubStatus string `xml:" PubStatus,attr"  json:",omitempty"`
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_Hour *Chi_Hour`xml:" Hour,omitempty" json:"Hour,omitempty"`
-	Chi_Minute *Chi_Minute`xml:" Minute,omitempty" json:"Minute,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_Hour *Chi_Hour `xml:" Hour,omitempty" json:"Hour,omitempty"`
+	Chi_Minute *Chi_Minute `xml:" Minute,omitempty" json:"Minute,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_Hour struct {
@@ -692,7 +776,7 @@ type Chi_PublicationStatus struct {
 }
 
 type Chi_ArticleIdList struct {
-	Chi_ArticleId []*Chi_ArticleId`xml:" ArticleId,omitempty" json:"ArticleId,omitempty"`
+	Chi_ArticleId []*Chi_ArticleId `xml:" ArticleId,omitempty" json:"ArticleId,omitempty"`
 }
 
 type Chi_ArticleId struct {
@@ -701,24 +785,24 @@ type Chi_ArticleId struct {
 }
 
 type Chi_PubmedBookArticle struct {
-	Chi_BookDocument *Chi_BookDocument`xml:" BookDocument,omitempty" json:"BookDocument,omitempty"`
-	Chi_PubmedBookData *Chi_PubmedBookData`xml:" PubmedBookData,omitempty" json:"PubmedBookData,omitempty"`
+	Chi_BookDocument *Chi_BookDocument `xml:" BookDocument,omitempty" json:"BookDocument,omitempty"`
+	Chi_PubmedBookData *Chi_PubmedBookData `xml:" PubmedBookData,omitempty" json:"PubmedBookData,omitempty"`
 }
 
 type Chi_BookDocument struct {
-	Chi_Abstract *Chi_Abstract`xml:" Abstract,omitempty" json:"Abstract,omitempty"`
-	Chi_ArticleIdList *Chi_ArticleIdList`xml:" ArticleIdList,omitempty" json:"ArticleIdList,omitempty"`
-	Chi_ArticleTitle *Chi_ArticleTitle`xml:" ArticleTitle,omitempty" json:"ArticleTitle,omitempty"`
-	Chi_AuthorList []*Chi_AuthorList`xml:" AuthorList,omitempty" json:"AuthorList,omitempty"`
-	Chi_Book *Chi_Book`xml:" Book,omitempty" json:"Book,omitempty"`
-	Chi_ContributionDate *Chi_ContributionDate`xml:" ContributionDate,omitempty" json:"ContributionDate,omitempty"`
-	Chi_DateRevised *Chi_DateRevised`xml:" DateRevised,omitempty" json:"DateRevised,omitempty"`
-	Chi_ItemList []*Chi_ItemList`xml:" ItemList,omitempty" json:"ItemList,omitempty"`
-	Chi_KeywordList *Chi_KeywordList`xml:" KeywordList,omitempty" json:"KeywordList,omitempty"`
-	Chi_Language []*Chi_Language`xml:" Language,omitempty" json:"Language,omitempty"`
-	Chi_LocationLabel []*Chi_LocationLabel`xml:" LocationLabel,omitempty" json:"LocationLabel,omitempty"`
-	Chi_PMID *Chi_PMID`xml:" PMID,omitempty" json:"PMID,omitempty"`
-	Chi_Sections *Chi_Sections`xml:" Sections,omitempty" json:"Sections,omitempty"`
+	Chi_Abstract *Chi_Abstract `xml:" Abstract,omitempty" json:"Abstract,omitempty"`
+	Chi_ArticleIdList *Chi_ArticleIdList `xml:" ArticleIdList,omitempty" json:"ArticleIdList,omitempty"`
+	Chi_ArticleTitle *Chi_ArticleTitle `xml:" ArticleTitle,omitempty" json:"ArticleTitle,omitempty"`
+	Chi_AuthorList []*Chi_AuthorList `xml:" AuthorList,omitempty" json:"AuthorList,omitempty"`
+	Chi_Book *Chi_Book `xml:" Book,omitempty" json:"Book,omitempty"`
+	Chi_ContributionDate *Chi_ContributionDate `xml:" ContributionDate,omitempty" json:"ContributionDate,omitempty"`
+	Chi_DateRevised *Chi_DateRevised `xml:" DateRevised,omitempty" json:"DateRevised,omitempty"`
+	Chi_ItemList []*Chi_ItemList `xml:" ItemList,omitempty" json:"ItemList,omitempty"`
+	Chi_KeywordList *Chi_KeywordList `xml:" KeywordList,omitempty" json:"KeywordList,omitempty"`
+	Chi_Language []*Chi_Language `xml:" Language,omitempty" json:"Language,omitempty"`
+	Chi_LocationLabel []*Chi_LocationLabel `xml:" LocationLabel,omitempty" json:"LocationLabel,omitempty"`
+	Chi_PMID *Chi_PMID `xml:" PMID,omitempty" json:"PMID,omitempty"`
+	Chi_Sections *Chi_Sections `xml:" Sections,omitempty" json:"Sections,omitempty"`
 }
 
 type Chi_LocationLabel struct {
@@ -727,13 +811,13 @@ type Chi_LocationLabel struct {
 }
 
 type Chi_Sections struct {
-	Chi_Section []*Chi_Section`xml:" Section,omitempty" json:"Section,omitempty"`
+	Chi_Section []*Chi_Section `xml:" Section,omitempty" json:"Section,omitempty"`
 }
 
 type Chi_Section struct {
-	Chi_LocationLabel []*Chi_LocationLabel`xml:" LocationLabel,omitempty" json:"LocationLabel,omitempty"`
-	Chi_Section []*Chi_Section`xml:" Section,omitempty" json:"Section,omitempty"`
-	Chi_SectionTitle []*Chi_SectionTitle`xml:" SectionTitle,omitempty" json:"SectionTitle,omitempty"`
+	Chi_LocationLabel []*Chi_LocationLabel `xml:" LocationLabel,omitempty" json:"LocationLabel,omitempty"`
+	Chi_Section []*Chi_Section `xml:" Section,omitempty" json:"Section,omitempty"`
+	Chi_SectionTitle []*Chi_SectionTitle `xml:" SectionTitle,omitempty" json:"SectionTitle,omitempty"`
 }
 
 type Chi_SectionTitle struct {
@@ -744,16 +828,16 @@ type Chi_SectionTitle struct {
 }
 
 type Chi_Book struct {
-	Chi_AuthorList []*Chi_AuthorList`xml:" AuthorList,omitempty" json:"AuthorList,omitempty"`
-	Chi_BeginningDate *Chi_BeginningDate`xml:" BeginningDate,omitempty" json:"BeginningDate,omitempty"`
-	Chi_BookTitle *Chi_BookTitle`xml:" BookTitle,omitempty" json:"BookTitle,omitempty"`
-	Chi_CollectionTitle *Chi_CollectionTitle`xml:" CollectionTitle,omitempty" json:"CollectionTitle,omitempty"`
-	Chi_Edition *Chi_Edition`xml:" Edition,omitempty" json:"Edition,omitempty"`
-	Chi_EndingDate *Chi_EndingDate`xml:" EndingDate,omitempty" json:"EndingDate,omitempty"`
-	Chi_Isbn []*Chi_Isbn`xml:" Isbn,omitempty" json:"Isbn,omitempty"`
-	Chi_Medium *Chi_Medium`xml:" Medium,omitempty" json:"Medium,omitempty"`
-	Chi_PubDate *Chi_PubDate`xml:" PubDate,omitempty" json:"PubDate,omitempty"`
-	Chi_Publisher *Chi_Publisher`xml:" Publisher,omitempty" json:"Publisher,omitempty"`
+	Chi_AuthorList []*Chi_AuthorList `xml:" AuthorList,omitempty" json:"AuthorList,omitempty"`
+	Chi_BeginningDate *Chi_BeginningDate `xml:" BeginningDate,omitempty" json:"BeginningDate,omitempty"`
+	Chi_BookTitle *Chi_BookTitle `xml:" BookTitle,omitempty" json:"BookTitle,omitempty"`
+	Chi_CollectionTitle *Chi_CollectionTitle `xml:" CollectionTitle,omitempty" json:"CollectionTitle,omitempty"`
+	Chi_Edition *Chi_Edition `xml:" Edition,omitempty" json:"Edition,omitempty"`
+	Chi_EndingDate *Chi_EndingDate `xml:" EndingDate,omitempty" json:"EndingDate,omitempty"`
+	Chi_Isbn []*Chi_Isbn `xml:" Isbn,omitempty" json:"Isbn,omitempty"`
+	Chi_Medium *Chi_Medium `xml:" Medium,omitempty" json:"Medium,omitempty"`
+	Chi_PubDate *Chi_PubDate `xml:" PubDate,omitempty" json:"PubDate,omitempty"`
+	Chi_Publisher *Chi_Publisher `xml:" Publisher,omitempty" json:"Publisher,omitempty"`
 }
 
 type Chi_BookTitle struct {
@@ -762,7 +846,7 @@ type Chi_BookTitle struct {
 }
 
 type Chi_BeginningDate struct {
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_Edition struct {
@@ -770,8 +854,8 @@ type Chi_Edition struct {
 }
 
 type Chi_Publisher struct {
-	Chi_PublisherLocation *Chi_PublisherLocation`xml:" PublisherLocation,omitempty" json:"PublisherLocation,omitempty"`
-	Chi_PublisherName *Chi_PublisherName`xml:" PublisherName,omitempty" json:"PublisherName,omitempty"`
+	Chi_PublisherLocation *Chi_PublisherLocation `xml:" PublisherLocation,omitempty" json:"PublisherLocation,omitempty"`
+	Chi_PublisherName *Chi_PublisherName `xml:" PublisherName,omitempty" json:"PublisherName,omitempty"`
 }
 
 type Chi_PublisherName struct {
@@ -783,7 +867,7 @@ type Chi_PublisherLocation struct {
 }
 
 type Chi_EndingDate struct {
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_Medium struct {
@@ -800,14 +884,14 @@ type Chi_CollectionTitle struct {
 }
 
 type Chi_ContributionDate struct {
-	Chi_Day *Chi_Day`xml:" Day,omitempty" json:"Day,omitempty"`
-	Chi_Month *Chi_Month`xml:" Month,omitempty" json:"Month,omitempty"`
-	Chi_Year *Chi_Year`xml:" Year,omitempty" json:"Year,omitempty"`
+	Chi_Day *Chi_Day `xml:" Day,omitempty" json:"Day,omitempty"`
+	Chi_Month *Chi_Month `xml:" Month,omitempty" json:"Month,omitempty"`
+	Chi_Year *Chi_Year `xml:" Year,omitempty" json:"Year,omitempty"`
 }
 
 type Chi_ItemList struct {
 	Attr_ListType string `xml:" ListType,attr"  json:",omitempty"`
-	Chi_Item *Chi_Item`xml:" Item,omitempty" json:"Item,omitempty"`
+	Chi_Item *Chi_Item `xml:" Item,omitempty" json:"Item,omitempty"`
 }
 
 type Chi_Item struct {
@@ -815,9 +899,9 @@ type Chi_Item struct {
 }
 
 type Chi_PubmedBookData struct {
-	Chi_ArticleIdList *Chi_ArticleIdList`xml:" ArticleIdList,omitempty" json:"ArticleIdList,omitempty"`
-	Chi_History *Chi_History`xml:" History,omitempty" json:"History,omitempty"`
-	Chi_PublicationStatus *Chi_PublicationStatus`xml:" PublicationStatus,omitempty" json:"PublicationStatus,omitempty"`
+	Chi_ArticleIdList *Chi_ArticleIdList `xml:" ArticleIdList,omitempty" json:"ArticleIdList,omitempty"`
+	Chi_History *Chi_History `xml:" History,omitempty" json:"History,omitempty"`
+	Chi_PublicationStatus *Chi_PublicationStatus `xml:" PublicationStatus,omitempty" json:"PublicationStatus,omitempty"`
 }
 
 0:48.21 15044
