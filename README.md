@@ -821,6 +821,10 @@ $
 
 48 seconds for 337MB XML; resident size: 15MB
 
+(All timings from Dell laptop
+`Linux 3.11.10-100.fc18.x86_64 #1 SMP Mon Dec 2 20:28:38 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux`
+16MB, regular disk, 8 core i7-3720QM CPU @ 2.60GHz)
+
 ### Generate Go program: `-W`
 
 ```
