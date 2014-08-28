@@ -7,6 +7,10 @@
 
 Author: G. Newton
 
+## How does it work (with such a small memory footprint)
+`chidley` uses the input XML to build a model of each XML element (or tag).
+It examines each instance of a tag, and builds a prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
+
 ## Usage
 ```
 $ chidley -h
@@ -171,6 +175,10 @@ Note that the original XML names are used in the struct XML and JSON annotations
 ### Go struct name prefix
 `chidley` by default prepends a prefix to struct identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
 
+##Warning
+If you are going to use the `chidley` generated Go structs on XML other than the input XML, you need to make sure the input XML has examples of all tags, and tag attribute and tag child tag combinations. 
+If the input does not have all of these, and you use new XML that has tags not found in the input XML, attributes not seen in tags in the input XML, or child tags not encountered in the input XML, these will not be *seen* by the xml decoder, as they will not be in the Go structs used by the xml decoder.
+
 ##Limitations
 `chidley` is constrained by the underlying Go [xml package](http://golang.org/pkg/encoding/xml/)
 Some of these limitations include:
@@ -184,7 +192,7 @@ It is possible that this method might be used in the future to extend `chidley` 
 * For _most_ XML with namespaces, the JSON will be OK but if you convert XML to XML using the generated Go code, there will be a chance one of the above mentioned bugs may impact results. Here is an example I encountered: https://groups.google.com/d/msg/golang-nuts/drWStJSt0Pg/Z47JHeij7ToJ
 
 ##Name
-`chidley` is names after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
+`chidley` is named after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
 
 ##Larger & more complex examples
 Using the file `xml/pubmed_xml_12750255.xml.bz2`. 
