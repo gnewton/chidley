@@ -11,6 +11,9 @@ Author: G. Newton
 `chidley` uses the input XML to build a model of each XML element (or tag).
 It examines each instance of a tag, and builds a prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
 
+## `chidley` binary
+Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
+
 ## Usage
 ```
 $ chidley -h
