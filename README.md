@@ -1,5 +1,5 @@
-# `chidley`
-## `chidley` converts *any* XML to Go structs (and therefor to JSON)
+#`chidley`
+##`chidley` converts *any* XML to Go structs (and therefor to JSON)
 * By *any*, any XML that can be read by the Go [xml package](http://golang.org/pkg/encoding/xml/) decoder. 
 * Where *convert* means, generates Go code that when compiled, will convert the XML to JSON
 * or will just generate the Go structs that represent the input XML
@@ -7,14 +7,14 @@
 
 Author: G. Newton
 
-## How does it work (with such a small memory footprint)
+##How does it work (with such a small memory footprint)
 `chidley` uses the input XML to build a model of each XML element (or tag).
 It examines each instance of a tag, and builds a prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
 
-## `chidley` binary
+##`chidley` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
-## Usage
+##Usage
 ```
 $ chidley -h
 Usage of ./chidley:
@@ -33,7 +33,7 @@ Usage of ./chidley:
 $
 ```
 
-### Specific Usages:
+###Specific Usages:
 * `chidley -W ...`: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
     * convert the XML file to JSON
     * or convert the XML file to XML (useful for validation)
@@ -175,7 +175,7 @@ XML names can contain dots `.` and hyphens or dashes `-`. These do not work as v
 
 Note that the original XML names are used in the struct XML and JSON annotations for the element.
 
-### Go struct name prefix
+###Go struct name prefix
 `chidley` by default prepends a prefix to struct identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
 
 ##Warning
@@ -190,7 +190,7 @@ An xml decoder that handles charsets other than UTF-8 is possible (see example h
 It is possible that this method might be used in the future to extend `chidley` to include a small set of popular charsets.
 * For vanilla XML with no namespaces, there should be no problem using `chidley`
 
-### XML Namespace issues
+###XML Namespace issues
 * There are a number of bugs open for the Go xml package that relate to XML namespaces: https://code.google.com/p/go/issues/list?can=2&q=xml+namespace  If the XML you are using uses namespaces in certain ways, these bugs will impact whether `chidley` can create correct structs for your XML
 * For _most_ XML with namespaces, the JSON will be OK but if you convert XML to XML using the generated Go code, there will be a chance one of the above mentioned bugs may impact results. Here is an example I encountered: https://groups.google.com/d/msg/golang-nuts/drWStJSt0Pg/Z47JHeij7ToJ
 
@@ -202,7 +202,7 @@ Using the file `xml/pubmed_xml_12750255.xml.bz2`.
 * Compressed size: 27M
 * uncompressed size: 337M
 
-### Generate Go structs: `-G`
+###Generate Go structs: `-G`
 
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -G xml/pubmed_xml_12750255.xml.bz2 
@@ -828,7 +828,7 @@ $
 `Linux 3.11.10-100.fc18.x86_64 #1 SMP Mon Dec 2 20:28:38 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux`
 16MB, regular disk, 8 core i7-3720QM CPU @ 2.60GHz)
 
-### Generate Go program: `-W`
+###Generate Go program: `-W`
 
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -W xml/pubmed_xml_12750255.xml.bz2 > examples/pubmed/ChiPubmed.go
@@ -966,7 +966,7 @@ Note the underscore before the colon indicates there is no (or the default) name
 
 ####Generated program: convert XML to JSON
 
-##### No streaming
+#####No streaming
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j > /dev/null
 0:57.26 2866408
@@ -974,7 +974,7 @@ $
 ```
 57 seconds for 337MB XML; resident size: 2.9GB
 
-##### With streaming `-s`
+#####With streaming `-s`
 Streaming decodes using the XML elements that are one level down from the top level container element.
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
@@ -982,7 +982,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
 ```
 59 seconds for 337MB XML; resident size: 16MB
 
-##### Sample of generated JSON
+#####Sample of generated JSON
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
 {
@@ -1297,7 +1297,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
  "MedlineCitation": {
 ```
 
-##### Sample of generated XML to XML
+#####Sample of generated XML to XML
 ```
 $ ./pubmed -x -s |head -100
   <Chi_PubmedArticle>
