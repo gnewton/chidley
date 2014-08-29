@@ -19,8 +19,14 @@ var nameSpaceInJsonName = false
 var prettyPrint = false
 var codeGenConvert = false
 var readFromStandardIn = false
+
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
+
+var writeJava = false
+var javaDir = "java"
+var javaPackage = "ca.newtong.chidley"
+
 var namePrefix = "Chi_"
 var nameSuffix = ""
 var xmlName = false
@@ -35,12 +41,17 @@ type Writer interface {
 var outputs = []*bool{
 	&codeGenConvert,
 	&structsToStdout,
+	&writeJava,
 }
 
 func init() {
 	flag.BoolVar(&DEBUG, "d", DEBUG, "Debug; prints out much information")
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
 	flag.BoolVar(&structsToStdout, "G", structsToStdout, "Only write generated Go structs to stdout")
+	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
+	flag.StringVar(&javaDir, "D", javaDir, "Directory for generated Java code")
+	flag.StringVar(&javaPackage, "k", javaPackage, "Java package name for Java code")
+
 	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
 
 	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")
@@ -52,7 +63,6 @@ func init() {
 	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to struct (element) names")
 	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
-
 }
 
 func handleParameters() error {
@@ -154,7 +164,6 @@ func main() {
 		if err != nil {
 			log.Println("executing template:", err)
 		}
-		break
 
 	case structsToStdout:
 		writer = new(stdoutWriter)
@@ -164,7 +173,25 @@ func main() {
 		printGoStructVisitor.Visit(ex.root)
 		close(lineChannel)
 		writer.close()
-		break
+
+	case writeJava:
+		//printJavaJaxbVisitor := new(PrintJavaJaxbVisitor)
+		printJavaJaxbVisitor := PrintJavaJaxbVisitor{
+			alreadyVisited:      make(map[string]bool),
+			globalTagAttributes: ex.globalTagAttributes,
+			nameSpaceTagMap:     ex.nameSpaceTagMap,
+			useType:             useType,
+			javaDir:             javaDir,
+			javaPackage:         javaPackage,
+		}
+
+		printJavaJaxbVisitor.init()
+
+		for _, child := range ex.root.children {
+			fmt.Println("************")
+			printJavaJaxbVisitor.Visit(child)
+		}
+
 	}
 
 }
@@ -216,6 +243,10 @@ func indent(d int) string {
 
 func capitalizeFirstLetter(s string) string {
 	return strings.ToUpper(s[0:1]) + s[1:]
+}
+
+func lowerFirstLetter(s string) string {
+	return strings.ToLower(s[0:1]) + s[1:]
 }
 
 func countNumberOfBoolsSet(a []*bool) int {
