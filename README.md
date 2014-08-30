@@ -7,6 +7,7 @@
 * or converts XML to XML (useful for validation) 
 
 Author: Glen Newton
+Language: Go
 
 ##How does it work (with such a small memory footprint)
 `chidley` uses the input XML to build a model of each XML element (aka tag).
