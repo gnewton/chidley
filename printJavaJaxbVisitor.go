@@ -15,12 +15,7 @@ type PrintJavaJaxbVisitor struct {
 	useType             bool
 	javaDir             string
 	javaPackage         string
-}
-
-func (v *PrintJavaJaxbVisitor) init() {
-	fullPath := v.javaDir + "/xml"
-	os.RemoveAll(fullPath)
-	os.MkdirAll(fullPath, 0755)
+	namePrefix          string
 }
 
 func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
@@ -34,7 +29,7 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 	class := new(JaxbClassInfo)
 	class.init()
 	class.PackageName = v.javaPackage
-	class.ClassName = cleanName(capitalizeFirstLetter(node.name))
+	class.ClassName = v.namePrefix + cleanName(capitalizeFirstLetter(node.name))
 	class.HasValue = node.hasCharData
 	class.Name = node.name
 
@@ -43,7 +38,8 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 		cleanName := cleanName(fqn.name)
 		jat.Name = fqn.name
 		jat.NameUpper = capitalizeFirstLetter(cleanName)
-		jat.NameLower = lowerFirstLetter(cleanName)
+		//jat.NameLower = v.namePrefix + lowerFirstLetter(cleanName)
+		jat.NameLower = lowerFirstLetter(v.namePrefix) + capitalizeFirstLetter(cleanName)
 		jat.NameSpace = fqn.space
 		class.Attributes = append(class.Attributes, jat)
 	}
@@ -53,10 +49,10 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 		jaf.Name = child.name
 		cleanName := cleanName(child.name)
 		jaf.NameUpper = capitalizeFirstLetter(cleanName)
-		jaf.NameLower = lowerFirstLetter(cleanName)
+		jaf.NameLower = lowerFirstLetter(v.namePrefix) + capitalizeFirstLetter(cleanName)
 		jaf.NameSpace = child.space
 		jaf.Repeats = child.repeats
-		jaf.TypeName = capitalizeFirstLetter(child.makeType("", ""))
+		jaf.TypeName = capitalizeFirstLetter(child.makeType(v.namePrefix, ""))
 		class.Fields = append(class.Fields, jaf)
 
 	}

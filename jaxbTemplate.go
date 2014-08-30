@@ -49,11 +49,11 @@ public class {{.ClassName}} {
     // Attributes{{end}}
 {{range .Attributes}}
 {{if .NameSpace}}    
-@XmlAttribute(namespace = "{{.NameSpace}}"){{else}}    @XmlAttribute{{end}}
+@XmlAttribute(namespace = "{{.NameSpace}}"){{else}}    @XmlAttribute(name="{{.Name}}"){{end}}
     public String {{.NameLower}};{{end}}
 {{if .Fields}}
     // Fields{{end}}{{range .Fields}}    
-    @XmlElement
+    @XmlElement(name="{{.Name}}")
     {{if .Repeats}}public ArrayList<{{.TypeName}}> {{.NameLower}}{{else}}public {{.TypeName}} {{.NameLower}}{{end}};
 {{end}}
 {{if .HasValue}}
@@ -73,6 +73,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import {{.PackageName}}.xml.{{.BaseXMLClassName}};
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
  
 public class Main {
 	public static void main(String[] args) {
@@ -82,7 +84,10 @@ public class Main {
  
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
                 {{.BaseXMLClassName}} root = ({{.BaseXMLClassName}}) jaxbUnmarshaller.unmarshal(file);
-		System.out.println(root);
+
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		System.out.println(gson.toJson(root));
+
 	  } catch (JAXBException e) {
 		e.printStackTrace();
 	  }

@@ -31,9 +31,9 @@ const mavenJavaBase = "src/main/java"
 var javaBasePackagePath = strings.Replace(javaBasePackage, ".", "/", -1)
 var javaAppName = "jaxb"
 var writeJava = false
-var javaDir = "java"
+var baseJavaDir = "java"
 
-var namePrefix = "Chi_"
+var namePrefix = "Chi"
 var nameSuffix = ""
 var xmlName = false
 var url = false
@@ -55,7 +55,7 @@ func init() {
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
 	flag.BoolVar(&structsToStdout, "G", structsToStdout, "Only write generated Go structs to stdout")
 	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
-	flag.StringVar(&javaDir, "D", javaDir, "Directory for generated Java code")
+	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
 
 	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
@@ -182,7 +182,11 @@ func main() {
 
 	case writeJava:
 		javaPackage := javaBasePackage + "." + javaAppName
-		javaDir = javaDir + "/" + mavenJavaBase + "/" + javaBasePackagePath + "/" + javaAppName
+		javaDir := baseJavaDir + "/" + mavenJavaBase + "/" + javaBasePackagePath + "/" + javaAppName
+
+		os.RemoveAll(baseJavaDir)
+		os.MkdirAll(javaDir+"/xml", 0755)
+
 		printJavaJaxbVisitor := PrintJavaJaxbVisitor{
 			alreadyVisited:      make(map[string]bool),
 			globalTagAttributes: ex.globalTagAttributes,
@@ -190,9 +194,8 @@ func main() {
 			useType:             useType,
 			javaDir:             javaDir,
 			javaPackage:         javaPackage,
+			namePrefix:          namePrefix,
 		}
-
-		printJavaJaxbVisitor.init()
 
 		var onlyChild *Node
 		for _, child := range ex.root.children {
@@ -200,9 +203,31 @@ func main() {
 			// Bad: assume only one base element
 			onlyChild = child
 		}
-		printJavaJaxbMain(capitalizeFirstLetter(onlyChild.makeType("", "")), javaDir, javaPackage)
+		printJavaJaxbMain(capitalizeFirstLetter(onlyChild.makeType(namePrefix, "")), javaDir, javaPackage)
+
+		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
 	}
 
+}
+
+func printMavenPom(pomPath string, javaAppName string) {
+	t := template.Must(template.New("mavenPom").Parse(mavenPomTemplate))
+	fi, err := os.Create(pomPath)
+	if err != nil {
+		log.Print("Problem creating file: " + pomPath)
+		panic(err)
+	}
+	defer fi.Close()
+
+	writer := bufio.NewWriter(fi)
+	maven := JaxbMavenPomInfo{
+		AppName: javaAppName,
+	}
+	err = t.Execute(writer, maven)
+	if err != nil {
+		log.Println("executing template:", err)
+	}
+	bufio.NewWriter(writer).Flush()
 }
 
 func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string) {
