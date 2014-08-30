@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -23,9 +24,14 @@ var readFromStandardIn = false
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
 
+// Java out
+const javaBasePackage = "ca.gnewton.chidley"
+const mavenJavaBase = "src/main/java"
+
+var javaBasePackagePath = strings.Replace(javaBasePackage, ".", "/", -1)
+var javaAppName = "jaxb"
 var writeJava = false
 var javaDir = "java"
-var javaPackage = "ca.newtong.chidley"
 
 var namePrefix = "Chi_"
 var nameSuffix = ""
@@ -50,7 +56,7 @@ func init() {
 	flag.BoolVar(&structsToStdout, "G", structsToStdout, "Only write generated Go structs to stdout")
 	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
 	flag.StringVar(&javaDir, "D", javaDir, "Directory for generated Java code")
-	flag.StringVar(&javaPackage, "k", javaPackage, "Java package name for Java code")
+	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
 
 	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
 
@@ -175,7 +181,8 @@ func main() {
 		writer.close()
 
 	case writeJava:
-		//printJavaJaxbVisitor := new(PrintJavaJaxbVisitor)
+		javaPackage := javaBasePackage + "." + javaAppName
+		javaDir = javaDir + "/" + mavenJavaBase + "/" + javaBasePackagePath + "/" + javaAppName
 		printJavaJaxbVisitor := PrintJavaJaxbVisitor{
 			alreadyVisited:      make(map[string]bool),
 			globalTagAttributes: ex.globalTagAttributes,
@@ -187,12 +194,33 @@ func main() {
 
 		printJavaJaxbVisitor.init()
 
+		var onlyChild *Node
 		for _, child := range ex.root.children {
-			fmt.Println("************")
 			printJavaJaxbVisitor.Visit(child)
+			// Bad: assume only one base element
+			onlyChild = child
 		}
-
+		printJavaJaxbMain(capitalizeFirstLetter(onlyChild.makeType("", "")), javaDir, javaPackage)
 	}
+
+}
+
+func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string) {
+	t := template.Must(template.New("chidleyJaxbGenClass").Parse(jaxbMainTemplate))
+	writer, f, err := javaClassWriter(javaDir, javaPackage, "Main")
+	defer f.Close()
+
+	classInfo := JaxbMainClassInfo{
+		PackageName:      javaPackage,
+		BaseXMLClassName: rootElementName,
+	}
+	log.Print("PackageName:" + javaPackage)
+	log.Print("BaseXMLClassName: " + rootElementName)
+	err = t.Execute(writer, classInfo)
+	if err != nil {
+		log.Println("executing template:", err)
+	}
+	bufio.NewWriter(writer).Flush()
 
 }
 

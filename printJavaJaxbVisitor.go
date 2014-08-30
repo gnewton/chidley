@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 	"text/template"
 )
 
@@ -19,7 +18,7 @@ type PrintJavaJaxbVisitor struct {
 }
 
 func (v *PrintJavaJaxbVisitor) init() {
-	fullPath := v.javaDir + "/" + strings.Replace(javaPackage, ".", "/", -1)
+	fullPath := v.javaDir + "/xml"
 	os.RemoveAll(fullPath)
 	os.MkdirAll(fullPath, 0755)
 }
@@ -32,12 +31,12 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 
 	attributes := v.globalTagAttributes[nk(node)]
 
-	jb := new(JaxbInfo)
-	jb.init()
-	jb.PackageName = v.javaPackage
-	jb.ClassName = cleanName(capitalizeFirstLetter(node.name))
-	jb.HasValue = node.hasCharData
-	jb.Name = node.name
+	class := new(JaxbClassInfo)
+	class.init()
+	class.PackageName = v.javaPackage
+	class.ClassName = cleanName(capitalizeFirstLetter(node.name))
+	class.HasValue = node.hasCharData
+	class.Name = node.name
 
 	for _, fqn := range attributes {
 		jat := new(JaxbAttribute)
@@ -46,7 +45,7 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 		jat.NameUpper = capitalizeFirstLetter(cleanName)
 		jat.NameLower = lowerFirstLetter(cleanName)
 		jat.NameSpace = fqn.space
-		jb.Attributes = append(jb.Attributes, jat)
+		class.Attributes = append(class.Attributes, jat)
 	}
 
 	for _, child := range node.children {
@@ -58,11 +57,11 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 		jaf.NameSpace = child.space
 		jaf.Repeats = child.repeats
 		jaf.TypeName = capitalizeFirstLetter(child.makeType("", ""))
-		jb.Fields = append(jb.Fields, jaf)
+		class.Fields = append(class.Fields, jaf)
 
 	}
 
-	printJaxbClass(jb, v.javaDir)
+	printJaxbClass(class, v.javaDir+"/xml")
 
 	for _, child := range node.children {
 		v.Visit(child)
@@ -80,12 +79,12 @@ func (v *PrintJavaJaxbVisitor) SetAlreadyVisited(n *Node) {
 	v.alreadyVisited[nk(n)] = true
 }
 
-func printJaxbClass(jb *JaxbInfo, dir string) {
-	t := template.Must(template.New("chidleyJaxbGen").Parse(jaxbTemplate))
+func printJaxbClass(class *JaxbClassInfo, dir string) {
+	t := template.Must(template.New("chidleyJaxbGen").Parse(jaxbClassTemplate))
 	//err := t.Execute(os.Stdout, jb)
-	writer, f, err := javaClassWriter(dir, jb.PackageName, jb.ClassName)
+	writer, f, err := javaClassWriter(dir, class.PackageName+".xml", class.ClassName)
 	defer f.Close()
-	err = t.Execute(writer, jb)
+	err = t.Execute(writer, class)
 	if err != nil {
 		log.Println("executing template:", err)
 	}
@@ -93,9 +92,10 @@ func printJaxbClass(jb *JaxbInfo, dir string) {
 }
 
 func javaClassWriter(dir string, packageName string, className string) (io.Writer, *os.File, error) {
-	fullPath := dir + "/" + strings.Replace(packageName, ".", "/", -1) + "/" + className + ".java"
+	fullPath := dir + "/" + className + ".java"
 	fi, err := os.Create(fullPath)
 	if err != nil {
+		log.Print("Problem creating file: " + fullPath)
 		panic(err)
 	}
 	return bufio.NewWriter(fi), fi, nil
