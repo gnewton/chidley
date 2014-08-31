@@ -61,12 +61,10 @@ func handleParameters() error {
 	numBoolsSet := countNumberOfBoolsSet(outputs)
 	if numBoolsSet > 1 {
 		log.Print("  ERROR: Only one of -W -J -X -V -c can be set")
-		return nil
-	}
-	if numBoolsSet == 0 {
+	} else if numBoolsSet == 0 {
 		log.Print("  ERROR: At least one of -W -J -X -V -c must be set")
-		return nil
 	}
+
 	return nil
 }
 
