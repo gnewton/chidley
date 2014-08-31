@@ -203,7 +203,7 @@ func main() {
 			// Bad: assume only one base element
 			onlyChild = child
 		}
-		printJavaJaxbMain(capitalizeFirstLetter(onlyChild.makeType(namePrefix, "")), javaDir, javaPackage)
+		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName))
 
 		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
 	}
@@ -230,14 +230,15 @@ func printMavenPom(pomPath string, javaAppName string) {
 	bufio.NewWriter(writer).Flush()
 }
 
-func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string) {
+func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string, sourceXMLFilename string) {
 	t := template.Must(template.New("chidleyJaxbGenClass").Parse(jaxbMainTemplate))
 	writer, f, err := javaClassWriter(javaDir, javaPackage, "Main")
 	defer f.Close()
 
 	classInfo := JaxbMainClassInfo{
-		PackageName:      javaPackage,
-		BaseXMLClassName: rootElementName,
+		PackageName:       javaPackage,
+		BaseXMLClassName:  rootElementName,
+		SourceXMLFilename: sourceXMLFilename,
 	}
 	log.Print("PackageName:" + javaPackage)
 	log.Print("BaseXMLClassName: " + rootElementName)

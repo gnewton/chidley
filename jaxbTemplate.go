@@ -1,8 +1,9 @@
 package main
 
 type JaxbMainClassInfo struct {
-	PackageName      string
-	BaseXMLClassName string
+	PackageName       string
+	BaseXMLClassName  string
+	SourceXMLFilename string
 }
 
 type JaxbClassInfo struct {
@@ -79,7 +80,7 @@ import com.google.gson.GsonBuilder;
 public class Main {
 	public static void main(String[] args) {
 	 try {
-		File file = new File("/home/newtong/work/chidley/xml/Fantasia_con_imitazione_BWV563.xml");
+		File file = new File("{{.SourceXMLFilename}}");
 		JAXBContext jaxbContext = JAXBContext.newInstance({{.BaseXMLClassName}}.class);
  
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();

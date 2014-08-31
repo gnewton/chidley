@@ -38,8 +38,11 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 		cleanName := cleanName(fqn.name)
 		jat.Name = fqn.name
 		jat.NameUpper = capitalizeFirstLetter(cleanName)
-		//jat.NameLower = v.namePrefix + lowerFirstLetter(cleanName)
-		jat.NameLower = lowerFirstLetter(v.namePrefix) + capitalizeFirstLetter(cleanName)
+		if v.namePrefix != "" {
+			jat.NameLower = lowerFirstLetter(v.namePrefix) + capitalizeFirstLetter(cleanName)
+		} else {
+			jat.NameLower = lowerFirstLetter(cleanName)
+		}
 		jat.NameSpace = fqn.space
 		class.Attributes = append(class.Attributes, jat)
 	}
@@ -49,10 +52,14 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 		jaf.Name = child.name
 		cleanName := cleanName(child.name)
 		jaf.NameUpper = capitalizeFirstLetter(cleanName)
-		jaf.NameLower = lowerFirstLetter(v.namePrefix) + capitalizeFirstLetter(cleanName)
+		if v.namePrefix != "" {
+			jaf.NameLower = lowerFirstLetter(v.namePrefix) + capitalizeFirstLetter(cleanName)
+		} else {
+			jaf.NameLower = lowerFirstLetter(cleanName)
+		}
 		jaf.NameSpace = child.space
 		jaf.Repeats = child.repeats
-		jaf.TypeName = capitalizeFirstLetter(child.makeType(v.namePrefix, ""))
+		jaf.TypeName = child.makeJavaType(v.namePrefix, "")
 		class.Fields = append(class.Fields, jaf)
 
 	}
