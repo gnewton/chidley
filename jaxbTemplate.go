@@ -13,6 +13,7 @@ type JaxbClassInfo struct {
 	Attributes             []*JaxbAttribute
 	Fields                 []*JaxbField
 	HasValue               bool
+	ValueType              string
 }
 
 type JaxbAttribute struct {
@@ -60,7 +61,7 @@ public class {{.ClassName}} {
 {{if .HasValue}}
     // Value
     @XmlValue
-    public String text;{{end}}
+    public {{.ValueType}} tagValue;{{end}}
 }
 `
 

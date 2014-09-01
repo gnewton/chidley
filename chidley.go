@@ -240,8 +240,6 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 		BaseXMLClassName:  rootElementName,
 		SourceXMLFilename: sourceXMLFilename,
 	}
-	log.Print("PackageName:" + javaPackage)
-	log.Print("BaseXMLClassName: " + rootElementName)
 	err = t.Execute(writer, classInfo)
 	if err != nil {
 		log.Println("executing template:", err)

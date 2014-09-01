@@ -4,13 +4,17 @@
   <person>
     <name>bill</name>
     <age>37</age>
+    <bigNum>9999999999999</bigNum>
     <married>true</married>
+    <human>yes</human>
   </person>
 
   <person>
     <name>sarah</name>
     <age>24</age>
+    <bigNum>555555555555555</bigNum>
     <married>false</married>
+    <human>no</human>
   </person>
 
 </people>

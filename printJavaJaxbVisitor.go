@@ -31,6 +31,7 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 	class.PackageName = v.javaPackage
 	class.ClassName = v.namePrefix + cleanName(capitalizeFirstLetter(node.name))
 	class.HasValue = node.hasCharData
+	class.ValueType = findJavaType(node.nodeTypeInfo, v.useType)
 	class.Name = node.name
 
 	for _, fqn := range attributes {
@@ -96,6 +97,7 @@ func printJaxbClass(class *JaxbClassInfo, dir string) {
 
 func javaClassWriter(dir string, packageName string, className string) (io.Writer, *os.File, error) {
 	fullPath := dir + "/" + className + ".java"
+	log.Print("Writing java Class file: " + fullPath)
 	fi, err := os.Create(fullPath)
 	if err != nil {
 		log.Print("Problem creating file: " + fullPath)

@@ -47,7 +47,11 @@ func (n *Node) makeName() string {
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
-	return makeTypeGeneric(n.name, n.spaceTag, prefix, suffix)
+	return makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, false)
+}
+
+func (n *Node) makeJavaType(prefix string, suffix string) string {
+	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, true))
 }
 
 func (n *Node) peekParent() *Node {
@@ -72,10 +76,13 @@ func (n *Node) popParent() *Node {
 	return poppedNode
 }
 
-func makeTypeGeneric(name string, space string, prefix string, suffix string) string {
+func makeTypeGeneric(name string, space string, prefix string, suffix string, capitalizeName bool) string {
 	spaceTag := ""
 	if space != "" {
 		spaceTag = space + "_"
+	}
+	if capitalizeName {
+		name = capitalizeFirstLetter(name)
 	}
 	return prefix + spaceTag + cleanName(name) + suffix
 
