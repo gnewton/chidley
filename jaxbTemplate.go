@@ -1,5 +1,11 @@
 package main
 
+type JaxbPackageInfo struct {
+	BaseNameSpace       string
+	AdditionalNameSpace []*FQNAbbr
+	PackageName         string
+}
+
 type JaxbMainClassInfo struct {
 	PackageName       string
 	BaseXMLClassName  string
@@ -43,6 +49,7 @@ package {{.PackageName}}.xml;
 
 import java.util.ArrayList;
 import javax.xml.bind.annotation.*;
+import com.google.gson.annotations.SerializedName;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name="{{.Name}}")
@@ -52,10 +59,12 @@ public class {{.ClassName}} {
 {{range .Attributes}}
 {{if .NameSpace}}    
 @XmlAttribute(namespace = "{{.NameSpace}}"){{else}}    @XmlAttribute(name="{{.Name}}"){{end}}
+    @SerializedName("{{.Name}}")
     public String {{.NameLower}};{{end}}
 {{if .Fields}}
     // Fields{{end}}{{range .Fields}}    
     @XmlElement(name="{{.Name}}")
+    @SerializedName("{{.Name}}")
     {{if .Repeats}}public ArrayList<{{.TypeName}}> {{.NameLower}}{{else}}public {{.TypeName}} {{.NameLower}}{{end}};
 {{end}}
 {{if .HasValue}}
@@ -95,4 +104,20 @@ public class Main {
 	  }
 	}
 }
+`
+
+const jaxbPackageInfoTemplage = `
+@XmlSchema(
+    namespace="{{.BaseNameSpace}}",
+    elementFormDefault = XmlNsForm.QUALIFIED{{if .AdditionalNameSpace}},
+    xmlns={
+       {{range .AdditionalNameSpace}}
+               @XmlNs(prefix="{{.abbr}}", namespaceURI="{{.space}}"), 
+       {{end}}
+   }
+   {{end}}
+)
+package {{.PackageName}};
+
+import javax.xml.bind.annotation.*;
 `

@@ -72,7 +72,7 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 }
 
 const JavaString = "String"
-const JavaBoolean = "bool"
+const JavaBoolean = "boolean"
 const JavaShort = "short"
 const JavaFloat = "float"
 const JavaDouble = "double"
@@ -88,15 +88,11 @@ func findJavaType(nti *NodeTypeInfo, useType bool) string {
 	switch goType {
 	case "bool":
 		return JavaBoolean
-	case "int8":
-	case "uint8":
-	case "int16":
+	case "int8", "uint8", "int16":
 		return JavaShort
-	case "uint16":
-	case "int32":
+	case "uint16", "int32":
 		return JavaInt
-	case "uint32":
-	case "int64":
+	case "uint32", "int64":
 		return JavaLong
 	case "float32":
 		return JavaFloat

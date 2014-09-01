@@ -1,5 +1,7 @@
 #`chidley`
 
+
+
 ##`chidley` converts *any* XML to Go structs (and therefor to JSON)
 * By *any*, any XML that can be read by the Go [xml package](http://golang.org/pkg/encoding/xml/) decoder. 
 * Where *convert* means, generates Go code that when compiled, will convert the XML to JSON
@@ -23,22 +25,31 @@ Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
 ##Usage
 ```
-$ chidley -h
 Usage of ./chidley:
+  -D="java": Base directory for generated Java code (root of maven project)
   -G=false: Only write generated Go structs to stdout
+  -J=false: Generated Java code for Java/JAXB
   -W=false: Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout
   -a="Attr": Prefix to attribute names
   -c=false: Read XML from standard input
   -d=false: Debug; prints out much information
-  -e="Chi_": Prefix to struct (element) names; must start with a capital
-  -n=false: Use the XML namespace as prefix to JSON name
+  -e="Chi": Prefix to struct (element) names; must start with a capital
+  -k="jaxb": App name for Java code (appended to ca.gnewton.chidley Java package name))
+  -n=false: Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)
   -p=false: Pretty-print json in generated code (if applicable)
   -r=false: Progress: every 50000 input tags (elements)
   -s="": Suffix to struct (element) names
   -t=false: Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete
   -u=false: Filename interpreted as an URL
+  -x=false: Add XMLName (Space, Local) for each XML element, to JSON
 $
 ```
+
+###New
+`chidley` now has support for Java/JAXB. It generates appropriate Java/Jaxb classes and associated maven pom.
+
+See Java section below for usage.
+
 
 ###Specific Usages:
 * `chidley -W ...`: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:

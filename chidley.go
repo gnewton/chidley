@@ -204,10 +204,50 @@ func main() {
 			onlyChild = child
 		}
 		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName))
+		printPackageInfo(onlyChild, javaDir, javaPackage, ex.globalTagAttributes, ex.nameSpaceTagMap)
 
 		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
 	}
 
+}
+
+//func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string]) []*FQN {
+func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string][]*FQN, nameSpaceTagMap map[string]string) {
+	if node.space != "" {
+		//attributes := findNameSpaces(globalTagAttributes[nk(node)])
+
+		t := template.Must(template.New("package-info").Parse(jaxbPackageInfoTemplage))
+		packageInfoPath := javaDir + "/xml/package-info.java"
+		fi, err := os.Create(packageInfoPath)
+		if err != nil {
+			log.Print("Problem creating file: " + packageInfoPath)
+			panic(err)
+		}
+		defer fi.Close()
+
+		writer := bufio.NewWriter(fi)
+		packageInfo := JaxbPackageInfo{
+			BaseNameSpace: node.space,
+			//AdditionalNameSpace []*FQN
+			PackageName: javaPackage + ".xml",
+		}
+		err = t.Execute(writer, packageInfo)
+		if err != nil {
+			log.Println("executing template:", err)
+		}
+		bufio.NewWriter(writer).Flush()
+	}
+
+}
+
+const XMLNS = "xmlns"
+
+func findNameSpaces(attributes []*FQN) []*FQN {
+	if attributes == nil || len(attributes) == 0 {
+		return nil
+	}
+	xmlns := make([]*FQN, 0)
+	return xmlns
 }
 
 func printMavenPom(pomPath string, javaAppName string) {
