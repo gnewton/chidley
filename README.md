@@ -1613,9 +1613,29 @@ $
 ```
 
 ###Limitations
-- Can handle vanilla XML (no namespaces) OK
+- Can handle vanilla XML (no namespaces) OK, like:
 - Can handle top level namespaces OK
-- *Cannot* handle element- or attribute-level namespaces (soon)
+```
+<?xml version="1.0"?>
+<docs 
+    xmlns:book="http://fake.org/book"
+    xmlns:article="http://fake.org/article"
+>
+  <book:doc>
+    A book entry
+  </book:doc>
+  <article:doc>
+    A article entry
+  </article:doc>
+</docs>
+```
+- *Cannot* handle element- or attribute-level namespaces (soon), like:
+<?xml version="1.0"?>
+<docs>
+  <doc>number one</doc>
+  <p1:doc xmlns:p1="http://test.org/1">number two</p1:doc>
+</docs>
+```
 - *Cannot* read `gz` or `bz2` compressed XML (soon)
 - *Cannot* do [XML streaming](https://stackoverflow.com/questions/1134189/can-jaxb-parse-large-xml-files-in-chunks) (thus limited to smaller XML files) (perhaps soon?)
 
