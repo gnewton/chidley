@@ -10,6 +10,12 @@
 
 Author: Glen Newton
 
+###New
+`chidley` now has support for Java/JAXB (beta). It generates appropriate Java/JAXB classes and associated maven pom.
+
+See Java/JAXB section below for usage.
+
+
 ##How does it work (with such a small memory footprint)
 `chidley` uses the input XML to build a model of each XML element (aka tag).
 It examines each instance of a tag, and builds a (single) prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
@@ -45,10 +51,6 @@ Usage of ./chidley:
 $
 ```
 
-###New
-`chidley` now has support for Java/JAXB. It generates appropriate Java/Jaxb classes and associated maven pom.
-
-See Java section below for usage.
 
 
 ###Specific Usages:
@@ -1499,5 +1501,6 @@ $ ./pubmed -x -s |head -100
           </ArticleIdList>
 ```
 
+## Java/JAXB
 
 Copyright 2014 Glen Newton
