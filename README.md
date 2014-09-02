@@ -13,7 +13,7 @@ Author: Glen Newton
 ###New
 `chidley` now has support for Java/JAXB (beta). It generates appropriate Java/JAXB classes and associated maven pom.
 
-See Java/JAXB section below for usage.
+See [Java/JAXB section below](#java) for usage.
 
 
 ##How does it work (with such a small memory footprint)
@@ -1501,6 +1501,6 @@ $ ./pubmed -x -s |head -100
           </ArticleIdList>
 ```
 
-## Java/JAXB
+## <a name="java">Java/JAXB</a>
 
 Copyright 2014 Glen Newton
