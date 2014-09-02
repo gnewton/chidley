@@ -1508,7 +1508,7 @@ Its only dependency is Google [Gson](https://code.google.com/p/google-gson/), fo
 *NB: Java/JAXB support considered beta*
 
 ###Usage
-`chidley` creates a maven project in `./java` and creates Java JAXB files in `src/main/java/ca/gnewton/chidley/jaxb/xml`. 
+`chidley` creates a maven project in `./java` (settable using the `-D` flag`) and creates Java JAXB files in `src/main/java/ca/gnewton/chidley/jaxb/xml`. 
 It creates a `Main.java` in `src/main/java/ca/gnewton/chidley/jax`
 ```
 $ `chidley -J xml/test1.xml
@@ -1564,7 +1564,7 @@ $
 
 #### Running
 ```
-$ export CLASSPATH=./target/chidley-jaxb-1.0-SNAPSHOT.jar:/home/newtong/.m2/repository/com/google/code/gson/gson/2.3/gson-2.3.jar:$CLASSPATH
+$ export CLASSPATH=./target/chidley-jaxb-1.0-SNAPSHOT.jar:/home/myhome/.m2/repository/com/google/code/gson/gson/2.3/gson-2.3.jar:$CLASSPATH
 $ java ca.gnewton.chidley.jaxb.Main
 {
   "language": "eng",
