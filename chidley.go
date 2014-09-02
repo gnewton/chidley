@@ -77,12 +77,10 @@ func handleParameters() error {
 	numBoolsSet := countNumberOfBoolsSet(outputs)
 	if numBoolsSet > 1 {
 		log.Print("  ERROR: Only one of -W -J -X -V -c can be set")
-		return nil
-	}
-	if numBoolsSet == 0 {
+	} else if numBoolsSet == 0 {
 		log.Print("  ERROR: At least one of -W -J -X -V -c must be set")
-		return nil
 	}
+
 	return nil
 }
 
@@ -214,7 +212,7 @@ func main() {
 //func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string]) []*FQN {
 func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string][]*FQN, nameSpaceTagMap map[string]string) {
 
-	fmt.Printf("%+v\n", node)
+	//log.Printf("%+v\n", node)
 
 	if node.space != "" {
 		_ = findNameSpaces(globalTagAttributes[nk(node)])
@@ -251,9 +249,9 @@ func findNameSpaces(attributes []*FQN) []*FQN {
 		return nil
 	}
 	xmlns := make([]*FQN, 0)
-	for k, v := range attributes {
-		fmt.Println(k, v)
-	}
+	//for k, v := range attributes {
+	//fmt.Println(k, v)
+	//}
 	return xmlns
 }
 

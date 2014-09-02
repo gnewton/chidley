@@ -17,7 +17,7 @@ do
     /usr/bin/time -f "%E %M"  ./test -j -s > /dev/null
     echo "Generated code: convert to XML"
     /usr/bin/time -f "%E %M" ./test -x > /dev/null
-    echo "Generated code: convert to XML, streaming"
+    echo "Generated code: convert to XML, streamingb"
     /usr/bin/time -f "%E %M" ./test -x -s > /dev/null
     cd ..
     echo "Java code generation"

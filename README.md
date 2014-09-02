@@ -9,6 +9,7 @@
 * or converts XML to XML (useful for validation) 
 
 Author: Glen Newton
+Language: Go
 
 ###New
 `chidley` now has support for Java/JAXB (beta). It generates appropriate Java/JAXB classes and associated maven pom.
@@ -18,13 +19,13 @@ See [Java/JAXB section below](#user-content-java) for usage.
 
 ##How does it work (with such a small memory footprint)
 `chidley` uses the input XML to build a model of each XML element (aka tag).
-It examines each instance of a tag, and builds a (single) prototypical representation, that is the union of all the attributes and all of the child elements of all instances of the tag.
+It examines each instance of a tag, and builds a (single) prototypical representation; that is, the union of all the attributes and all of the child elements of all instances of the tag.
 So even if there are million instances of a specific tag, there is only one model tag representation.
 Note that a tag is unique by its namespace+tagname combination (in the Go xml package parlance, [`space + local`](http://golang.org/pkg/encoding/xml/#Name).
 ###Types
-`chidley` by default makes everything a string (which is always valid for XML content), but it has a flag (`-t`) where it will detect and use the most appropriate type. 
-`chidley` tries to fit the **smallest** type. 
-That is, if all instances of a tag contain a number, and all instances are -128 to 127, then it will use an `int8` in the Go struct.
+`chidley` by default makes all values (attributes, tag content) in the generated Go structs a string (which is always valid for XML attributes and content), but it has a flag (`-t`) where it will detect and use the most appropriate type. 
+`chidley` tries to fit the **smallest** Go type. 
+For example, if all instances of a tag contain a number, and all instances are -128 to 127, then it will use an `int8` in the Go struct.
 
 ##`chidley` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
@@ -150,7 +151,7 @@ $ ./test1 -c
 2 _:firstName
 ```
 
-Note the underscore before the colon indicates there is no (or the default) namespace for the element.
+**Note**: the underscore before the colon indicates there is no (or the default) namespace for the element. 
 
 ###Example `chidley -G`:
 Just prints out the Go structs to standard out:
@@ -189,11 +190,11 @@ type Chi_firstName struct {
 ```
 
 ##Name changes: XML vs. Go structs
-XML names can contain dots `.` and hyphens or dashes `-`. These do not work as valid Go struct identifiers. These are mapped as:
+XML names can contain dots `.` and hyphens or dashes `-`. These are not valid identifiers for Go structs or variables. These are mapped as:
 * `"-": "_"`
 * `".": "_dot_"`
 
-Note that the original XML names are used in the struct XML and JSON annotations for the element.
+Note that the original XML name strings are used in the struct XML and JSON annotations for the element.
 
 ##Type example
 ```
@@ -274,11 +275,16 @@ type Chi_married struct {
 }
 ```
 
+Notice:
+* `Text int8` in `Chi_age`
+* `Text bool` in `Chi_married`
+
 ##Go struct name prefix
-`chidley` by default prepends a prefix to struct identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter.
+`chidley` by default prepends a prefix to Go struct type identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter (for the XML annotation and decoder to work: the struct fields must be public).
 
 ##Warning
 If you are going to use the `chidley` generated Go structs on XML other than the input XML, you need to make sure the input XML has examples of all tags, and tag attribute and tag child tag combinations. 
+
 If the input does not have all of these, and you use new XML that has tags not found in the input XML, attributes not seen in tags in the input XML, or child tags not encountered in the input XML, these will not be *seen* by the xml decoder, as they will not be in the Go structs used by the xml decoder.
 
 ##Limitations
@@ -289,7 +295,7 @@ An xml decoder that handles charsets other than UTF-8 is possible (see example h
 It is possible that this method might be used in the future to extend `chidley` to include a small set of popular charsets.
 * For vanilla XML with no namespaces, there should be no problem using `chidley`
 
-###XML Namespace issues
+###Go `xml` package Namespace issues
 * There are a number of bugs open for the Go xml package that relate to XML namespaces: https://code.google.com/p/go/issues/list?can=2&q=xml+namespace  If the XML you are using uses namespaces in certain ways, these bugs will impact whether `chidley` can create correct structs for your XML
 * For _most_ XML with namespaces, the JSON will be OK but if you convert XML to XML using the generated Go code, there will be a chance one of the above mentioned bugs may impact results. Here is an example I encountered: https://groups.google.com/d/msg/golang-nuts/drWStJSt0Pg/Z47JHeij7ToJ
 
@@ -297,11 +303,11 @@ It is possible that this method might be used in the future to extend `chidley` 
 `chidley` is named after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
 
 ##Larger & more complex example
-Using the file `xml/pubmed_xml_12750255.xml.bz2`. 
+Using the file `xml/pubmed_xml_12750255.xml.bz2`. Generated from a query to pubmed (similar but much larger than [http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml](http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml)), returning a document in the [MEDLINE/Pubmed XML format](http://www.nlm.nih.gov/bsd/licensee/data_elements_doc.html).
 * Compressed size: 27M
-* uncompressed size: 337M
+* Uncompressed size: 337M
 
-###Generate Go structs: `-G`
+###Generate Go structs from pubmed_xml_12750255.xml.bz2: `-G`
 
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -G xml/pubmed_xml_12750255.xml.bz2 
@@ -923,9 +929,11 @@ $
 
 48 seconds for 337MB XML; resident size: 15MB
 
-(All timings from Dell laptop
+*Note:* All timings from Dell laptop 16GB, regular disk, 8 core i7-3720QM CPU @ 2.60GHz)
+
 `Linux 3.11.10-100.fc18.x86_64 #1 SMP Mon Dec 2 20:28:38 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux`
-16MB, regular disk, 8 core i7-3720QM CPU @ 2.60GHz)
+
+
 
 ###Generate Go program: `-W`
 
@@ -1059,7 +1067,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -c | sort -n
 $
 ```
 
-Note the underscore before the colon indicates there is no (or the default) namespace for the element.
+*Note:* The underscore before the colon indicates there is no (or the default) namespace for the element.
 
 36 seconds for 337MB XML; resident size: 10.5MB
 
@@ -1605,9 +1613,9 @@ $
 ###Limitations
 - Can handle vanilla XML (no namespaces) OK
 - Can handle top level namespaces OK
-- Cannot handle element- or attribute-level namespaces (soon)
-- Does not read `gz` or `bz2` compressed XML (soon)
-- Does not do XML streaming (thus limited to smaller XML files) (perhaps soon?)
+- *Cannot* handle element- or attribute-level namespaces (soon)
+- *Cannot* read `gz` or `bz2` compressed XML (soon)
+- *Cannot* do [XML streaming](https://stackoverflow.com/questions/1134189/can-jaxb-parse-large-xml-files-in-chunks) (thus limited to smaller XML files) (perhaps soon?)
 
 
 Copyright 2014 Glen Newton
