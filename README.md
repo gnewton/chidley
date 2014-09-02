@@ -1,5 +1,3 @@
-* auto-gen TOC:
-{:toc}
 #`chidley`
 
 
@@ -15,7 +13,7 @@ Author: Glen Newton
 ###New
 `chidley` now has support for Java/JAXB (beta). It generates appropriate Java/JAXB classes and associated maven pom.
 
-See [Java/JAXB section below](#java) for usage.
+See [Java/JAXB section below](#user-content-java) for usage.
 
 
 ##How does it work (with such a small memory footprint)
