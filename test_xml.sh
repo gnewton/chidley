@@ -7,14 +7,26 @@ do
     echo "=================================================================="
     echo $f
     echo ""
-    echo ""
-    ./chidley -W $f > test/Test.go
+    echo "Go code generation"
+    /usr/bin/time -f "%E %M" ./chidley -W $f > test/Test.go
     cd test
     go build
-    time ./test -j > /dev/null
-    time ./test -j -s > /dev/null
-    time ./test -x > /dev/null
-    time ./test -x -s > /dev/null
+    echo "Generated code: convert to JSON"
+    /usr/bin/time -f "%E %M"  ./test -j > /dev/null
+    echo "Generated code: convert to JSON, streaming"
+    /usr/bin/time -f "%E %M"  ./test -j -s > /dev/null
+    echo "Generated code: convert to XML"
+    /usr/bin/time -f "%E %M" ./test -x > /dev/null
+    echo "Generated code: convert to XML, streaming"
+    /usr/bin/time -f "%E %M" ./test -x -s > /dev/null
+    cd ..
+    echo "Java code generation"
+    /usr/bin/time -f "%E %M" ./chidley -J $f
+    cd java
+    mvn package
+    export CLASSPATH=target/jaxb-1.0-SNAPSHOT.jar:$CLASSPATH
+    echo "Running Java/JAXB  XML -> JSON"
+    /usr/bin/time -f "%E %M" java ca.gnewton.chidley.jaxb.Main > /dev/null
     cd ..
 done
 

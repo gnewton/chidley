@@ -213,7 +213,11 @@ func main() {
 
 //func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string]) []*FQN {
 func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string][]*FQN, nameSpaceTagMap map[string]string) {
+
+	fmt.Printf("%+v\n", node)
+
 	if node.space != "" {
+		_ = findNameSpaces(globalTagAttributes[nk(node)])
 		//attributes := findNameSpaces(globalTagAttributes[nk(node)])
 
 		t := template.Must(template.New("package-info").Parse(jaxbPackageInfoTemplage))
@@ -247,6 +251,9 @@ func findNameSpaces(attributes []*FQN) []*FQN {
 		return nil
 	}
 	xmlns := make([]*FQN, 0)
+	for k, v := range attributes {
+		fmt.Println(k, v)
+	}
 	return xmlns
 }
 
