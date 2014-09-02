@@ -1,3 +1,5 @@
+* auto-gen TOC:
+{:toc}
 #`chidley`
 
 
