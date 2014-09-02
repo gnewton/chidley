@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<docs
+<docs     xmlns="http://test.org/88"
     xmlns:p1="http://test.org/1"
     xmlns:p2="http://test.org/2"
 >
-  <doc p2:type="x" type="y" >number two</doc>
+  <doc p2:type="x" type="y"     >number two</doc>
 
 </docs>

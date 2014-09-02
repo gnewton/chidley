@@ -3,7 +3,7 @@
      Original XML at: http://docs.aws.amazon.com/AmazonCloudFront/latest/APIReference/GetDistribution.html
      Corrected as indicated in: https://groups.google.com/d/msg/golang-nuts/IzlH_ZLWC4A/uU2hNH_4idMJ
 -->
-<Distribution xmlns="http://cloudfront.amazonaws.com/doc/2014-05-31/">
+<Distribution xmlns="http://cloudfront.amazonaws.com/doc/2014-05-31/" xmlns:bp="http://www.biopax.org/release/biopax-level3.owl#">
    <Id>ID for the distribution</Id>
    <Status>Deployed | InProgress</Status>
    <LastModifiedTime>creation date and time in 
@@ -221,7 +221,7 @@
          <Prefix>prefix for log filenames</Prefix>
       </Logging>
       <ViewerCertificate>
-         <IAMCertificateId>IAM certificate ID</IAMCertificateId> | 
+         <IAMCertificateId>IAM certificate ID</IAMCertificateId> 
             <CloudFrontDefaultCertificate>true</CloudFrontDefaultCertificate>
          <SSLSupportMethod>vip | sni-only</SSLSupportMethod>
       </ViewerCertificate>
