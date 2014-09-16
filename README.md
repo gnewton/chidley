@@ -1517,10 +1517,10 @@ Its only dependency is Google [Gson](https://code.google.com/p/google-gson/), fo
 *NB: Java/JAXB support considered beta*
 
 ###Usage
-`chidley` creates a maven project in `./java` (settable using the `-D` flag`) and creates Java JAXB files in `src/main/java/ca/gnewton/chidley/jaxb/xml`. 
+`chidley` creates a maven project in `./java` (settable using the `-D` flag) and creates Java JAXB files in `src/main/java/ca/gnewton/chidley/jaxb/xml`. 
 It creates a `Main.java` in `src/main/java/ca/gnewton/chidley/jax`
 ```
-$ `chidley -J xml/test1.xml
+$ chidley -J xml/test1.xml
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiDocs.java
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiDoc.java
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiTitle.java
@@ -1613,7 +1613,7 @@ $
 ```
 
 ###Limitations
-- Can handle vanilla XML (no namespaces) OK, like:
+- Can handle vanilla XML (no namespaces) OK
 - Can handle top level namespaces OK
 ```
 <?xml version="1.0"?>
@@ -1629,7 +1629,8 @@ $
   </article:doc>
 </docs>
 ```
-- *Cannot* handle element- or attribute-level namespaces (soon), like:
+- *Cannot* handle element- or attribute-level namespaces (*soon*), like:
+```
 <?xml version="1.0"?>
 <docs>
   <doc>number one</doc>
