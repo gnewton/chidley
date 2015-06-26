@@ -47,14 +47,19 @@ func (ex *Extractor) extract() error {
 	go handleTokens(tokenChannel, ex, handleTokensDoneChannel)
 
 	for {
+		log.Println("m")
 		token, err := decoder.Token()
+		log.Println(token)
 		if err != nil {
 			if err.Error() == "EOF" {
+				log.Println("EOF")
 				break
 			}
+			log.Println(err)
 			return err
 		}
 		if token == nil {
+			log.Println("Empty token")
 			break
 		}
 		tokenChannel <- xml.CopyToken(token)
