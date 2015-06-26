@@ -84,8 +84,12 @@ func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
 
 		jsonAnnotation := makeJsonAnnotation(v.spaceTag, pn.nameSpaceInJsonName, v.name)
 		xmlAnnotation := makeXmlAnnotation(v.space, false, v.name)
+		dbAnnotation := ""
+		if addDbMetadata {
+			dbAnnotation = " " + makeDbAnnotation(v.space, false, v.name)
+		}
 
-		annotation := " `" + xmlAnnotation + " " + jsonAnnotation + "`"
+		annotation := " `" + xmlAnnotation + " " + jsonAnnotation + dbAnnotation + "`"
 
 		field += annotation
 		fields = append(fields, field)
@@ -108,6 +112,10 @@ func makeJsonAnnotation(spaceTag string, useSpaceTagInName bool, name string) st
 
 func makeXmlAnnotation(spaceTag string, useSpaceTag bool, name string) string {
 	return makeAnnotation("xml", spaceTag, true, false, name)
+}
+
+func makeDbAnnotation(spaceTag string, useSpaceTag bool, name string) string {
+	return makeAnnotation("db", spaceTag, true, false, name)
 }
 
 func makeAnnotation(annotationId string, spaceTag string, useSpaceTag bool, useSpaceTagInName bool, name string) (annotation string) {
