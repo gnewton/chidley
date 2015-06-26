@@ -38,6 +38,7 @@ var nameSuffix = ""
 var xmlName = false
 var url = false
 var useType = false
+var addDbMetadata = false
 
 type Writer interface {
 	open(s string, lineChannel chan string) error
@@ -69,6 +70,7 @@ func init() {
 	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to struct (element) names")
 	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
+	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
 }
 
 func handleParameters() error {
