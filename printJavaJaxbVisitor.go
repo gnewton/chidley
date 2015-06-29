@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"text/template"
+	"time"
 )
 
 type PrintJavaJaxbVisitor struct {
@@ -16,6 +17,7 @@ type PrintJavaJaxbVisitor struct {
 	javaDir             string
 	javaPackage         string
 	namePrefix          string
+	Date                time.Time
 }
 
 func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
@@ -28,6 +30,7 @@ func (v *PrintJavaJaxbVisitor) Visit(node *Node) bool {
 
 	class := new(JaxbClassInfo)
 	class.init()
+	class.Date = v.Date
 	class.PackageName = v.javaPackage
 	class.ClassName = v.namePrefix + cleanName(capitalizeFirstLetter(node.name))
 	class.HasValue = node.hasCharData

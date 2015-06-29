@@ -12,7 +12,7 @@ const mavenPomTemplate = `
   <artifactId>{{.AppName}}</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>::.AppName}}</name>
+  <name>{{.AppName}}</name>
   <url>http://maven.apache.org</url>
   <dependencies>
     <dependency>

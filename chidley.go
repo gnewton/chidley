@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+	"time"
 )
 
 var DEBUG = false
@@ -38,6 +39,7 @@ var nameSuffix = ""
 var xmlName = false
 var url = false
 var useType = false
+var addDbMetadata = false
 
 type Writer interface {
 	open(s string, lineChannel chan string) error
@@ -69,6 +71,7 @@ func init() {
 	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to struct (element) names")
 	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
+	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
 }
 
 func handleParameters() error {
@@ -184,7 +187,7 @@ func main() {
 
 		os.RemoveAll(baseJavaDir)
 		os.MkdirAll(javaDir+"/xml", 0755)
-
+		date := time.Now()
 		printJavaJaxbVisitor := PrintJavaJaxbVisitor{
 			alreadyVisited:      make(map[string]bool),
 			globalTagAttributes: ex.globalTagAttributes,
@@ -193,6 +196,7 @@ func main() {
 			javaDir:             javaDir,
 			javaPackage:         javaPackage,
 			namePrefix:          namePrefix,
+			Date:                date,
 		}
 
 		var onlyChild *Node
@@ -201,7 +205,7 @@ func main() {
 			// Bad: assume only one base element
 			onlyChild = child
 		}
-		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName))
+		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName), date)
 		printPackageInfo(onlyChild, javaDir, javaPackage, ex.globalTagAttributes, ex.nameSpaceTagMap)
 
 		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
@@ -275,7 +279,7 @@ func printMavenPom(pomPath string, javaAppName string) {
 	bufio.NewWriter(writer).Flush()
 }
 
-func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string, sourceXMLFilename string) {
+func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string, sourceXMLFilename string, date time.Time) {
 	t := template.Must(template.New("chidleyJaxbGenClass").Parse(jaxbMainTemplate))
 	writer, f, err := javaClassWriter(javaDir, javaPackage, "Main")
 	defer f.Close()
@@ -284,6 +288,7 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 		PackageName:       javaPackage,
 		BaseXMLClassName:  rootElementName,
 		SourceXMLFilename: sourceXMLFilename,
+		Date:              date,
 	}
 	err = t.Execute(writer, classInfo)
 	if err != nil {
