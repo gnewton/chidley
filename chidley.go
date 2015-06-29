@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+	"time"
 )
 
 var DEBUG = false
@@ -186,7 +187,7 @@ func main() {
 
 		os.RemoveAll(baseJavaDir)
 		os.MkdirAll(javaDir+"/xml", 0755)
-
+		date := time.Now()
 		printJavaJaxbVisitor := PrintJavaJaxbVisitor{
 			alreadyVisited:      make(map[string]bool),
 			globalTagAttributes: ex.globalTagAttributes,
@@ -195,6 +196,7 @@ func main() {
 			javaDir:             javaDir,
 			javaPackage:         javaPackage,
 			namePrefix:          namePrefix,
+			Date:                date,
 		}
 
 		var onlyChild *Node
@@ -203,7 +205,7 @@ func main() {
 			// Bad: assume only one base element
 			onlyChild = child
 		}
-		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName))
+		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName), date)
 		printPackageInfo(onlyChild, javaDir, javaPackage, ex.globalTagAttributes, ex.nameSpaceTagMap)
 
 		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
@@ -277,7 +279,7 @@ func printMavenPom(pomPath string, javaAppName string) {
 	bufio.NewWriter(writer).Flush()
 }
 
-func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string, sourceXMLFilename string) {
+func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage string, sourceXMLFilename string, date time.Time) {
 	t := template.Must(template.New("chidleyJaxbGenClass").Parse(jaxbMainTemplate))
 	writer, f, err := javaClassWriter(javaDir, javaPackage, "Main")
 	defer f.Close()
@@ -286,6 +288,7 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 		PackageName:       javaPackage,
 		BaseXMLClassName:  rootElementName,
 		SourceXMLFilename: sourceXMLFilename,
+		Date:              date,
 	}
 	err = t.Execute(writer, classInfo)
 	if err != nil {
