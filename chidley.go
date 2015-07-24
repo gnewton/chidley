@@ -1,5 +1,8 @@
 package main
 
+// Copyright 2014,2015 Glen Newton
+// glen.newton@gmail.com
+
 import (
 	"bufio"
 	"flag"
@@ -213,7 +216,6 @@ func main() {
 
 }
 
-//func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string]) []*FQN {
 func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagAttributes map[string][]*FQN, nameSpaceTagMap map[string]string) {
 
 	//log.Printf("%+v\n", node)
@@ -253,9 +255,6 @@ func findNameSpaces(attributes []*FQN) []*FQN {
 		return nil
 	}
 	xmlns := make([]*FQN, 0)
-	//for k, v := range attributes {
-	//fmt.Println(k, v)
-	//}
 	return xmlns
 }
 

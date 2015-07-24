@@ -71,37 +71,6 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 	return "string"
 }
 
-const JavaString = "String"
-const JavaBoolean = "boolean"
-const JavaShort = "short"
-const JavaFloat = "float"
-const JavaDouble = "double"
-const JavaInt = "int"
-const JavaLong = "long"
-
-func findJavaType(nti *NodeTypeInfo, useType bool) string {
-	if !useType {
-		return JavaString
-	}
-	goType := findType(nti, true)
-
-	switch goType {
-	case "bool":
-		return JavaBoolean
-	case "int8", "uint8", "int16":
-		return JavaShort
-	case "uint16", "int32":
-		return JavaInt
-	case "uint32", "int64":
-		return JavaLong
-	case "float32":
-		return JavaFloat
-	case "float64":
-		return JavaDouble
-	}
-	return JavaString
-}
-
 func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap map[string]string) {
 
 	for _, fqn := range attributes {

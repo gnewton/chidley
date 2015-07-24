@@ -47,9 +47,7 @@ func (ex *Extractor) extract() error {
 	go handleTokens(tokenChannel, ex, handleTokensDoneChannel)
 
 	for {
-		log.Println("m")
 		token, err := decoder.Token()
-		log.Println(token)
 		if err != nil {
 			if err.Error() == "EOF" {
 				log.Println("EOF")
