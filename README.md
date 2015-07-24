@@ -44,7 +44,6 @@ Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 ##Usage
 ```
 Usage of ./chidley:
-  -B=false: Add database metadata to created Go structs
   -D="java": Base directory for generated Java code (root of maven project)
   -G=false: Only write generated Go structs to stdout
   -J=false: Generated Java code for Java/JAXB
