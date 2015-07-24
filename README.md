@@ -11,7 +11,18 @@
 Author: Glen Newton
 Language: Go
 
-###New
+##New
+
+#2015.07.24
+`chidley` now supports the user naming of the resulting JAXB Java class package.
+Previously the package name could only be `ca/gnewton/chidley/jaxb`.
+Now, using the `-P name`, the `jaxb` default can be altered.
+
+So `chidley -J -P "foobar" sample.xml` will result in Java classes with package name: `ca/gnewton/chidley/foobar`.
+
+
+###Previous
+
 `chidley` now has support for Java/JAXB. It generates appropriate Java/JAXB classes and associated maven pom.
 
 See [Java/JAXB section below](#user-content-java) for usage.
@@ -33,9 +44,11 @@ Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 ##Usage
 ```
 Usage of ./chidley:
+  -B=false: Add database metadata to created Go structs
   -D="java": Base directory for generated Java code (root of maven project)
   -G=false: Only write generated Go structs to stdout
   -J=false: Generated Java code for Java/JAXB
+  -P="": Java package name (rightmost in full package name
   -W=false: Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout
   -a="Attr": Prefix to attribute names
   -c=false: Read XML from standard input
@@ -45,7 +58,6 @@ Usage of ./chidley:
   -n=false: Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)
   -p=false: Pretty-print json in generated code (if applicable)
   -r=false: Progress: every 50000 input tags (elements)
-  -s="": Suffix to struct (element) names
   -t=false: Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete
   -u=false: Filename interpreted as an URL
   -x=false: Add XMLName (Space, Local) for each XML element, to JSON
@@ -1516,7 +1528,7 @@ Its only dependency is Google [Gson](https://code.google.com/p/google-gson/), fo
 
 ###Usage
 `chidley` creates a maven project in `./java` (settable using the `-D` flag) and creates Java JAXB files in `src/main/java/ca/gnewton/chidley/jaxb/xml`. 
-It creates a `Main.java` in `src/main/java/ca/gnewton/chidley/jax`
+It creates a `Main.java` in `src/main/java/ca/gnewton/chidley/jaxb`
 ```
 $ chidley -J xml/test1.xml
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiDocs.java
@@ -1526,6 +1538,20 @@ $ chidley -J xml/test1.xml
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiLast_name.java
 2014/09/02 10:22:28 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiFirstName.java
 2014/09/02 10:22:28 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/Main.java
+```
+
+###New
+Changing the package with "-P":
+```
+$ chidley -J -P testFoo xml/test1.xml
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiDocs.java
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiDoc.java
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiTitle.java
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiAuthor.java
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiLast_name.java
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiFirstName.java
+2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/Main.java
+$
 ```
 
 ####Build Java package

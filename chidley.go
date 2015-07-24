@@ -36,6 +36,7 @@ var javaBasePackagePath = strings.Replace(javaBasePackage, ".", "/", -1)
 var javaAppName = "jaxb"
 var writeJava = false
 var baseJavaDir = "java"
+var userJavaPackageName = ""
 
 var namePrefix = "Chi"
 var nameSuffix = ""
@@ -56,25 +57,24 @@ var outputs = []*bool{
 }
 
 func init() {
+
 	flag.BoolVar(&DEBUG, "d", DEBUG, "Debug; prints out much information")
+	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
-	flag.BoolVar(&structsToStdout, "G", structsToStdout, "Only write generated Go structs to stdout")
-	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
-	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
-	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
-
-	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
-
+	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
 	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")
 	flag.BoolVar(&progress, "r", progress, "Progress: every 50000 input tags (elements)")
+	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
+	flag.BoolVar(&structsToStdout, "G", structsToStdout, "Only write generated Go structs to stdout")
 	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
-	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
-	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
-	flag.StringVar(&nameSuffix, "s", nameSuffix, "Suffix to struct (element) names")
-	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
+	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
-	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
+	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
+	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
+	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
+	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
+	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
 }
 
 func handleParameters() error {
@@ -185,6 +185,9 @@ func main() {
 		writer.close()
 
 	case writeJava:
+		if len(userJavaPackageName) > 0 {
+			javaAppName = userJavaPackageName
+		}
 		javaPackage := javaBasePackage + "." + javaAppName
 		javaDir := baseJavaDir + "/" + mavenJavaBase + "/" + javaBasePackagePath + "/" + javaAppName
 
