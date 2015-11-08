@@ -82,7 +82,7 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 			spaceTag = spaceTag + "_"
 		}
 
-		lineChannel <- "\t" + attributePrefix + "_" + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
+		lineChannel <- "\t" + attributePrefix + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
 	}
 }
 

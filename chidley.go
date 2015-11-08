@@ -18,7 +18,7 @@ import (
 
 var DEBUG = false
 var progress = false
-var attributePrefix = "Attr"
+var attributePrefix = "Attr_"
 var structsToStdout = false
 var nameSpaceInJsonName = false
 var prettyPrint = false
