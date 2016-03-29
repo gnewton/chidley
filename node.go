@@ -47,7 +47,7 @@ func (n *Node) makeName() string {
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
-	return makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, false)
+	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, false))
 }
 
 func (n *Node) makeJavaType(prefix string, suffix string) string {
