@@ -104,31 +104,31 @@ func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
 	}
 }
 
-func makeJsonAnnotation(spaceTag string, useSpaceTagInName bool, name string) string {
-	return makeAnnotation("json", spaceTag, false, useSpaceTagInName, name)
+func makeJsonAnnotation(nameSpaceTag string, useNameSpaceTagInName bool, name string) string {
+	return makeAnnotation("json", nameSpaceTag, false, useNameSpaceTagInName, name)
 }
 
-func makeXmlAnnotation(spaceTag string, useSpaceTag bool, name string) string {
-	return makeAnnotation("xml", spaceTag, true, false, name)
+func makeXmlAnnotation(nameSpaceTag string, useNameSpaceTag bool, name string) string {
+	return makeAnnotation("xml", nameSpaceTag, true, false, name)
 }
 
-func makeDbAnnotation(spaceTag string, useSpaceTag bool, name string) string {
-	return makeAnnotation("db", spaceTag, true, false, name)
+func makeDbAnnotation(nameSpaceTag string, useNameSpaceTag bool, name string) string {
+	return makeAnnotation("db", nameSpaceTag, true, false, name)
 }
 
-func makeAnnotation(annotationId string, spaceTag string, useSpaceTag bool, useSpaceTagInName bool, name string) (annotation string) {
+func makeAnnotation(annotationId string, nameSpaceTag string, useNameSpaceTag bool, useNameSpaceTagInName bool, name string) (annotation string) {
 	annotation = annotationId + ":\""
 
-	if useSpaceTag {
-		annotation = annotation + spaceTag
-		if spaceTag != ""{
+	if useNameSpaceTag {
+		annotation = annotation + nameSpaceTag
+		if nameSpaceTag != ""{
 		    annotation = annotation + " "
 		    }
 	}
 
-	if useSpaceTagInName {
-		if spaceTag != "" {
-			annotation = annotation + spaceTag + "__"
+	if useNameSpaceTagInName {
+		if nameSpaceTag != "" {
+			annotation = annotation + nameSpaceTag + "__"
 		}
 	}
 
