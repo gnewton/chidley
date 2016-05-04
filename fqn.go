@@ -1,7 +1,7 @@
 package main
 
 type FQN struct {
-	space string
+	nameSpace string
 	name  string
 }
 

@@ -75,7 +75,7 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 
 	for _, fqn := range attributes {
 		name := fqn.name
-		space := fqn.space
+		space := fqn.nameSpace
 
 		spaceTag, ok := nameSpaceTagMap[space]
 		if ok && spaceTag != "" {
@@ -88,11 +88,11 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 
 // node key
 func nk(n *Node) string {
-	return nks(n.space, n.name)
+	return nks(n.nameSpace, n.name)
 }
 
-func nks(space, name string) string {
-	return space + "___" + name
+func nks(nameSpace, name string) string {
+	return nameSpace + "___" + name
 }
 
 func getFullPath(filename string) string {

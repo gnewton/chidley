@@ -29,25 +29,12 @@ func (v *PrintGoStructVisitor) init(lineChannel chan string, maxDepth int, globa
 
 func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	v.depth += 1
-	//	if v.depth >= v.maxDepth {
-	//		return false
-	//	}
 
 	if v.AlreadyVisited(node) {
 		v.depth += 1
 		return false
 	}
 	v.SetAlreadyVisited(node)
-
-	// attributes := v.globalTagAttributes[nk(node)]
-
-	// v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
-	// makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
-	// v.printInternalFields(node)
-	// if node.space != "" {
-	// 	v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
-	// }
-	// v.lineChannel <- "}\n"
 
 	print(v, node)
 
@@ -63,8 +50,8 @@ func print(v *PrintGoStructVisitor, node *Node) {
 	v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
 	makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
 	v.printInternalFields(node)
-	if node.space != "" {
-		v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
+	if node.nameSpace != "" {
+		v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.nameSpace, false, node.name) + " " + makeJsonAnnotation(node.nameSpaceTag, false, node.name) + "`"
 	}
 	v.lineChannel <- "}\n"
 
@@ -93,11 +80,11 @@ func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
 		}
 		field += v.makeType(namePrefix, nameSuffix)
 
-		jsonAnnotation := makeJsonAnnotation(v.spaceTag, pn.nameSpaceInJsonName, v.name)
-		xmlAnnotation := makeXmlAnnotation(v.space, false, v.name)
+		jsonAnnotation := makeJsonAnnotation(v.nameSpaceTag, pn.nameSpaceInJsonName, v.name)
+		xmlAnnotation := makeXmlAnnotation(v.nameSpace, false, v.name)
 		dbAnnotation := ""
 		if addDbMetadata {
-			dbAnnotation = " " + makeDbAnnotation(v.space, false, v.name)
+			dbAnnotation = " " + makeDbAnnotation(v.nameSpace, false, v.name)
 		}
 
 		annotation := " `" + xmlAnnotation + " " + jsonAnnotation + dbAnnotation + "`"

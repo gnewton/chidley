@@ -6,8 +6,8 @@ import (
 
 type Node struct {
 	name         string
-	space        string
-	spaceTag     string
+	nameSpace        string
+	nameSpaceTag     string
 	parent       *Node
 	parents      []*Node
 	children     map[string]*Node
@@ -24,13 +24,13 @@ type NodeVisitor interface {
 	SetAlreadyVisited(n *Node)
 }
 
-func (n *Node) initialize(name string, space string, spaceTag string, parent *Node) {
+func (n *Node) initialize(name string, nameSpace string, nameSpaceTag string, parent *Node) {
 	n.parent = parent
 	n.parents = make([]*Node, 0, 0)
 	n.pushParent(parent)
 	n.name = name
-	n.space = space
-	n.spaceTag = spaceTag
+	n.nameSpace = nameSpace
+	n.nameSpaceTag = nameSpaceTag
 	n.children = make(map[string]*Node)
 	n.childCount = make(map[string]int)
 	n.nodeTypeInfo = new(NodeTypeInfo)
@@ -39,19 +39,19 @@ func (n *Node) initialize(name string, space string, spaceTag string, parent *No
 }
 
 func (n *Node) makeName() string {
-	spaceTag := ""
-	if n.spaceTag != "" {
-		spaceTag = "_" + n.spaceTag
+	nameSpaceTag := ""
+	if n.nameSpaceTag != "" {
+		nameSpaceTag = "_" + n.nameSpaceTag
 	}
-	return capitalizeFirstLetter(cleanName(n.name)) + spaceTag
+	return capitalizeFirstLetter(cleanName(n.name)) + nameSpaceTag
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
-	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, false))
+	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.nameSpaceTag, prefix, suffix, false))
 }
 
 func (n *Node) makeJavaType(prefix string, suffix string) string {
-	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, true))
+	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.nameSpaceTag, prefix, suffix, true))
 }
 
 func (n *Node) peekParent() *Node {
@@ -76,14 +76,14 @@ func (n *Node) popParent() *Node {
 	return poppedNode
 }
 
-func makeTypeGeneric(name string, space string, prefix string, suffix string, capitalizeName bool) string {
-	spaceTag := ""
-	if space != "" {
-		spaceTag = space + "_"
+func makeTypeGeneric(name string, nameSpace string, prefix string, suffix string, capitalizeName bool) string {
+	nameSpaceTag := ""
+	if nameSpace != "" {
+		nameSpaceTag = nameSpace + "_"
 	}
 	if capitalizeName {
 		name = capitalizeFirstLetter(name)
 	}
-	return prefix + spaceTag + cleanName(name) + suffix
+	return prefix + nameSpaceTag + cleanName(name) + suffix
 
 }

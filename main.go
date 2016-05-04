@@ -159,7 +159,7 @@ func main() {
 		xt := XMLType{NameType: ex.firstNode.makeType(namePrefix, nameSuffix),
 			XMLName:      ex.firstNode.name,
 			XMLNameUpper: capitalizeFirstLetter(ex.firstNode.name),
-			XMLSpace:     ex.firstNode.space,
+			XMLSpace:     ex.firstNode.nameSpace,
 		}
 
 		x := XmlInfo{
@@ -223,7 +223,7 @@ func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagA
 
 	//log.Printf("%+v\n", node)
 
-	if node.space != "" {
+	if node.nameSpace != "" {
 		_ = findNameSpaces(globalTagAttributes[nk(node)])
 		//attributes := findNameSpaces(globalTagAttributes[nk(node)])
 
@@ -238,7 +238,7 @@ func printPackageInfo(node *Node, javaDir string, javaPackage string, globalTagA
 
 		writer := bufio.NewWriter(fi)
 		packageInfo := JaxbPackageInfo{
-			BaseNameSpace: node.space,
+			BaseNameSpace: node.nameSpace,
 			//AdditionalNameSpace []*FQN
 			PackageName: javaPackage + ".xml",
 		}
@@ -377,7 +377,7 @@ func makeOneLevelDown(node *Node) []*XMLType {
 			x := XMLType{NameType: n.makeType(namePrefix, nameSuffix),
 				XMLName:      n.name,
 				XMLNameUpper: capitalizeFirstLetter(n.name),
-				XMLSpace:     n.space}
+				XMLSpace:     n.nameSpace}
 			children = append(children, &x)
 		}
 	}

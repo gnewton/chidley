@@ -215,7 +215,7 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 		if !ok {
 			fqn := new(FQN)
 			fqn.name = attr.Name.Local
-			fqn.space = attr.Name.Space
+			fqn.nameSpace = attr.Name.Space
 			attributes = append(attributes, fqn)
 			ex.globalTagAttributesMap[bigKey] = true
 		}
