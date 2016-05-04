@@ -2,6 +2,12 @@ package main
 
 
 type Annotator interface {
-     Do(fieldname string) string     
+     Make(fieldname string, repeats bool) string     
 
 }
+
+type AnnotatorImpl struct{
+     AnnotationId string
+     UseNameSpaceTag bool
+     UseNameSpaceTagInName bool
+}    
