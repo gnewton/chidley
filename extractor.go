@@ -50,7 +50,7 @@ func (ex *Extractor) extract() error {
 		token, err := decoder.Token()
 		if err != nil {
 			if err.Error() == "EOF" {
-				log.Println("EOF")
+				//log.Println("EOF")
 				break
 			}
 			log.Println(err)
