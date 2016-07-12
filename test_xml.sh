@@ -1,11 +1,16 @@
 #!/bin/bash
+set -e
 
-FILES=`ls  xml/*.xml xml/*.xml.bz2 xml/*.xml.gz`
+#FILES=`ls  xml/*.xml xml/*.xml.bz2 xml/*.xml.gz`
+FILES=`ls  xml/*.xml xml/*.xml.gz`
 
 for f in $FILES
 do
+    echo ""
+    echo ""
+    echo ""
     echo "=================================================================="
-    echo $f
+    echo "Processing file $f"
     echo ""
     echo "Go code generation"
     /usr/bin/time -f "%E %M" ./chidley -W $f > test/Test.go
@@ -24,7 +29,7 @@ do
     /usr/bin/time -f "%E %M" ./chidley -J $f
     cd java
     mvn package
-    export CLASSPATH=target/jaxb-1.0-SNAPSHOT.jar:$CLASSPATH
+    export CLASSPATH=target/jaxb-1.0-SNAPSHOT.jar:$CLASSPATH:/home/gnewton/.m2/repository
     echo "Running Java/JAXB  XML -> JSON"
     /usr/bin/time -f "%E %M" java ca.gnewton.chidley.jaxb.Main > /dev/null
     cd ..
