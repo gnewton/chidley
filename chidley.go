@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -153,6 +154,18 @@ func main() {
 		printGoStructVisitor := new(PrintGoStructVisitor)
 		printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 		printGoStructVisitor.Visit(ex.root)
+		var keys []string
+		for k := range printGoStructVisitor.alreadyVisitedNodes {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		// To perform the opertion you want
+		for _, k := range keys {
+			//fmt.Println("Key:", k, "Value:", printGoStructVisitor.alreadyVisitedNodes[k])
+			print(printGoStructVisitor, printGoStructVisitor.alreadyVisitedNodes[k])
+		}
+
 		close(lineChannel)
 		sWriter.close()
 

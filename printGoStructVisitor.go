@@ -6,6 +6,7 @@ import (
 
 type PrintGoStructVisitor struct {
 	alreadyVisited      map[string]bool
+	alreadyVisitedNodes map[string]*Node
 	globalTagAttributes map[string]([]*FQN)
 	lineChannel         chan string
 	maxDepth            int
@@ -17,6 +18,7 @@ type PrintGoStructVisitor struct {
 
 func (v *PrintGoStructVisitor) init(lineChannel chan string, maxDepth int, globalTagAttributes map[string]([]*FQN), nameSpaceTagMap map[string]string, useType bool, nameSpaceInJsonName bool) {
 	v.alreadyVisited = make(map[string]bool)
+	v.alreadyVisitedNodes = make(map[string]*Node)
 	v.globalTagAttributes = make(map[string]([]*FQN))
 	v.globalTagAttributes = globalTagAttributes
 	v.lineChannel = lineChannel
@@ -49,7 +51,7 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	// }
 	// v.lineChannel <- "}\n"
 
-	print(v, node)
+	//print(v, node)
 
 	for _, child := range node.children {
 		v.Visit(child)
@@ -77,6 +79,7 @@ func (v *PrintGoStructVisitor) AlreadyVisited(n *Node) bool {
 
 func (v *PrintGoStructVisitor) SetAlreadyVisited(n *Node) {
 	v.alreadyVisited[nk(n)] = true
+	v.alreadyVisitedNodes[nk(n)] = n
 }
 
 func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
