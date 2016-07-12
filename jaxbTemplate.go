@@ -95,10 +95,23 @@ import javax.xml.bind.Unmarshaller;
 import {{.PackageName}}.xml.{{.BaseXMLClassName}};
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.net.URL;
+import java.net.URLClassLoader;
+
+
  
 public class Main {
 	public static void main(String[] args) {
 	 try {
+             //https://jaxp.java.net/1.5/JAXP1.5Guide.html
+             // To fix error: Caused by: 
+                 //org.xml.sax.SAXParseException; systemId: file:/home/gnewton/gocode/src/github.com/gnewton/chidley/xml/MozartTrio.xml; lineNumber: 2; columnNumber: 123; External DTD: Failed to read external DTD 'partwise.dtd', because 'http' access is not allowed due to restriction set by the accessExternalDTD property.
+	     System.setProperty("javax.xml.accessExternalSchema", "all");
+	     System.setProperty("javax.xml.accessExternalDTD", "all");
+	     System.setProperty("javax.xml.XMLConstants.ACCESS_EXTERNAL_STYLESHEET", "all");
+
+//             System.setProperty("http.agent", "Mozilla/4.76");
+
 		File file = new File("{{.SourceXMLFilename}}");
 		JAXBContext jaxbContext = JAXBContext.newInstance({{.BaseXMLClassName}}.class);
  
@@ -108,8 +121,16 @@ public class Main {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		System.out.println(gson.toJson(root));
 
-	  } catch (JAXBException e) {
+	  } catch (Throwable e) {
 		e.printStackTrace();
+                // Print classpath
+                System.err.println("CLASSPATH START");
+                ClassLoader cl = ClassLoader.getSystemClassLoader();
+                URL[] urls = ((URLClassLoader)cl).getURLs();
+                for(URL url: urls){
+            	    System.err.println("\n" + url.getFile());
+                }
+                System.err.println("CLASSPATH END");
 	  }
 	}
 }
