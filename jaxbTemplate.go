@@ -111,6 +111,7 @@ public class Main {
 	     System.setProperty("javax.xml.XMLConstants.ACCESS_EXTERNAL_STYLESHEET", "all");
 
 //             System.setProperty("http.agent", "Mozilla/4.76");
+               System.setProperty("http.agent", "Mozilla/5.0 (X11; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0");
 
 		File file = new File("{{.SourceXMLFilename}}");
 		JAXBContext jaxbContext = JAXBContext.newInstance({{.BaseXMLClassName}}.class);
