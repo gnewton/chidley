@@ -31,27 +31,12 @@ func (v *PrintGoStructVisitor) init(lineChannel chan string, maxDepth int, globa
 
 func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	v.depth += 1
-	//	if v.depth >= v.maxDepth {
-	//		return false
-	//	}
 
 	if v.AlreadyVisited(node) {
 		v.depth += 1
 		return false
 	}
 	v.SetAlreadyVisited(node)
-
-	// attributes := v.globalTagAttributes[nk(node)]
-
-	// v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
-	// makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
-	// v.printInternalFields(node)
-	// if node.space != "" {
-	// 	v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
-	// }
-	// v.lineChannel <- "}\n"
-
-	//print(v, node)
 
 	for _, child := range node.children {
 		v.Visit(child)
@@ -87,7 +72,8 @@ func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
 
 	var field string
 
-	for _, v := range n.children {
+	for i, _ := range n.children {
+		v := n.children[i]
 		field = "\t" + v.makeType(namePrefix, nameSuffix) + " "
 		if v.repeats {
 			field += "[]*"

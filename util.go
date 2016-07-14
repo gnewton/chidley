@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -71,7 +72,10 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 	return "string"
 }
 
+type fqnSorter []*FQN
+
 func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap map[string]string) {
+	sort.Sort(fqnSorter(attributes))
 
 	for _, fqn := range attributes {
 		name := fqn.name
@@ -84,6 +88,21 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 
 		lineChannel <- "\t" + attributePrefix + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
 	}
+}
+
+// Len is part of sort.Interface.
+func (s fqnSorter) Len() int {
+	return len(s)
+}
+
+// Swap is part of sort.Interface.
+func (s fqnSorter) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// Less is part of sort.Interface. It is implemented by calling the "by" closure in the sorter.
+func (s fqnSorter) Less(i, j int) bool {
+	return strings.Compare(cleanName(s[i].name), cleanName(s[j].name)) < 0
 }
 
 // node key

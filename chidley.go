@@ -145,7 +145,6 @@ func main() {
 
 	var writer Writer
 	lineChannel := make(chan string, 100)
-
 	switch {
 	case codeGenConvert:
 		sWriter := new(stringWriter)
@@ -154,17 +153,8 @@ func main() {
 		printGoStructVisitor := new(PrintGoStructVisitor)
 		printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 		printGoStructVisitor.Visit(ex.root)
-		var keys []string
-		for k := range printGoStructVisitor.alreadyVisitedNodes {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
 
-		// To perform the opertion you want
-		for _, k := range keys {
-			//fmt.Println("Key:", k, "Value:", printGoStructVisitor.alreadyVisitedNodes[k])
-			print(printGoStructVisitor, printGoStructVisitor.alreadyVisitedNodes[k])
-		}
+		printStructs(printGoStructVisitor)
 
 		close(lineChannel)
 		sWriter.close()
@@ -194,6 +184,7 @@ func main() {
 		printGoStructVisitor := new(PrintGoStructVisitor)
 		printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 		printGoStructVisitor.Visit(ex.root)
+		printStructs(printGoStructVisitor)
 		close(lineChannel)
 		writer.close()
 
@@ -401,4 +392,17 @@ func printChildrenChildren(node *Node) {
 		log.Print(k)
 		log.Printf("children: %+v\n", v.children)
 	}
+}
+
+func printStructs(v *PrintGoStructVisitor) {
+	var keys []string
+	for k := range v.alreadyVisitedNodes {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		print(v, v.alreadyVisitedNodes[k])
+	}
+
 }
