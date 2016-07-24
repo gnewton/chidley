@@ -5,17 +5,18 @@ import (
 )
 
 type Node struct {
-	name         string
-	space        string
-	spaceTag     string
-	parent       *Node
-	parents      []*Node
-	children     map[string]*Node
-	childCount   map[string]int
-	repeats      bool
-	nodeTypeInfo *NodeTypeInfo
-	hasCharData  bool
-	tempCharData string
+	name            string
+	space           string
+	spaceTag        string
+	parent          *Node
+	parents         []*Node
+	children        map[string]*Node
+	childCount      map[string]int
+	repeats         bool
+	nodeTypeInfo    *NodeTypeInfo
+	hasCharData     bool
+	tempCharData    string
+	discoveredOrder int
 }
 
 type NodeVisitor interface {

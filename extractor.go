@@ -13,6 +13,8 @@ var nameMapper = map[string]string{
 	".": "_dot_",
 }
 
+var DiscoveredOrder = 0
+
 type Extractor struct {
 	globalTagAttributes    map[string]([]*FQN)
 	globalTagAttributesMap map[string]bool
@@ -50,7 +52,7 @@ func (ex *Extractor) extract() error {
 		token, err := decoder.Token()
 		if err != nil {
 			if err.Error() == "EOF" {
-			   	// OK
+				// OK
 				break
 			}
 			log.Println(err)
@@ -195,6 +197,8 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 		child, ok = ex.globalNodeMap[key]
 		if !ok {
 			child = new(Node)
+			DiscoveredOrder += 1
+			child.discoveredOrder = DiscoveredOrder
 			ex.globalNodeMap[key] = child
 			spaceTag, _ := ex.nameSpaceTagMap[space]
 			child.initialize(name, space, spaceTag, thisNode)

@@ -394,7 +394,27 @@ func printChildrenChildren(node *Node) {
 	}
 }
 
+// Order Xml is encountered
 func printStructs(v *PrintGoStructVisitor) {
+	orderNodes := make(map[int]*Node)
+	var order []int
+
+	for k := range v.alreadyVisitedNodes {
+		nodeOrder := v.alreadyVisitedNodes[k].discoveredOrder
+		orderNodes[nodeOrder] = v.alreadyVisitedNodes[k]
+		order = append(order, nodeOrder)
+	}
+	sort.Ints(order)
+	fmt.Println(order)
+
+	for o := range order {
+		fmt.Println(o)
+		print(v, orderNodes[o])
+	}
+}
+
+// Alphabetical order
+func printStructs2(v *PrintGoStructVisitor) {
 	var keys []string
 	for k := range v.alreadyVisitedNodes {
 		keys = append(keys, k)

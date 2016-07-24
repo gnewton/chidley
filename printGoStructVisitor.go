@@ -2,6 +2,7 @@ package main
 
 import (
 	"sort"
+	"strconv"
 )
 
 type PrintGoStructVisitor struct {
@@ -47,6 +48,7 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 
 func print(v *PrintGoStructVisitor, node *Node) {
 	attributes := v.globalTagAttributes[nk(node)]
+	v.lineChannel <- "// discoveredOrder: " + strconv.Itoa(node.discoveredOrder)
 	v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
 	makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
 	v.printInternalFields(node)
