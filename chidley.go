@@ -405,10 +405,8 @@ func printStructs(v *PrintGoStructVisitor) {
 		order = append(order, nodeOrder)
 	}
 	sort.Ints(order)
-	fmt.Println(order)
 
 	for o := range order {
-		fmt.Println(o)
 		print(v, orderNodes[o])
 	}
 }
