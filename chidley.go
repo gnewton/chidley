@@ -1,6 +1,6 @@
 package main
 
-// Copyright 2014,2015 Glen Newton
+// Copyright 2014,2015,2016 Glen Newton
 // glen.newton@gmail.com
 
 import (
@@ -24,6 +24,7 @@ var nameSpaceInJsonName = false
 var prettyPrint = false
 var codeGenConvert = false
 var readFromStandardIn = false
+var sortByXmlOrder = false
 
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
@@ -60,6 +61,7 @@ func init() {
 
 	flag.BoolVar(&DEBUG, "d", DEBUG, "Debug; prints out much information")
 	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
+	flag.BoolVar(&sortByXmlOrder, "X", sortByXmlOrder, "Sort output of structs in Go code by order encounered in source XML (default is alphabetical order)")
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
 	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
 	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")

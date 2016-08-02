@@ -39,16 +39,6 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	}
 	v.SetAlreadyVisited(node)
 
-	// attributes := v.globalTagAttributes[nk(node)]
-
-	// v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
-	// makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
-	// v.printInternalFields(node)
-	// if node.space != "" {
-	// 	v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
-	// }
-	// v.lineChannel <- "}\n"
-
 	print(v, node)
 
 	for _, child := range node.children {
