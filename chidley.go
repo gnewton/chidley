@@ -1,6 +1,6 @@
 package main
 
-// Copyright 2014,2015 Glen Newton
+// Copyright 2014,2015,2016 Glen Newton
 // glen.newton@gmail.com
 
 import (
@@ -25,6 +25,7 @@ var nameSpaceInJsonName = false
 var prettyPrint = false
 var codeGenConvert = false
 var readFromStandardIn = false
+var sortByXmlOrder = false
 
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
@@ -46,6 +47,10 @@ var url = false
 var useType = false
 var addDbMetadata = false
 
+type structSortFunc func(v *PrintGoStructVisitor)
+
+var structSort = printStructsAlphabetical
+
 type Writer interface {
 	open(s string, lineChannel chan string) error
 	close()
@@ -61,6 +66,7 @@ func init() {
 
 	flag.BoolVar(&DEBUG, "d", DEBUG, "Debug; prints out much information")
 	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
+	flag.BoolVar(&sortByXmlOrder, "X", sortByXmlOrder, "Sort output of structs in Go code by order encounered in source XML (default is alphabetical order)")
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
 	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
 	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")
@@ -87,7 +93,9 @@ func handleParameters() error {
 	} else if numBoolsSet == 0 {
 		log.Print("  ERROR: At least one of -W -J -X -V -c must be set")
 	}
-
+	if sortByXmlOrder {
+		structSort = printStructsByXml
+	}
 	return nil
 }
 
@@ -154,7 +162,7 @@ func main() {
 		printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 		printGoStructVisitor.Visit(ex.root)
 
-		printStructs(printGoStructVisitor)
+		structSort(printGoStructVisitor)
 
 		close(lineChannel)
 		sWriter.close()
@@ -184,7 +192,7 @@ func main() {
 		printGoStructVisitor := new(PrintGoStructVisitor)
 		printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 		printGoStructVisitor.Visit(ex.root)
-		printStructs(printGoStructVisitor)
+		structSort(printGoStructVisitor)
 		close(lineChannel)
 		writer.close()
 
@@ -395,7 +403,7 @@ func printChildrenChildren(node *Node) {
 }
 
 // Order Xml is encountered
-func printStructs(v *PrintGoStructVisitor) {
+func printStructsByXml(v *PrintGoStructVisitor) {
 	orderNodes := make(map[int]*Node)
 	var order []int
 
@@ -412,7 +420,7 @@ func printStructs(v *PrintGoStructVisitor) {
 }
 
 // Alphabetical order
-func printStructs2(v *PrintGoStructVisitor) {
+func printStructsAlphabetical(v *PrintGoStructVisitor) {
 	var keys []string
 	for k := range v.alreadyVisitedNodes {
 		keys = append(keys, k)

@@ -13,6 +13,10 @@ Language: Go
 
 ##New
 
+#2016.08.14
+Added ability to sort structs into the same order the XML is encountered in the file. Useful for human readers comparing the Go structs to the original XML.
+Use flag `-X` to invoke. Overrides default of sorting by alphabetical sorting.
+
 #2015.07.24
 `chidley` now supports the user naming of the resulting JAXB Java class package.
 Previously the package name could only be `ca/gnewton/chidley/jaxb`.
@@ -43,23 +47,31 @@ Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
 ##Usage
 ```
+
 Usage of ./chidley:
-  -D="java": Base directory for generated Java code (root of maven project)
-  -G=false: Only write generated Go structs to stdout
-  -J=false: Generated Java code for Java/JAXB
-  -P="": Java package name (rightmost in full package name
-  -W=false: Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout
-  -a="Attr": Prefix to attribute names
-  -c=false: Read XML from standard input
-  -d=false: Debug; prints out much information
-  -e="Chi": Prefix to struct (element) names; must start with a capital
-  -k="jaxb": App name for Java code (appended to ca.gnewton.chidley Java package name))
-  -n=false: Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)
-  -p=false: Pretty-print json in generated code (if applicable)
-  -r=false: Progress: every 50000 input tags (elements)
-  -t=false: Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete
-  -u=false: Filename interpreted as an URL
-  -x=false: Add XMLName (Space, Local) for each XML element, to JSON
+  -B	Add database metadata to created Go structs
+  -D string
+    	Base directory for generated Java code (root of maven project) (default "java")
+  -G	Only write generated Go structs to stdout
+  -J	Generated Java code for Java/JAXB
+  -P string
+    	Java package name (rightmost in full package name
+  -W	Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout
+  -X	Sort output of structs in Go code by order encounered in source XML  (default is alphabetical order)
+  -a string
+    	Prefix to attribute names (default "Attr_")
+  -c	Read XML from standard input
+  -d	Debug; prints out much information
+  -e string
+    	Prefix to struct (element) names; must start with a capital (default "Chi")
+  -k string
+    	App name for Java code (appended to ca.gnewton.chidley Java package name)) (default "jaxb")
+  -n	Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)
+  -p	Pretty-print json in generated code (if applicable)
+  -r	Progress: every 50000 input tags (elements)
+  -t	Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete
+  -u	Filename interpreted as an URL
+  -x	Add XMLName (Space, Local) for each XML element, to JSON
 $
 ```
 
@@ -1664,4 +1676,4 @@ $
 - *Cannot* do [XML streaming](https://stackoverflow.com/questions/1134189/can-jaxb-parse-large-xml-files-in-chunks) (thus limited to smaller XML files) (perhaps soon?)
 
 
-Copyright 2014 Glen Newton
+Copyright 2014,2015,2016 Glen Newton
