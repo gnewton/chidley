@@ -9,8 +9,8 @@ import (
 )
 
 var nameMapper = map[string]string{
-	"-": "_",
-	".": "_dot_",
+	"-": "Hyphen",
+	".": "Dot",
 }
 
 var DiscoveredOrder = 0
@@ -132,7 +132,7 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 			if DEBUG {
 				log.Printf("EndElement: %+v\n", element)
 				log.Printf("[[" + thisNode.tempCharData + "]]")
-				log.Printf("Char is empty: ", isJustSpacesAndLinefeeds(thisNode.tempCharData))
+				log.Println("Char is empty: ", isJustSpacesAndLinefeeds(thisNode.tempCharData))
 			}
 			if !thisNode.hasCharData && !isJustSpacesAndLinefeeds(thisNode.tempCharData) {
 				thisNode.hasCharData = true
@@ -159,7 +159,7 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 }
 
 func space(n int) string {
-	s := strconv.Itoa(n) + ":"
+	s := strconv.Itoa(n) + "Space"
 	for i := 0; i < n; i++ {
 		s += " "
 	}

@@ -18,14 +18,15 @@ import (
 )
 
 var DEBUG = false
-var progress = false
-var attributePrefix = "Attr_"
-var structsToStdout = false
+var attributePrefix = "Attr"
+var codeGenConvert = false
+var classicStructNamesWithUnderscores = false
 var nameSpaceInJsonName = false
 var prettyPrint = false
-var codeGenConvert = false
+var progress = false
 var readFromStandardIn = false
 var sortByXmlOrder = false
+var structsToStdout = true
 
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
@@ -64,11 +65,13 @@ var outputs = []*bool{
 
 func init() {
 
+	flag.BoolVar(&classicStructNamesWithUnderscores, "C", classicStructNamesWithUnderscores, "Structs have underscores instead of CamelCase; how chidley used to produce output; includes name spaces (see -n)")
+
 	flag.BoolVar(&DEBUG, "d", DEBUG, "Debug; prints out much information")
 	flag.BoolVar(&addDbMetadata, "B", addDbMetadata, "Add database metadata to created Go structs")
 	flag.BoolVar(&sortByXmlOrder, "X", sortByXmlOrder, "Sort output of structs in Go code by order encounered in source XML (default is alphabetical order)")
 	flag.BoolVar(&codeGenConvert, "W", codeGenConvert, "Generate Go code to convert XML to JSON or XML (latter useful for validation) and write it to stdout")
-	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name; prefix followed by 2 underscores (__)")
+	flag.BoolVar(&nameSpaceInJsonName, "n", nameSpaceInJsonName, "Use the XML namespace prefix as prefix to JSON name")
 	flag.BoolVar(&prettyPrint, "p", prettyPrint, "Pretty-print json in generated code (if applicable)")
 	flag.BoolVar(&progress, "r", progress, "Progress: every 50000 input tags (elements)")
 	flag.BoolVar(&readFromStandardIn, "c", readFromStandardIn, "Read XML from standard input")
@@ -355,14 +358,6 @@ func indent(d int) string {
 		indent = indent + "\t"
 	}
 	return indent
-}
-
-func capitalizeFirstLetter(s string) string {
-	return strings.ToUpper(s[0:1]) + s[1:]
-}
-
-func lowerFirstLetter(s string) string {
-	return strings.ToLower(s[0:1]) + s[1:]
 }
 
 func countNumberOfBoolsSet(a []*bool) int {
