@@ -6,6 +6,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+
+	"golang.org/x/net/html/charset"
 )
 
 var nameMapper = map[string]string{
@@ -37,6 +39,7 @@ func (ex *Extractor) extract() error {
 	ex.globalNodeMap = make(map[string]*Node)
 
 	decoder := xml.NewDecoder(ex.reader)
+	decoder.CharsetReader = charset.NewReaderLabel
 
 	ex.root = new(Node)
 	ex.root.initialize("root", "", "", nil)
