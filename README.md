@@ -1,8 +1,8 @@
-#`chidley`
+# `chidley`
 
 
 
-##`chidley` converts *any* XML to Go structs (and therefor to JSON)
+## `chidley` converts *any* XML to Go structs (and therefor to JSON)
 * By *any*, any XML that can be read by the Go [xml package](http://golang.org/pkg/encoding/xml/) decoder. 
 * Where *convert* means, generates Go code that when compiled, will convert the XML to JSON
 * or will just generate the Go structs that represent the input XML
@@ -11,13 +11,13 @@
 Author: Glen Newton
 Language: Go
 
-##New
+## New
 
-#2016.08.14
+# 2016.08.14
 Added ability to sort structs into the same order the XML is encountered in the file. Useful for human readers comparing the Go structs to the original XML.
 Use flag `-X` to invoke. Overrides default of sorting by alphabetical sorting.
 
-#2015.07.24
+# 2015.07.24
 `chidley` now supports the user naming of the resulting JAXB Java class package.
 Previously the package name could only be `ca/gnewton/chidley/jaxb`.
 Now, using the `-P name`, the `jaxb` default can be altered.
@@ -25,27 +25,27 @@ Now, using the `-P name`, the `jaxb` default can be altered.
 So `chidley -J -P "foobar" sample.xml` will result in Java classes with package name: `ca/gnewton/chidley/foobar`.
 
 
-###Previous
+### Previous
 
 `chidley` now has support for Java/JAXB. It generates appropriate Java/JAXB classes and associated maven pom.
 
 See [Java/JAXB section below](#user-content-java) for usage.
 
 
-##How does it work (with such a small memory footprint)
+## How does it work (with such a small memory footprint)
 `chidley` uses the input XML to build a model of each XML element (aka tag).
 It examines each instance of a tag, and builds a (single) prototypical representation; that is, the union of all the attributes and all of the child elements of all instances of the tag.
 So even if there are million instances of a specific tag, there is only one model tag representation.
 Note that a tag is unique by its namespace+tagname combination (in the Go xml package parlance, [`space + local`](http://golang.org/pkg/encoding/xml/#Name).
-###Types
+### Types
 `chidley` by default makes all values (attributes, tag content) in the generated Go structs a string (which is always valid for XML attributes and content), but it has a flag (`-t`) where it will detect and use the most appropriate type. 
 `chidley` tries to fit the **smallest** Go type. 
 For example, if all instances of a tag contain a number, and all instances are -128 to 127, then it will use an `int8` in the Go struct.
 
-##`chidley` binary
+## `chidley` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
-##Usage
+## Usage
 ```
 
 Usage of ./chidley:
@@ -77,7 +77,7 @@ $
 
 
 
-###Specific Usages:
+### Specific Usages:
 * `chidley -W ...`: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
     * convert the XML file to JSON
     * or convert the XML file to XML (useful for validation)
@@ -85,11 +85,11 @@ $
 * `chidley -G ...`: writes just the Go structs that represent the input XML. For incorporation into the user's code base.
 
 
-###Example `chidley -W`:
+### Example `chidley -W`:
 ```
 $ chidley -W xml/test1.xml > examples/test1/ChidTest1.go
 ```
-####Usage of generated code
+#### Usage of generated code
 ```
 $ cd examples/test1
 $ go build
@@ -103,7 +103,7 @@ Usage of ./test1:
   -x=false: Convert to XML
 ```
 
-#####Generated code: Convert XML to JSON `-j`
+##### Generated code: Convert XML to JSON `-j`
 ```
 $ ./test1 -j -f ../../xml/test1.xml 
 {
@@ -140,7 +140,7 @@ $ ./test1 -j -f ../../xml/test1.xml
 }
 ```
 
-#####Generated code: Convert XML to XML `-x`
+##### Generated code: Convert XML to XML `-x`
 ```
 $ ./test1 -x -f ../../xml/test1.xml 
   <Chi_docs>
@@ -161,7 +161,7 @@ $ ./test1 -x -f ../../xml/test1.xml
   </Chi_docs>
 ```
 
-#####Generated code: Count elements `-c`
+##### Generated code: Count elements `-c`
 XML elements (or tags) are counted in the source file (space,local) and are printed-out, unsorted
 
 ```
@@ -176,7 +176,7 @@ $ ./test1 -c
 
 **Note**: the underscore before the colon indicates there is no (or the default) namespace for the element. 
 
-###Example `chidley -G`:
+### Example `chidley -G`:
 Just prints out the Go structs to standard out:
 ```
 $ chidley -G xml/test1.xml
@@ -212,14 +212,14 @@ type Chi_firstName struct {
 }
 ```
 
-##Name changes: XML vs. Go structs
+## Name changes: XML vs. Go structs
 XML names can contain dots `.` and hyphens or dashes `-`. These are not valid identifiers for Go structs or variables. These are mapped as:
 * `"-": "_"`
 * `".": "_dot_"`
 
 Note that the original XML name strings are used in the struct XML and JSON annotations for the element.
 
-##Type example
+## Type example
 ```
 <people>
 
@@ -238,7 +238,7 @@ Note that the original XML name strings are used in the struct XML and JSON anno
 </people>
 ```
 
-####Default
+#### Default
 ```
 $ ./chidley -G xml/testType.xml
 type Chi_root struct {
@@ -268,7 +268,7 @@ type Chi_married struct {
 }
 ```
 
-####Types turned on `-t`
+#### Types turned on `-t`
 ```
 $ ./chidley -G -t xml/testType.xml
 $ type Chi_root struct {
@@ -302,15 +302,15 @@ Notice:
 * `Text int8` in `Chi_age`
 * `Text bool` in `Chi_married`
 
-##Go struct name prefix
+## Go struct name prefix
 `chidley` by default prepends a prefix to Go struct type identifiers. The default is `Chi` but this can be changed with the `-e` flag. If changed from the default, the new prefix must start with a capital letter (for the XML annotation and decoder to work: the struct fields must be public).
 
-##Warning
+## Warning
 If you are going to use the `chidley` generated Go structs on XML other than the input XML, you need to make sure the input XML has examples of all tags, and tag attribute and tag child tag combinations. 
 
 If the input does not have all of these, and you use new XML that has tags not found in the input XML, attributes not seen in tags in the input XML, or child tags not encountered in the input XML, these will not be *seen* by the xml decoder, as they will not be in the Go structs used by the xml decoder.
 
-##Limitations
+## Limitations
 `chidley` is constrained by the underlying Go [xml package](http://golang.org/pkg/encoding/xml/)
 Some of these limitations include:
 * The default encoding supported by `encoder/xml` is UTF-8. Right now `chidley` does not support additional charsets. 
@@ -318,19 +318,19 @@ An xml decoder that handles charsets other than UTF-8 is possible (see example h
 It is possible that this method might be used in the future to extend `chidley` to include a small set of popular charsets.
 * For vanilla XML with no namespaces, there should be no problem using `chidley`
 
-###Go `xml` package Namespace issues
+### Go `xml` package Namespace issues
 * There are a number of bugs open for the Go xml package that relate to XML namespaces: https://code.google.com/p/go/issues/list?can=2&q=xml+namespace  If the XML you are using uses namespaces in certain ways, these bugs will impact whether `chidley` can create correct structs for your XML
 * For _most_ XML with namespaces, the JSON will be OK but if you convert XML to XML using the generated Go code, there will be a chance one of the above mentioned bugs may impact results. Here is an example I encountered: https://groups.google.com/d/msg/golang-nuts/drWStJSt0Pg/Z47JHeij7ToJ
 
-##Name
+## Name
 `chidley` is named after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
 
-##Larger & more complex example
+## Larger & more complex example
 Using the file `xml/pubmed_xml_12750255.xml.bz2`. Generated from a query to pubmed (similar but much larger than [http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml](http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml)), returning a document in the [MEDLINE/Pubmed XML format](http://www.nlm.nih.gov/bsd/licensee/data_elements_doc.html).
 * Compressed size: 27M
 * Uncompressed size: 337M
 
-###Generate Go structs from pubmed_xml_12750255.xml.bz2: `-G`
+### Generate Go structs from pubmed_xml_12750255.xml.bz2: `-G`
 
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -G xml/pubmed_xml_12750255.xml.bz2 
@@ -958,7 +958,7 @@ $
 
 
 
-###Generate Go program: `-W`
+### Generate Go program: `-W`
 
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -W xml/pubmed_xml_12750255.xml.bz2 > examples/pubmed/ChiPubmed.go
@@ -969,7 +969,7 @@ $
 ```
 48 seconds for 337MB XML; resident size: 17MB
 
-####Generated program: count tags
+#### Generated program: count tags
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -c | sort -n
 0:36.58 10460
@@ -1094,9 +1094,9 @@ $
 
 36 seconds for 337MB XML; resident size: 10.5MB
 
-####Generated program: convert XML to JSON
+#### Generated program: convert XML to JSON
 
-#####No streaming
+##### No streaming
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j > /dev/null
 0:57.26 2866408
@@ -1104,7 +1104,7 @@ $
 ```
 57 seconds for 337MB XML; resident size: 2.9GB
 
-#####With streaming `-s`
+##### With streaming `-s`
 Streaming decodes using the XML elements that are one level down from the top level container element.
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
@@ -1112,7 +1112,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
 ```
 59 seconds for 337MB XML; resident size: 16MB
 
-#####Sample of generated JSON
+##### Sample of generated JSON
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
 {
@@ -1427,7 +1427,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
  "MedlineCitation": {
 ```
  
-#####Sample of generated XML to XML
+##### Sample of generated XML to XML
 ```
 $ ./pubmed -x -s |head -100
   <Chi_PubmedArticle>
@@ -1537,7 +1537,7 @@ $ ./pubmed -x -s |head -100
 Its only dependency is Google [Gson](https://code.google.com/p/google-gson/), for JSON generation.
 
 
-###Usage
+### Usage
 `chidley` creates a maven project in `./java` (settable using the `-D` flag) and creates Java JAXB files in `src/main/java/ca/gnewton/chidley/jaxb/xml`. 
 It creates a `Main.java` in `src/main/java/ca/gnewton/chidley/jaxb`
 ```
@@ -1551,7 +1551,7 @@ $ chidley -J xml/test1.xml
 2014/09/02 10:22:28 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/Main.java
 ```
 
-###New
+### New
 Changing the package with "-P":
 ```
 $ chidley -J -P testFoo xml/test1.xml
@@ -1565,7 +1565,7 @@ $ chidley -J -P testFoo xml/test1.xml
 $
 ```
 
-####Build Java package
+#### Build Java package
 ```
 $ cd java
 $ ls
@@ -1647,7 +1647,7 @@ $ java ca.gnewton.chidley.jaxb.Main
 $ 
 ```
 
-###Limitations
+### Limitations
 - Can handle vanilla XML (no namespaces) OK
 - Can handle top level namespaces OK
 ```
