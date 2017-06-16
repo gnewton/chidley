@@ -32,9 +32,21 @@ func genericReader(filename string) (io.Reader, *os.File, error) {
 
 func cleanName(name string) string {
 	for old, new := range nameMapper {
-		name = strings.Replace(name, old, new, -1)
+		parts := strings.Split(name, old)
+		if len(parts) == 1 {
+			continue
+		} else {
+			name = ""
+			l := len(parts)
+			for i := 0; i < l; i++ {
+				name += capitalizeFirstLetter(parts[i])
+				if i+1 < l {
+					name += new
+				}
+			}
+		}
 	}
-	return name
+	return capitalizeFirstLetter(name)
 }
 
 func findType(nti *NodeTypeInfo, useType bool) string {
@@ -83,10 +95,12 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 
 		spaceTag, ok := nameSpaceTagMap[space]
 		if ok && spaceTag != "" {
-			spaceTag = spaceTag + "_"
+			spaceTag = spaceTag + "Space"
+		} else {
+			spaceTag = space
 		}
 
-		lineChannel <- "\t" + attributePrefix + spaceTag + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
+		lineChannel <- "\t" + attributePrefix + capitalizeFirstLetter(spaceTag) + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
 	}
 }
 
@@ -111,7 +125,7 @@ func nk(n *Node) string {
 }
 
 func nks(space, name string) string {
-	return space + "___" + name
+	return space + "NS" + name
 }
 
 func getFullPath(filename string) string {
@@ -124,4 +138,27 @@ func getFullPath(filename string) string {
 		log.Fatal(err)
 	}
 	return file.Name()
+}
+
+type alterer func(string) string
+
+func alterFirstLetter(s string, f alterer) string {
+	switch len(s) {
+	case 0:
+		return s
+	case 1:
+		v := f(s[0:1])
+		return v
+
+	default:
+		return f(s[0:1]) + s[1:]
+	}
+}
+
+func capitalizeFirstLetter(s string) string {
+	return alterFirstLetter(s, strings.ToUpper)
+}
+
+func lowerFirstLetter(s string) string {
+	return alterFirstLetter(s, strings.ToLower)
 }

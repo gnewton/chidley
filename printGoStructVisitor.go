@@ -128,7 +128,7 @@ func makeAnnotation(annotationId string, spaceTag string, useSpaceTag bool, useS
 
 	if useSpaceTagInName {
 		if spaceTag != "" {
-			annotation = annotation + spaceTag + "__"
+			annotation = annotation + spaceTag
 		}
 	}
 
