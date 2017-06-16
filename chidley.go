@@ -90,6 +90,10 @@ func init() {
 func handleParameters() error {
 	flag.Parse()
 
+	if codeGenConvert || writeJava {
+		structsToStdout = false
+	}
+
 	numBoolsSet := countNumberOfBoolsSet(outputs)
 	if numBoolsSet > 1 {
 		log.Print("  ERROR: Only one of -W -J -X -V -c can be set")
