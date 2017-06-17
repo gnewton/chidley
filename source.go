@@ -13,7 +13,6 @@ type Source interface {
 	newSource(name string) error
 	getName() string
 	getReader() io.Reader
-	copySource() (Source, error)
 }
 
 type GenericSource struct {

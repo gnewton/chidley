@@ -30,6 +30,8 @@ type Extractor struct {
 	progress               bool
 }
 
+const RootName = "ChidleyRoot314159"
+
 func (ex *Extractor) extract() error {
 	ex.globalTagAttributes = make(map[string]([]*FQN))
 	ex.globalTagAttributesMap = make(map[string]bool)
@@ -39,7 +41,7 @@ func (ex *Extractor) extract() error {
 	decoder := xml.NewDecoder(ex.reader)
 
 	ex.root = new(Node)
-	ex.root.initialize("root", "", "", nil)
+	ex.root.initialize(RootName, "", "", nil)
 
 	ex.hasStartElements = false
 
