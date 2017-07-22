@@ -14,6 +14,7 @@ type PrintGoStructVisitor struct {
 	nameSpaceTagMap     map[string]string
 	useType             bool
 	nameSpaceInJsonName bool
+	charDataFieldName   string
 }
 
 func (v *PrintGoStructVisitor) init(lineChannel chan string, maxDepth int, globalTagAttributes map[string]([]*FQN), nameSpaceTagMap map[string]string, useType bool, nameSpaceInJsonName bool) {
@@ -27,6 +28,7 @@ func (v *PrintGoStructVisitor) init(lineChannel chan string, maxDepth int, globa
 	v.nameSpaceTagMap = nameSpaceTagMap
 	v.useType = useType
 	v.nameSpaceInJsonName = nameSpaceInJsonName
+	v.charDataFieldName = "Text"
 }
 
 func (v *PrintGoStructVisitor) Visit(node *Node) bool {
@@ -97,7 +99,7 @@ func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
 
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
-		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
+		charField := "\t" + pn.charDataFieldName + " " + findType(n.nodeTypeInfo, useType) + xmlString
 		fields = append(fields, charField)
 	}
 	sort.Strings(fields)

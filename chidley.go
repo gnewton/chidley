@@ -40,6 +40,7 @@ var javaAppName = "jaxb"
 var writeJava = false
 var baseJavaDir = "java"
 var userJavaPackageName = ""
+var charDataFieldName = ""
 
 var namePrefix = "Chi"
 var nameSuffix = ""
@@ -85,6 +86,7 @@ func init() {
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
 	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
 	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
+	flag.StringVar(&charDataFieldName, "cdata", "Text", "Field name for any chardata field")
 }
 
 func handleParameters() error {
@@ -167,6 +169,7 @@ func main() {
 		writer.open("", lineChannel)
 		printGoStructVisitor := new(PrintGoStructVisitor)
 		printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+		printGoStructVisitor.charDataFieldName = charDataFieldName
 		printGoStructVisitor.Visit(ex.root)
 
 		structSort(printGoStructVisitor)
@@ -198,6 +201,7 @@ func main() {
 		writer.open("", lineChannel)
 		printGoStructVisitor := new(PrintGoStructVisitor)
 		printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+		printGoStructVisitor.charDataFieldName = charDataFieldName
 		printGoStructVisitor.Visit(ex.root)
 		structSort(printGoStructVisitor)
 		close(lineChannel)
