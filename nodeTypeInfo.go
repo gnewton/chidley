@@ -20,6 +20,7 @@ type NodeTypeInfo struct {
 	alwaysUint16 bool
 	alwaysUint32 bool
 	alwaysUint64 bool
+	maxLength    int64
 }
 
 func (nti *NodeTypeInfo) initialize() {
@@ -37,6 +38,13 @@ func (nti *NodeTypeInfo) initialize() {
 	nti.alwaysUint16 = true
 	nti.alwaysUint32 = true
 	nti.alwaysUint64 = true
+	nti.maxLength = 0
+}
+
+func (n *NodeTypeInfo) addFieldLength(l int64) {
+	if n.maxLength < l {
+		n.maxLength = l
+	}
 }
 
 func (n *NodeTypeInfo) checkFieldType(v string) {

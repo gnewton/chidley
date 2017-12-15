@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"text/template"
@@ -27,6 +26,8 @@ var progress = false
 var readFromStandardIn = false
 var sortByXmlOrder = false
 var structsToStdout = true
+
+var ignoreXmlDecodingErrors = false
 
 var codeGenDir = "codegen"
 var codeGenFilename = "CodeGenStructs.go"
@@ -47,6 +48,8 @@ var xmlName = false
 var url = false
 var useType = false
 var addDbMetadata = false
+
+var flattenStrings = false
 
 type structSortFunc func(v *PrintGoStructVisitor)
 
@@ -80,6 +83,8 @@ func init() {
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
 	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
+	flag.BoolVar(&ignoreXmlDecodingErrors, "I", ignoreXmlDecodingErrors, "If XML decoding error encountered, continue")
+
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
@@ -107,7 +112,7 @@ func handleParameters() error {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	err := handleParameters()
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -142,11 +147,12 @@ func main() {
 	}
 
 	ex := Extractor{
-		namePrefix: namePrefix,
-		nameSuffix: nameSuffix,
-		reader:     source.getReader(),
-		useType:    useType,
-		progress:   progress,
+		namePrefix:              namePrefix,
+		nameSuffix:              nameSuffix,
+		reader:                  source.getReader(),
+		useType:                 useType,
+		progress:                progress,
+		ignoreXmlDecodingErrors: ignoreXmlDecodingErrors,
 	}
 
 	if DEBUG {
@@ -155,7 +161,10 @@ func main() {
 	err = ex.extract()
 
 	if err != nil {
-		log.Fatal("FATAL ERROR: " + err.Error())
+		log.Println("ERROR: " + err.Error())
+		if !ignoreXmlDecodingErrors {
+			log.Fatal("FATAL ERROR: " + err.Error())
+		}
 	}
 
 	var writer Writer
@@ -182,7 +191,7 @@ func main() {
 
 		x := XmlInfo{
 			BaseXML:         &xt,
-			OneLevelDownXML: makeOneLevelDown(ex.root),
+			OneLevelDownXML: makeOneLevelDown(ex.root, ex.globalTagAttributes),
 			Filename:        getFullPath(sourceName),
 			Structs:         sWriter.s,
 		}
@@ -374,7 +383,7 @@ func countNumberOfBoolsSet(a []*bool) int {
 	return counter
 }
 
-func makeOneLevelDown(node *Node) []*XMLType {
+func makeOneLevelDown(node *Node, globalTagAttributes map[string]([]*FQN)) []*XMLType {
 	var children []*XMLType
 
 	for _, np := range node.children {
@@ -383,6 +392,9 @@ func makeOneLevelDown(node *Node) []*XMLType {
 		}
 		for _, n := range np.children {
 			if n == nil {
+				continue
+			}
+			if flattenStrings && isStringOnlyField(n, len(globalTagAttributes[nk(n)])) {
 				continue
 			}
 			x := XMLType{NameType: n.makeType(namePrefix, nameSuffix),

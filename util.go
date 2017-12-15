@@ -86,22 +86,36 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 
 type fqnSorter []*FQN
 
+func isStringOnlyField(n *Node, nattributes int) bool {
+	return (len(n.children) == 0 && nattributes == 0)
+}
+
 func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap map[string]string) {
 	sort.Sort(fqnSorter(attributes))
 
 	for _, fqn := range attributes {
 		name := fqn.name
-		space := fqn.space
+		nameSpace := fqn.space
 
-		spaceTag, ok := nameSpaceTagMap[space]
-		if ok && spaceTag != "" {
-			spaceTag = spaceTag + "Space"
+		nameSpaceTag, ok := nameSpaceTagMap[nameSpace]
+		if ok && nameSpaceTag != "" {
+			nameSpaceTag = nameSpaceTag + "Space"
 		} else {
-			spaceTag = space
+			nameSpaceTag = nameSpace
 		}
 
-		lineChannel <- "\t" + attributePrefix + capitalizeFirstLetter(spaceTag) + cleanName(name) + " string `xml:\"" + space + " " + name + ",attr\"  json:\",omitempty\"`"
+		nameSpaceTag = goVariableNameSanitize(nameSpaceTag)
+
+		lineChannel <- "\t" + attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name) + " string `xml:\"" + nameSpace + " " + name + ",attr\"  json:\",omitempty\"`"
 	}
+}
+
+func goVariableNameSanitize(s string) string {
+	s = strings.Replace(s, ":", "_colon_", -1)
+	s = strings.Replace(s, "/", "_slash_", -1)
+	s = strings.Replace(s, ".", "_dot_", -1)
+	s = strings.Replace(s, " ", "_space_", -1)
+	return s
 }
 
 // Len is part of sort.Interface.

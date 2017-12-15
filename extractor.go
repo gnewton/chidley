@@ -16,18 +16,19 @@ var nameMapper = map[string]string{
 var DiscoveredOrder = 0
 
 type Extractor struct {
-	globalTagAttributes    map[string]([]*FQN)
-	globalTagAttributesMap map[string]bool
-	globalNodeMap          map[string]*Node
-	namePrefix             string
-	nameSpaceTagMap        map[string]string
-	nameSuffix             string
-	reader                 io.Reader
-	root                   *Node
-	firstNode              *Node
-	hasStartElements       bool
-	useType                bool
-	progress               bool
+	globalTagAttributes     map[string]([]*FQN)
+	globalTagAttributesMap  map[string]bool
+	globalNodeMap           map[string]*Node
+	namePrefix              string
+	nameSpaceTagMap         map[string]string
+	nameSuffix              string
+	reader                  io.Reader
+	root                    *Node
+	firstNode               *Node
+	hasStartElements        bool
+	useType                 bool
+	progress                bool
+	ignoreXmlDecodingErrors bool
 }
 
 const RootName = "ChidleyRoot314159"
@@ -58,7 +59,9 @@ func (ex *Extractor) extract() error {
 				break
 			}
 			log.Println(err)
-			return err
+			if !ex.ignoreXmlDecodingErrors {
+				return err
+			}
 		}
 		if token == nil {
 			log.Println("Empty token")
@@ -125,11 +128,15 @@ func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChanne
 			}
 
 			//if !thisNode.hasCharData {
-			thisNode.tempCharData += strings.TrimSpace(string(element))
+			charData := string(element)
+			thisNode.tempCharData += strings.TrimSpace(charData)
+			thisNode.charDataCount += int64(len(charData))
 		//}
 
 		case xml.EndElement:
 			thisNode.nodeTypeInfo.checkFieldType(thisNode.tempCharData)
+			thisNode.nodeTypeInfo.addFieldLength(thisNode.charDataCount)
+			thisNode.charDataCount = 0
 
 			if DEBUG {
 				log.Printf("EndElement: %+v\n", element)
@@ -215,6 +222,7 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 	}
 	child.pushParent(thisNode)
 
+	// Extract attributes
 	for _, attr := range startElement.Attr {
 		bigKey := key + "_" + attr.Name.Space + "_" + attr.Name.Local
 		_, ok := ex.globalTagAttributesMap[bigKey]
@@ -222,6 +230,7 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 			fqn := new(FQN)
 			fqn.name = attr.Name.Local
 			fqn.space = attr.Name.Space
+			log.Println(name, "|", fqn.name, "||", fqn.space)
 			attributes = append(attributes, fqn)
 			ex.globalTagAttributesMap[bigKey] = true
 		}

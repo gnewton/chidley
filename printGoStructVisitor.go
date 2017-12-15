@@ -2,6 +2,7 @@ package main
 
 import (
 	"sort"
+	"strconv"
 )
 
 type PrintGoStructVisitor struct {
@@ -46,10 +47,15 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 }
 
 func print(v *PrintGoStructVisitor, node *Node) {
+	if flattenStrings && isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])) {
+		v.lineChannel <- "//type " + node.makeType(namePrefix, nameSuffix)
+		return
+	}
+
 	attributes := v.globalTagAttributes[nk(node)]
 	v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
 	makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
-	v.printInternalFields(node)
+	v.printInternalFields(len(attributes), node)
 	if node.space != "" {
 		v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
 	}
@@ -67,42 +73,58 @@ func (v *PrintGoStructVisitor) SetAlreadyVisited(n *Node) {
 	v.alreadyVisitedNodes[nk(n)] = n
 }
 
-func (pn *PrintGoStructVisitor) printInternalFields(n *Node) {
+func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 	var fields []string
 
 	var field string
 
 	for i, _ := range n.children {
-		v := n.children[i]
-		field = "\t" + v.makeType(namePrefix, nameSuffix) + " "
-		if v.repeats {
-			field += "[]*"
+		child := n.children[i]
+
+		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
+			field = "\t" + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`"
 		} else {
-			field += "*"
+
+			field = "\t" + child.makeType(namePrefix, nameSuffix) + " "
+			if child.repeats {
+				field += "[]*"
+			} else {
+				field += "*"
+			}
+			field += child.makeType(namePrefix, nameSuffix)
+
+			jsonAnnotation := makeJsonAnnotation(child.spaceTag, v.nameSpaceInJsonName, child.name)
+			xmlAnnotation := makeXmlAnnotation(child.space, false, child.name)
+			dbAnnotation := ""
+			if addDbMetadata {
+				dbAnnotation = " " + makeDbAnnotation(child.space, false, child.name)
+			}
+
+			annotation := " `" + xmlAnnotation + " " + jsonAnnotation + dbAnnotation + "`"
+
+			field += annotation
+			if flattenStrings {
+				field += "// foo--------------" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
+			}
 		}
-		field += v.makeType(namePrefix, nameSuffix)
-
-		jsonAnnotation := makeJsonAnnotation(v.spaceTag, pn.nameSpaceInJsonName, v.name)
-		xmlAnnotation := makeXmlAnnotation(v.space, false, v.name)
-		dbAnnotation := ""
-		if addDbMetadata {
-			dbAnnotation = " " + makeDbAnnotation(v.space, false, v.name)
-		}
-
-		annotation := " `" + xmlAnnotation + " " + jsonAnnotation + dbAnnotation + "`"
-
-		field += annotation
 		fields = append(fields, field)
 	}
 
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
 		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
+
+		if flattenStrings {
+			charField += "// foo mm" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+			if len(n.children) == 0 && nattributes == 0 {
+				charField += "// *******************"
+			}
+		}
 		fields = append(fields, charField)
 	}
 	sort.Strings(fields)
 	for i := 0; i < len(fields); i++ {
-		pn.lineChannel <- fields[i]
+		v.lineChannel <- fields[i]
 	}
 }
 

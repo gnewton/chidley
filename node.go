@@ -16,6 +16,7 @@ type Node struct {
 	nodeTypeInfo    *NodeTypeInfo
 	hasCharData     bool
 	tempCharData    string
+	charDataCount   int64
 	discoveredOrder int
 }
 
