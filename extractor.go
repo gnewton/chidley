@@ -226,11 +226,22 @@ func (ex *Extractor) handleStartElement(startElement xml.StartElement, thisNode 
 	for _, attr := range startElement.Attr {
 		bigKey := key + "_" + attr.Name.Space + "_" + attr.Name.Local
 		_, ok := ex.globalTagAttributesMap[bigKey]
-		if !ok {
+		if ok {
+			fqn := findThisAttribute(attr.Name.Local, attr.Name.Space, ex.globalTagAttributes[key])
+			if fqn == nil {
+				log.Println("This should not be happening: fqn is nil")
+				continue
+			}
+			lenValue := len(attr.Value)
+			if lenValue > fqn.maxLength {
+				fqn.maxLength = lenValue
+			}
+		} else {
 			fqn := new(FQN)
 			fqn.name = attr.Name.Local
 			fqn.space = attr.Name.Space
-			log.Println(name, "|", fqn.name, "||", fqn.space)
+			fqn.maxLength = len(attr.Value)
+			//log.Println(name, "|", fqn.name, "||", fqn.space)
 			attributes = append(attributes, fqn)
 			ex.globalTagAttributesMap[bigKey] = true
 		}

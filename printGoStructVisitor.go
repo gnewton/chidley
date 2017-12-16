@@ -48,7 +48,7 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 
 func print(v *PrintGoStructVisitor, node *Node) {
 	if flattenStrings && isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])) {
-		v.lineChannel <- "//type " + node.makeType(namePrefix, nameSuffix)
+		//v.lineChannel <- "//type " + node.makeType(namePrefix, nameSuffix)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 		child := n.children[i]
 
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-			field = "\t" + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`"
+			field = "\t" + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" + "   // maxLength=" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
 		} else {
 
 			field = "\t" + child.makeType(namePrefix, nameSuffix) + " "
@@ -104,7 +104,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 
 			field += annotation
 			if flattenStrings {
-				field += "// foo--------------" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
+				field += "   // maxLength=" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
 			}
 		}
 		fields = append(fields, field)
@@ -115,7 +115,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
 
 		if flattenStrings {
-			charField += "// foo mm" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+			charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
 			if len(n.children) == 0 && nattributes == 0 {
 				charField += "// *******************"
 			}

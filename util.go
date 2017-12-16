@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -105,8 +106,11 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 		}
 
 		nameSpaceTag = goVariableNameSanitize(nameSpaceTag)
+		if len(nameSpace) > 0 {
+			nameSpace = nameSpace + " "
+		}
 
-		lineChannel <- "\t" + attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name) + " string `xml:\"" + nameSpace + " " + name + ",attr\"  json:\",omitempty\"`"
+		lineChannel <- "\t" + attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name) + " string `xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
 	}
 }
 
@@ -175,4 +179,13 @@ func capitalizeFirstLetter(s string) string {
 
 func lowerFirstLetter(s string) string {
 	return alterFirstLetter(s, strings.ToLower)
+}
+
+func findThisAttribute(local, nameSpace string, attrs []*FQN) *FQN {
+	for _, attr := range attrs {
+		if attr.name == local && attr.space == nameSpace {
+			return attr
+		}
+	}
+	return nil
 }
