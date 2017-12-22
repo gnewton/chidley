@@ -5,6 +5,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -51,6 +52,11 @@ var addDbMetadata = false
 
 var flattenStrings = false
 
+var lengthTagName = ""
+var lengthTagPadding int64 = 0
+var lengthTagAttribute = ""
+var lengthTagSeparator = ":"
+
 type structSortFunc func(v *PrintGoStructVisitor)
 
 var structSort = printStructsAlphabetical
@@ -90,6 +96,12 @@ func init() {
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
 	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
 	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
+
+	flag.StringVar(&lengthTagName, "N", lengthTagName, "The tag name to use for the max length Go annotations")
+	flag.StringVar(&lengthTagAttribute, "A", lengthTagAttribute, "The tag name attribute to use for the max length Go annotations")
+	flag.StringVar(&lengthTagSeparator, "S", lengthTagSeparator, "The tag name separator to use for the max length Go annotations")
+	flag.Int64Var(&lengthTagPadding, "Z", lengthTagPadding, "The padding on the max length tag attribute")
+
 }
 
 func handleParameters() error {
@@ -108,16 +120,21 @@ func handleParameters() error {
 	if sortByXmlOrder {
 		structSort = printStructsByXml
 	}
-	return nil
+
+	if lengthTagName == "" && lengthTagAttribute == "" || lengthTagName != "" && lengthTagAttribute != "" {
+		return nil
+	}
+
+	return errors.New("Both lengthTagName and lengthTagAttribute must be set")
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	err := handleParameters()
 
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
 	if err != nil {
+		log.Println(err)
 		flag.Usage()
 		return
 	}

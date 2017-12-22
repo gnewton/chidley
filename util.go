@@ -110,7 +110,10 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 			nameSpace = nameSpace + " "
 		}
 
-		lineChannel <- "\t" + attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name) + " string `xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
+		variableName := attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name)
+		variableType := "string"
+
+		lineChannel <- "\t" + variableName + " " + variableType + "`xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
 	}
 }
 

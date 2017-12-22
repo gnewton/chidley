@@ -80,18 +80,30 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 
 	for i, _ := range n.children {
 		child := n.children[i]
-
+		var def OutVariableDef
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-			field = "\t" + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" + "   // maxLength=" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
+			field = "\t" + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" + "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
+			def.GoName = child.makeType(namePrefix, nameSuffix)
+			def.GoType = "string"
+			def.XMLName = child.name
+			def.XMLNameSpace = child.space
 		} else {
 
-			field = "\t" + child.makeType(namePrefix, nameSuffix) + " "
+			// Field name and type are the same: i.e. Person *Person or Persons []Persons
+			nameAndType := child.makeType(namePrefix, nameSuffix)
+
+			def.GoName = nameAndType
+			def.GoType = nameAndType
+			def.XMLName = child.name
+			def.XMLNameSpace = child.space
+
+			field = "\t" + nameAndType + " "
 			if child.repeats {
 				field += "[]*"
 			} else {
 				field += "*"
 			}
-			field += child.makeType(namePrefix, nameSuffix)
+			field += nameAndType
 
 			jsonAnnotation := makeJsonAnnotation(child.spaceTag, v.nameSpaceInJsonName, child.name)
 			xmlAnnotation := makeXmlAnnotation(child.space, false, child.name)
