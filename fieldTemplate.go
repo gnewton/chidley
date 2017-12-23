@@ -15,24 +15,24 @@ type OutVariableDef struct {
 	//Foo          bool
 }
 
+var fieldTemplate *template.Template
+
 // const t = `
 // type Article struct{
 //        {{.GoName}} {{.GoType}} ` + "`" + `xml:"{{if notEmpty .XMLNameSpace}}{{.XMLNameSpace}} {{end}}{{.XMLName}},omitempty" json:"{{.XMLName}},omitempty"{{if .Foo}} db:"size={{.Length}}" {{- else}} gorm:"name:name,size={{.Length}}"{{- end}}` + "`" + `
 // }
 // `
 
-const t = `
-type Article struct{
+const fieldTemplateString = `
        {{.GoName}} {{.GoType}} ` + "`" + `xml:"{{if notEmpty .XMLNameSpace}}{{.XMLNameSpace}} {{end}}{{.XMLName}},omitempty" json:"{{.XMLName}},omitempty"` + "`" + `
-}
 `
 
 func render() {
-	t := template.Must(template.New("foo").Funcs(template.FuncMap{
+	fieldTemplate = template.Must(template.New("fieldTemplate").Funcs(template.FuncMap{
 		"notEmpty": func(feature string) bool {
 			return len(feature) > 0
 		},
-	}).Parse(t))
+	}).Parse(fieldTemplateString))
 
 	ot := OutVariableDef{
 		"author",
@@ -46,7 +46,7 @@ func render() {
 	var buf bytes.Buffer
 
 	//err := t.Execute(os.Stdout, ot)
-	err := t.Execute(&buf, ot)
+	err := fieldTemplate.Execute(&buf, ot)
 	if err != nil {
 		panic(err)
 	}
