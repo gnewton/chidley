@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"errors"
 	"io"
 	"log"
 	"strconv"
@@ -29,27 +30,37 @@ type Extractor struct {
 	useType                 bool
 	progress                bool
 	ignoreXmlDecodingErrors bool
+	initted                 bool
+	tokenChannel            chan xml.Token
+	handleTokensDoneChannel chan bool
 }
 
 const RootName = "ChidleyRoot314159"
 
-func (ex *Extractor) extract() error {
+func (ex *Extractor) init() {
 	ex.globalTagAttributes = make(map[string]([]*FQN))
 	ex.globalTagAttributesMap = make(map[string]bool)
 	ex.nameSpaceTagMap = make(map[string]string)
 	ex.globalNodeMap = make(map[string]*Node)
-
-	decoder := xml.NewDecoder(ex.reader)
-
 	ex.root = new(Node)
 	ex.root.initialize(RootName, "", "", nil)
-
 	ex.hasStartElements = false
+	ex.initted = true
+	ex.tokenChannel = make(chan xml.Token, 100)
+	ex.handleTokensDoneChannel = make(chan bool)
+	go handleTokens(ex)
+}
 
-	tokenChannel := make(chan xml.Token, 100)
-	handleTokensDoneChannel := make(chan bool)
+func (ex *Extractor) done() {
+	close(ex.tokenChannel)
+	_ = <-ex.handleTokensDoneChannel
+}
 
-	go handleTokens(tokenChannel, ex, handleTokensDoneChannel)
+func (ex *Extractor) extract() error {
+	if ex.initted == false {
+		return errors.New("extractor not properly initted: must run extractor.init() first")
+	}
+	decoder := xml.NewDecoder(ex.reader)
 
 	for {
 		token, err := decoder.Token()
@@ -67,14 +78,14 @@ func (ex *Extractor) extract() error {
 			log.Println("Empty token")
 			break
 		}
-		tokenChannel <- xml.CopyToken(token)
+		ex.tokenChannel <- xml.CopyToken(token)
 	}
-	close(tokenChannel)
-	_ = <-handleTokensDoneChannel
 	return nil
 }
 
-func handleTokens(tChannel chan xml.Token, ex *Extractor, handleTokensDoneChannel chan bool) {
+func handleTokens(ex *Extractor) {
+	tChannel := ex.tokenChannel
+	handleTokensDoneChannel := ex.handleTokensDoneChannel
 	depth := 0
 	thisNode := ex.root
 	first := true
@@ -177,8 +188,13 @@ func space(n int) string {
 
 func (ex *Extractor) findNewNameSpaces(attrs []xml.Attr) {
 	for _, attr := range attrs {
+
 		if attr.Name.Space == "xmlns" {
 			ex.nameSpaceTagMap[attr.Value] = attr.Name.Local
+		}
+		if strings.HasPrefix(attr.Name.Space, "xmlns") {
+			log.Println("mmmmmmmmmmmmmmmmmmmmmmm", attr)
+			log.Println("+++++++++++++++++++++++++++", attr.Value, "|", attr.Name.Local, "|", attr.Name.Space)
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -129,6 +130,7 @@ func handleParameters() error {
 }
 
 func main() {
+	EXP()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	err := handleParameters()
@@ -170,12 +172,19 @@ func main() {
 		useType:                 useType,
 		progress:                progress,
 		ignoreXmlDecodingErrors: ignoreXmlDecodingErrors,
+		initted:                 false,
 	}
 
 	if DEBUG {
 		log.Print("extracting")
 	}
-	err = ex.extract()
+
+	m := &ex
+	log.Println("111")
+	m.init()
+	log.Println("222")
+	err = m.extract()
+	log.Println("333")
 
 	if err != nil {
 		log.Println("ERROR: " + err.Error())
@@ -184,50 +193,14 @@ func main() {
 		}
 	}
 
-	var writer Writer
-	lineChannel := make(chan string, 100)
+	ex.done()
+
 	switch {
 	case codeGenConvert:
-		sWriter := new(stringWriter)
-		writer = sWriter
-		writer.open("", lineChannel)
-		printGoStructVisitor := new(PrintGoStructVisitor)
-		printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
-		printGoStructVisitor.Visit(ex.root)
-
-		structSort(printGoStructVisitor)
-
-		close(lineChannel)
-		sWriter.close()
-
-		xt := XMLType{NameType: ex.firstNode.makeType(namePrefix, nameSuffix),
-			XMLName:      ex.firstNode.name,
-			XMLNameUpper: capitalizeFirstLetter(ex.firstNode.name),
-			XMLSpace:     ex.firstNode.space,
-		}
-
-		x := XmlInfo{
-			BaseXML:         &xt,
-			OneLevelDownXML: makeOneLevelDown(ex.root, ex.globalTagAttributes),
-			Filename:        getFullPath(sourceName),
-			Structs:         sWriter.s,
-		}
-		t := template.Must(template.New("chidleyGen").Parse(codeTemplate))
-
-		err := t.Execute(os.Stdout, x)
-		if err != nil {
-			log.Println("executing template:", err)
-		}
+		generateGoCode(os.Stdout, sourceName, &ex)
 
 	case structsToStdout:
-		writer = new(stdoutWriter)
-		writer.open("", lineChannel)
-		printGoStructVisitor := new(PrintGoStructVisitor)
-		printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
-		printGoStructVisitor.Visit(ex.root)
-		structSort(printGoStructVisitor)
-		close(lineChannel)
-		writer.close()
+		generateGoStructs(os.Stdout, sourceName, &ex)
 
 	case writeJava:
 		if len(userJavaPackageName) > 0 {
@@ -457,6 +430,55 @@ func printStructsAlphabetical(v *PrintGoStructVisitor) {
 
 	for _, k := range keys {
 		print(v, v.alreadyVisitedNodes[k])
+	}
+
+}
+
+func generateGoStructs(out io.Writer, sourceName string, ex *Extractor) {
+	lineChannel := make(chan string, 100)
+	var writer Writer
+	writer = new(stdoutWriter)
+	writer.open("", lineChannel)
+	printGoStructVisitor := new(PrintGoStructVisitor)
+	printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	printGoStructVisitor.Visit(ex.root)
+	structSort(printGoStructVisitor)
+	close(lineChannel)
+	writer.close()
+}
+
+func generateGoCode(out io.Writer, sourceName string, ex *Extractor) {
+	lineChannel := make(chan string, 100)
+	var writer Writer
+	sWriter := new(stringWriter)
+	writer = sWriter
+	writer.open("", lineChannel)
+	printGoStructVisitor := new(PrintGoStructVisitor)
+	printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	printGoStructVisitor.Visit(ex.root)
+
+	structSort(printGoStructVisitor)
+
+	close(lineChannel)
+	sWriter.close()
+
+	xt := XMLType{NameType: ex.firstNode.makeType(namePrefix, nameSuffix),
+		XMLName:      ex.firstNode.name,
+		XMLNameUpper: capitalizeFirstLetter(ex.firstNode.name),
+		XMLSpace:     ex.firstNode.space,
+	}
+
+	x := XmlInfo{
+		BaseXML:         &xt,
+		OneLevelDownXML: makeOneLevelDown(ex.root, ex.globalTagAttributes),
+		Filename:        getFullPath(sourceName),
+		Structs:         sWriter.s,
+	}
+	t := template.Must(template.New("chidleyGen").Parse(codeTemplate))
+
+	err := t.Execute(out, x)
+	if err != nil {
+		log.Println("executing template:", err)
 	}
 
 }

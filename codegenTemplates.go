@@ -55,6 +55,7 @@ var filename = "{{.Filename}}"
 
 
 func init() {
+
 	flag.BoolVar(&toJson, "j", toJson, "Convert to JSON")
 	flag.BoolVar(&toXml, "x", toXml, "Convert to XML")
 	flag.BoolVar(&countAll, "c", countAll, "Count each instance of XML tags")

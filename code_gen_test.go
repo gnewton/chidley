@@ -7,7 +7,10 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"log"
 	//"log"
+	"bytes"
+	"strings"
 	"testing"
 )
 
@@ -24,7 +27,29 @@ type ChiAuthor struct {
 `
 
 func TestAverage(t *testing.T) {
-	err := parseAndType(hello)
+	ex := Extractor{
+		namePrefix:              namePrefix,
+		nameSuffix:              nameSuffix,
+		reader:                  strings.NewReader(modx),
+		useType:                 useType,
+		progress:                progress,
+		ignoreXmlDecodingErrors: ignoreXmlDecodingErrors,
+	}
+
+	ex.init()
+	err := ex.extract()
+
+	if err != nil {
+		t.Error(err)
+	}
+	ex.done()
+
+	buf := bytes.NewBufferString("")
+	generateGoCode(buf, "foo", &ex)
+
+	log.Println(buf.String())
+
+	err = parseAndType(buf.String())
 	if err != nil {
 		t.Error(err)
 	}
@@ -34,7 +59,7 @@ func TestAverage(t *testing.T) {
 func parseAndType(s string) error {
 	fset := token.NewFileSet()
 	//f, err := parser.ParseFile(fset, "hello.go", hello, 0)
-	f, err := parser.ParseFile(fset, "hello.go", hello, 0)
+	f, err := parser.ParseFile(fset, "hello.go", s, 0)
 	if err != nil {
 		//t.Error("Expected 1.5, got ", v)
 		//log.Fatal(err) // parse error
