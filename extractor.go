@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const XML_NAMESPACE_ACRONYM = "xmlns"
+
 var nameMapper = map[string]string{
 	"-": "Hyphen",
 	".": "Dot",
@@ -140,7 +142,7 @@ func handleTokens(ex *Extractor) {
 
 			//if !thisNode.hasCharData {
 			charData := string(element)
-			thisNode.tempCharData += strings.TrimSpace(charData)
+			thisNode.tempCharData += charData //strings.TrimSpace(charData)
 			thisNode.charDataCount += int64(len(charData))
 		//}
 
@@ -188,13 +190,10 @@ func space(n int) string {
 
 func (ex *Extractor) findNewNameSpaces(attrs []xml.Attr) {
 	for _, attr := range attrs {
-
-		if attr.Name.Space == "xmlns" {
+		if strings.HasPrefix(attr.Name.Space, XML_NAMESPACE_ACRONYM) {
+			//log.Println("mmmmmmmmmmmmmmmmmmmmmmm", attr)
+			//log.Println("+++++++++++++++++++++++++++", attr.Value, "|", attr.Name.Local, "|", attr.Name.Space)
 			ex.nameSpaceTagMap[attr.Value] = attr.Name.Local
-		}
-		if strings.HasPrefix(attr.Name.Space, "xmlns") {
-			log.Println("mmmmmmmmmmmmmmmmmmmmmmm", attr)
-			log.Println("+++++++++++++++++++++++++++", attr.Value, "|", attr.Name.Local, "|", attr.Name.Space)
 		}
 	}
 }

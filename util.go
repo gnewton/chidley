@@ -37,17 +37,22 @@ func cleanName(name string) string {
 		if len(parts) == 1 {
 			continue
 		} else {
-			name = ""
+			name := ""
 			l := len(parts)
 			for i := 0; i < l; i++ {
-				name += capitalizeFirstLetter(parts[i])
+				if i == 0 {
+					name += parts[i]
+				} else {
+					name += capitalizeFirstLetter(parts[i])
+				}
 				if i+1 < l {
 					name += new
 				}
 			}
 		}
 	}
-	return capitalizeFirstLetter(name)
+	//return capitalizeFirstLetter(name)
+	return name
 }
 
 func findType(nti *NodeTypeInfo, useType bool) string {
@@ -95,6 +100,7 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 	sort.Sort(fqnSorter(attributes))
 
 	for _, fqn := range attributes {
+
 		name := fqn.name
 		nameSpace := fqn.space
 
@@ -110,6 +116,7 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 			nameSpace = nameSpace + " "
 		}
 
+		//variableName := attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name)
 		variableName := attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name)
 		variableType := "string"
 
@@ -191,4 +198,9 @@ func findThisAttribute(local, nameSpace string, attrs []*FQN) *FQN {
 		}
 	}
 	return nil
+}
+
+func makeAttributeName(key, namespace, local string) string {
+	return key + "_" + local + "_" + namespace
+
 }

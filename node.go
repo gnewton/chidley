@@ -1,7 +1,8 @@
 package main
 
 import (
-//"log"
+	"strings"
+	//"log"
 )
 
 type Node struct {
@@ -45,15 +46,24 @@ func (n *Node) makeName() string {
 	if n.spaceTag != "" {
 		spaceTag = "_" + n.spaceTag
 	}
-	return capitalizeFirstLetter(cleanName(n.name)) + spaceTag
+	//return capitalizeFirstLetter(cleanName(n.name)) + spaceTag
+	return cleanName(n.name) + spaceTag
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
-	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, true))
+	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, !keepXmlFirstLetterCase)) + n.renderSpaceTag()
+}
+
+func (n *Node) renderSpaceTag() string {
+	if len(strings.TrimSpace(n.spaceTag)) == 0 {
+		return ""
+	} else {
+		return "__" + n.spaceTag
+	}
 }
 
 func (n *Node) makeJavaType(prefix string, suffix string) string {
-	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, true))
+	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, !keepXmlFirstLetterCase))
 }
 
 func (n *Node) peekParent() *Node {
@@ -81,9 +91,10 @@ func (n *Node) popParent() *Node {
 func makeTypeGeneric(name string, space string, prefix string, suffix string, capitalizeName bool) string {
 	spaceTag := ""
 
-	if capitalizeName {
-		name = capitalizeFirstLetter(name)
-	}
+	//if capitalizeName {
+	//name = capitalizeFirstLetter(name)
+	//}
+
 	return prefix + spaceTag + cleanName(name) + suffix
 
 }

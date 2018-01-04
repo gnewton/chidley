@@ -52,6 +52,7 @@ var useType = false
 var addDbMetadata = false
 
 var flattenStrings = false
+var keepXmlFirstLetterCase = true
 
 var lengthTagName = ""
 var lengthTagPadding int64 = 0
@@ -92,6 +93,8 @@ func init() {
 	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
 
+	flag.BoolVar(&keepXmlFirstLetterCase, "K", keepXmlFirstLetterCase, "Do not change the case of the first letter of the XML tag names")
+
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
@@ -130,7 +133,8 @@ func handleParameters() error {
 }
 
 func main() {
-	EXP()
+
+	//EXP()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	err := handleParameters()
@@ -180,11 +184,8 @@ func main() {
 	}
 
 	m := &ex
-	log.Println("111")
 	m.init()
-	log.Println("222")
 	err = m.extract()
-	log.Println("333")
 
 	if err != nil {
 		log.Println("ERROR: " + err.Error())
