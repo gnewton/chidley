@@ -7,7 +7,6 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"log"
 	//"log"
 	"bytes"
 	"strings"
@@ -47,7 +46,7 @@ func TestAverage(t *testing.T) {
 	buf := bytes.NewBufferString("")
 	generateGoCode(buf, "foo", &ex)
 
-	log.Println(buf.String())
+	//log.Println(buf.String())
 
 	err = parseAndType(buf.String())
 	if err != nil {
