@@ -52,6 +52,8 @@ var useType = false
 var addDbMetadata = false
 
 var flattenStrings = false
+
+//FIXXX: should not be global
 var keepXmlFirstLetterCase = true
 
 var lengthTagName = ""

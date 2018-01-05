@@ -91,9 +91,9 @@ func (n *Node) popParent() *Node {
 func makeTypeGeneric(name string, space string, prefix string, suffix string, capitalizeName bool) string {
 	spaceTag := ""
 
-	//if capitalizeName {
-	//name = capitalizeFirstLetter(name)
-	//}
+	if capitalizeName {
+		name = capitalizeFirstLetter(name)
+	}
 
 	return prefix + spaceTag + cleanName(name) + suffix
 

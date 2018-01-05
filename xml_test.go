@@ -13,23 +13,25 @@ import (
 	"testing"
 )
 
-const hello = `package main
-
-import (
-      "encoding/xml"
-)
-
-type ChiAuthor struct {
-	ChiName *ChiAuthor ` + "`" + `xml:\"http://www.w3.org/2005/Atom name,omitempty\" json:\"name,omitempty\""` + "`" + `
-	XMLName  xml.Name ` + "`" + `xml:\"http://www.w3.org/2005/Atom author,omitempty\" json:\"author,omitempty\"` + "`" + `
+func TestSameNameDifferentNameSpaceXML(t *testing.T) {
+	err := extractor(sameNameDifferentNameSpaceXML)
+	if err != nil {
+		t.Error(err)
+	}
 }
-`
 
-func TestAverage(t *testing.T) {
+func TestMixedCaseSameNameXML(t *testing.T) {
+	err := extractor(mixedCaseSameNameXML)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func extractor(xml string) error {
 	ex := Extractor{
 		namePrefix:              namePrefix,
 		nameSuffix:              nameSuffix,
-		reader:                  strings.NewReader(modx),
+		reader:                  strings.NewReader(xml),
 		useType:                 useType,
 		progress:                progress,
 		ignoreXmlDecodingErrors: ignoreXmlDecodingErrors,
@@ -39,7 +41,7 @@ func TestAverage(t *testing.T) {
 	err := ex.extract()
 
 	if err != nil {
-		t.Error(err)
+		return err
 	}
 	ex.done()
 
@@ -49,9 +51,7 @@ func TestAverage(t *testing.T) {
 	//log.Println(buf.String())
 
 	err = parseAndType(buf.String())
-	if err != nil {
-		t.Error(err)
-	}
+	return err
 }
 
 // Derived from example at https://github.com/golang/example/tree/master/gotypes#an-example
