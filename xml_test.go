@@ -27,6 +27,14 @@ func TestMixedCaseSameNameXML(t *testing.T) {
 	}
 }
 
+//https://github.com/gnewton/chidley/issues/14
+func TestGithubIssue14(t *testing.T) {
+	err := extractor(githubIssue14)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func extractor(xml string) error {
 	ex := Extractor{
 		namePrefix:              namePrefix,

@@ -18,3 +18,16 @@ const mixedCaseSameNameXML = `
 	<Name>MODIS Imagery Overlays</Name>
 </kml>
 `
+
+//https://github.com/gnewton/chidley/issues/14
+const githubIssue14 = `
+<con1:actions>
+   <con2:route xmlns:con2="http://www.bea.com/wli/sb/stages/routing/config">
+     <con3:id xmlns:con3="http://www.bea.com/wli/sb/stages/config">_ActionId-3525062221263473230--64db5972.154ce25275c.-7fc5</con3:id>
+     <con2:service ref="Something/Proxy/Something" xsi:type="ref:ProxyRef" xmlns:ref="http://www.bea.com/wli/sb/reference" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+     <con2:operation passThrough="true"/>
+     <con2:outboundTransform/>
+     <con2:responseTransform/>
+   </con2:route>
+</con1:actions>
+`

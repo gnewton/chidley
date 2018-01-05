@@ -2,7 +2,7 @@ package main
 
 import (
 	"sort"
-	"strconv"
+	//"strconv"
 )
 
 type PrintGoStructVisitor struct {
@@ -82,7 +82,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 		child := n.children[i]
 		var def OutVariableDef
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-			field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" + "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
+			field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
 			def.GoName = child.makeType(namePrefix, nameSuffix)
 			def.GoType = "string"
 			def.XMLName = child.name
@@ -116,7 +116,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 
 			field += annotation
 			if flattenStrings {
-				field += "   // maxLength=" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
+				//field += "   // maxLength=" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
 			}
 		}
 		fields = append(fields, field)
@@ -125,9 +125,9 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
 		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
-		charField += "   // maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+		//charField += "   // maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
 		if flattenStrings {
-			charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+			//charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
 			if len(n.children) == 0 && nattributes == 0 {
 				charField += "// *******************"
 			}
