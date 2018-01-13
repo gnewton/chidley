@@ -19,13 +19,13 @@ var nameMapper = map[string]string{
 var DiscoveredOrder = 0
 
 type Extractor struct {
-	globalTagAttributes     map[string]([]*FQN)
-	globalTagAttributesMap  map[string]bool
-	globalNodeMap           map[string]*Node
-	namePrefix              string
-	nameSpaceTagMap         map[string]string
-	nameSuffix              string
-	reader                  io.Reader
+	globalTagAttributes    map[string]([]*FQN)
+	globalTagAttributesMap map[string]bool
+	globalNodeMap          map[string]*Node
+	namePrefix             string
+	nameSpaceTagMap        map[string]string
+	nameSuffix             string
+	//reader                  io.Reader
 	root                    *Node
 	firstNode               *Node
 	hasStartElements        bool
@@ -58,11 +58,11 @@ func (ex *Extractor) done() {
 	_ = <-ex.handleTokensDoneChannel
 }
 
-func (ex *Extractor) extract() error {
+func (ex *Extractor) extract(reader io.Reader) error {
 	if ex.initted == false {
 		return errors.New("extractor not properly initted: must run extractor.init() first")
 	}
-	decoder := xml.NewDecoder(ex.reader)
+	decoder := xml.NewDecoder(reader)
 
 	for {
 		token, err := decoder.Token()

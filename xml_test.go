@@ -39,22 +39,29 @@ func extractor(xml string) error {
 	ex := Extractor{
 		namePrefix:              namePrefix,
 		nameSuffix:              nameSuffix,
-		reader:                  strings.NewReader(xml),
 		useType:                 useType,
 		progress:                progress,
 		ignoreXmlDecodingErrors: ignoreXmlDecodingErrors,
 	}
 
 	ex.init()
-	err := ex.extract()
+	err := ex.extract(strings.NewReader(xml))
 
 	if err != nil {
 		return err
 	}
+
+	err = ex.extract(strings.NewReader(xml))
+	if err != nil {
+		return err
+	}
+
 	ex.done()
 
 	buf := bytes.NewBufferString("")
-	generateGoCode(buf, "foo", &ex)
+	fps := make([]string, 1)
+	fps[0] = "foo"
+	generateGoCode(buf, fps, &ex)
 
 	//log.Println(buf.String())
 

@@ -13,68 +13,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
+
 	"text/template"
 	"time"
 )
-
-var DEBUG = false
-var attributePrefix = "Attr"
-var codeGenConvert = false
-var classicStructNamesWithUnderscores = false
-var nameSpaceInJsonName = false
-var prettyPrint = false
-var progress = false
-var readFromStandardIn = false
-var sortByXmlOrder = false
-var structsToStdout = true
-
-var ignoreXmlDecodingErrors = false
-
-var codeGenDir = "codegen"
-var codeGenFilename = "CodeGenStructs.go"
-
-// Java out
-const javaBasePackage = "ca.gnewton.chidley"
-const mavenJavaBase = "src/main/java"
-
-var javaBasePackagePath = strings.Replace(javaBasePackage, ".", "/", -1)
-var javaAppName = "jaxb"
-var writeJava = false
-var baseJavaDir = "java"
-var userJavaPackageName = ""
-
-var namePrefix = "Chi"
-var nameSuffix = ""
-var xmlName = false
-var url = false
-var useType = false
-var addDbMetadata = false
-
-var flattenStrings = false
-
-//FIXXX: should not be global
-var keepXmlFirstLetterCase = true
-
-var lengthTagName = ""
-var lengthTagPadding int64 = 0
-var lengthTagAttribute = ""
-var lengthTagSeparator = ":"
-
-type structSortFunc func(v *PrintGoStructVisitor)
-
-var structSort = printStructsAlphabetical
-
-type Writer interface {
-	open(s string, lineChannel chan string) error
-	close()
-}
-
-var outputs = []*bool{
-	&codeGenConvert,
-	&structsToStdout,
-	&writeJava,
-}
 
 func init() {
 
@@ -147,26 +89,29 @@ func main() {
 		return
 	}
 
-	if len(flag.Args()) != 1 && !readFromStandardIn {
+	if len(flag.Args()) == 1 && !readFromStandardIn {
 		fmt.Println("chidley <flags> xmlFileName|url")
 		fmt.Println("xmlFileName can be .gz or .bz2: uncompressed transparently")
 		flag.Usage()
 		return
 	}
 
-	var sourceName string
+	var sourceNames []string
 
 	if !readFromStandardIn {
-		sourceName = flag.Args()[0]
+		sourceNames = flag.Args()
+		log.Println("FLAGS", flag.Args())
 	}
 	if !url && !readFromStandardIn {
-		sourceName, err = filepath.Abs(sourceName)
-		if err != nil {
-			log.Fatal("FATAL ERROR: " + err.Error())
+		for i, _ := range sourceNames {
+			sourceNames[i], err = filepath.Abs(sourceNames[i])
+			if err != nil {
+				log.Fatal("FATAL ERROR: " + err.Error())
+			}
 		}
 	}
 
-	source, err := makeSourceReader(sourceName, url, readFromStandardIn)
+	sources, err := makeSourceReaders(sourceNames, url, readFromStandardIn)
 	if err != nil {
 		log.Fatal("FATAL ERROR: " + err.Error())
 	}
@@ -174,7 +119,6 @@ func main() {
 	ex := Extractor{
 		namePrefix:              namePrefix,
 		nameSuffix:              nameSuffix,
-		reader:                  source.getReader(),
 		useType:                 useType,
 		progress:                progress,
 		ignoreXmlDecodingErrors: ignoreXmlDecodingErrors,
@@ -187,12 +131,15 @@ func main() {
 
 	m := &ex
 	m.init()
-	err = m.extract()
 
-	if err != nil {
-		log.Println("ERROR: " + err.Error())
-		if !ignoreXmlDecodingErrors {
-			log.Fatal("FATAL ERROR: " + err.Error())
+	for i, _ := range sources {
+		err = m.extract(sources[i].getReader())
+
+		if err != nil {
+			log.Println("ERROR: " + err.Error())
+			if !ignoreXmlDecodingErrors {
+				log.Fatal("FATAL ERROR: " + err.Error())
+			}
 		}
 	}
 
@@ -200,10 +147,10 @@ func main() {
 
 	switch {
 	case codeGenConvert:
-		generateGoCode(os.Stdout, sourceName, &ex)
+		generateGoCode(os.Stdout, sourceNames, &ex)
 
 	case structsToStdout:
-		generateGoStructs(os.Stdout, sourceName, &ex)
+		generateGoStructs(os.Stdout, sourceNames[0], &ex)
 
 	case writeJava:
 		if len(userJavaPackageName) > 0 {
@@ -232,7 +179,7 @@ func main() {
 			// Bad: assume only one base element
 			onlyChild = child
 		}
-		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceName), date)
+		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceNames[0]), date)
 		printPackageInfo(onlyChild, javaDir, javaPackage, ex.globalTagAttributes, ex.nameSpaceTagMap)
 
 		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
@@ -321,33 +268,35 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 
 }
 
-func makeSourceReader(sourceName string, url bool, standardIn bool) (Source, error) {
-	var err error
+func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Source, error) {
 
-	var source Source
-	if url {
-		source = new(UrlSource)
-		if DEBUG {
-			log.Print("Making UrlSource")
-		}
-	} else {
-		if standardIn {
-			source = new(StdinSource)
+	var sources []Source
+	for i, _ := range sourceNames {
+
+		if url {
+			sources[i] = new(UrlSource)
 			if DEBUG {
-				log.Print("Making StdinSource")
+				log.Print("Making UrlSource")
 			}
 		} else {
-			source = new(FileSource)
-			if DEBUG {
-				log.Print("Making FileSource")
+			if standardIn {
+				sources[i] = new(StdinSource)
+				if DEBUG {
+					log.Print("Making StdinSource")
+				}
+			} else {
+				sources[i] = new(FileSource)
+				if DEBUG {
+					log.Print("Making FileSource")
+				}
 			}
 		}
+		if DEBUG {
+			log.Print("Making Source:[" + sourceNames[i] + "]")
+		}
 	}
-	if DEBUG {
-		log.Print("Making Source:[" + sourceName + "]")
-	}
-	err = source.newSource(sourceName)
-	return source, err
+
+	return sources, nil
 }
 
 func attributes(atts map[string]bool) string {
@@ -450,7 +399,7 @@ func generateGoStructs(out io.Writer, sourceName string, ex *Extractor) {
 	writer.close()
 }
 
-func generateGoCode(out io.Writer, sourceName string, ex *Extractor) {
+func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) {
 	lineChannel := make(chan string, 100)
 	var writer Writer
 	sWriter := new(stringWriter)
@@ -474,7 +423,8 @@ func generateGoCode(out io.Writer, sourceName string, ex *Extractor) {
 	x := XmlInfo{
 		BaseXML:         &xt,
 		OneLevelDownXML: makeOneLevelDown(ex.root, ex.globalTagAttributes),
-		Filename:        getFullPath(sourceName),
+		Filenames:       getFullPaths(sourceNames),
+		Filename:        getFullPath(sourceNames[0]),
 		Structs:         sWriter.s,
 	}
 	t := template.Must(template.New("chidleyGen").Parse(codeTemplate))

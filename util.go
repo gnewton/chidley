@@ -156,6 +156,16 @@ func nks(space, name string) string {
 	return space + "NS" + name
 }
 
+func getFullPaths(filenames []string) []string {
+	fps := make([]string, len(filenames))
+
+	for i, _ := range filenames {
+		fps[i] = getFullPath(filenames[i])
+	}
+
+	return fps
+}
+
 func getFullPath(filename string) string {
 	if filename == "" {
 		return ""

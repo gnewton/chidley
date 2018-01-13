@@ -1,9 +1,11 @@
 package main
 
 type XmlInfo struct {
-	BaseXML           *XMLType
-	OneLevelDownXML   []*XMLType
-	Structs, Filename string
+	BaseXML         *XMLType
+	OneLevelDownXML []*XMLType
+	Structs         string
+	Filenames       []string
+	Filename        string
 }
 
 type XMLType struct {
