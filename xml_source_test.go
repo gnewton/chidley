@@ -19,6 +19,14 @@ const mixedCaseSameNameXML = `
 </kml>
 `
 
+const tagsContainHyphens = `
+<?xml version="1.0" encoding="UTF-8"?>
+<name>
+	<first-name>Bill</first-name>
+	<last-name></last-name>
+</name>
+`
+
 //https://github.com/gnewton/chidley/issues/14
 const githubIssue14 = `
 <con1:actions>

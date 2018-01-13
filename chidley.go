@@ -89,7 +89,8 @@ func main() {
 		return
 	}
 
-	if len(flag.Args()) == 1 && !readFromStandardIn {
+	if len(flag.Args()) == 0 && !readFromStandardIn {
+		log.Println("********")
 		fmt.Println("chidley <flags> xmlFileName|url")
 		fmt.Println("xmlFileName can be .gz or .bz2: uncompressed transparently")
 		flag.Usage()
@@ -133,6 +134,7 @@ func main() {
 	m.init()
 
 	for i, _ := range sources {
+		log.Println(i, "READER", sources[i])
 		err = m.extract(sources[i].getReader())
 
 		if err != nil {
@@ -269,10 +271,10 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 }
 
 func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Source, error) {
-
-	var sources []Source
+	var err error
+	sources := make([]Source, len(sourceNames))
 	for i, _ := range sourceNames {
-
+		log.Println(i, "Sourcename", sourceNames[i])
 		if url {
 			sources[i] = new(UrlSource)
 			if DEBUG {
@@ -292,11 +294,16 @@ func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Sourc
 			}
 		}
 		if DEBUG {
+
 			log.Print("Making Source:[" + sourceNames[i] + "]")
+		}
+		err = sources[i].newSource(sourceNames[i])
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	return sources, nil
+	return sources, err
 }
 
 func attributes(atts map[string]bool) string {

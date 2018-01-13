@@ -13,6 +13,13 @@ import (
 	"testing"
 )
 
+func TestTagsContainHyphens(t *testing.T) {
+	err := extractor(tagsContainHyphens)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestSameNameDifferentNameSpaceXML(t *testing.T) {
 	err := extractor(sameNameDifferentNameSpaceXML)
 	if err != nil {
@@ -35,7 +42,7 @@ func TestGithubIssue14(t *testing.T) {
 	}
 }
 
-func extractor(xml string) error {
+func extractor(xmlString string) error {
 	ex := Extractor{
 		namePrefix:              namePrefix,
 		nameSuffix:              nameSuffix,
@@ -45,13 +52,13 @@ func extractor(xml string) error {
 	}
 
 	ex.init()
-	err := ex.extract(strings.NewReader(xml))
+	err := ex.extract(strings.NewReader(xmlString))
 
 	if err != nil {
 		return err
 	}
 
-	err = ex.extract(strings.NewReader(xml))
+	err = ex.extract(strings.NewReader(xmlString))
 	if err != nil {
 		return err
 	}

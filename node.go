@@ -51,7 +51,7 @@ func (n *Node) makeName() string {
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
-	return capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, !keepXmlFirstLetterCase)) + n.renderSpaceTag()
+	return goVariableNameSanitize(capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, !keepXmlFirstLetterCase)) + n.renderSpaceTag())
 }
 
 func (n *Node) renderSpaceTag() string {

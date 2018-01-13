@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strconv"
+)
+
 type XmlInfo struct {
 	BaseXML         *XMLType
 	OneLevelDownXML []*XMLType
@@ -10,6 +14,18 @@ type XmlInfo struct {
 
 type XMLType struct {
 	NameType, XMLName, XMLNameUpper, XMLSpace string
+}
+
+//     b := [5]int{1, 2, 3, 4, 5}
+func (xi *XmlInfo) makeFilenamesDeclaration() {
+	xi.Filename = "[" + strconv.Itoa(len(xi.Filenames)) + "]string{"
+	for i, _ := range xi.Filenames {
+		if i != 0 {
+			xi.Filename = xi.Filename + ","
+		}
+		xi.Filename = xi.Filename + "\"" + xi.Filenames[i] + "\""
+	}
+	xi.Filename = xi.Filename + "}"
 }
 
 const codeTemplate = `
