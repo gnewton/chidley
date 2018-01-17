@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/xi2/xz"
 )
 
 func genericReader(filename string) (io.Reader, *os.File, error) {
@@ -17,6 +19,14 @@ func genericReader(filename string) (io.Reader, *os.File, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	if strings.HasSuffix(filename, "xz") {
+		reader, err := xz.NewReader(bufio.NewReader(file), 0)
+		if err != nil {
+			return nil, nil, err
+		}
+		return bufio.NewReader(reader), file, err
+	}
+
 	if strings.HasSuffix(filename, "bz2") {
 		return bufio.NewReader(bzip2.NewReader(bufio.NewReader(file))), file, err
 	}
