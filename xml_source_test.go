@@ -23,7 +23,7 @@ const tagsContainHyphens = `
 <?xml version="1.0" encoding="UTF-8"?>
 <name>
 	<first-name>Bill</first-name>
-	<last-name></last-name>
+	<last-name>Smith</last-name>
 </name>
 `
 
@@ -35,6 +35,7 @@ const githubIssue14 = `
      <con2:service ref="Something/Proxy/Something" xsi:type="ref:ProxyRef" xmlns:ref="http://www.bea.com/wli/sb/reference" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
      <con2:operation passThrough="true"/>
      <con2:outboundTransform/>
+     <con3:outboundTransform/>
      <con2:responseTransform/>
    </con2:route>
 </con1:actions>

@@ -101,7 +101,6 @@ func main() {
 
 	if !readFromStandardIn {
 		sourceNames = flag.Args()
-		log.Println("FLAGS", flag.Args())
 	}
 	if !url && !readFromStandardIn {
 		for i, _ := range sourceNames {
@@ -134,7 +133,10 @@ func main() {
 	m.init()
 
 	for i, _ := range sources {
-		log.Println(i, "READER", sources[i])
+		log.Println(i)
+		if DEBUG {
+			log.Println(i, "READER", sources[i])
+		}
 		err = m.extract(sources[i].getReader())
 
 		if err != nil {
@@ -274,7 +276,6 @@ func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Sourc
 	var err error
 	sources := make([]Source, len(sourceNames))
 	for i, _ := range sourceNames {
-		log.Println(i, "Sourcename", sourceNames[i])
 		if url {
 			sources[i] = new(UrlSource)
 			if DEBUG {

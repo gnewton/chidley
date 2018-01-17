@@ -2,33 +2,33 @@ package main
 
 import (
 	//	"fmt"
+	"bytes"
 	"go/ast"
 	"go/importer"
 	"go/parser"
 	"go/token"
 	"go/types"
-	//"log"
-	"bytes"
+	"log"
 	"strings"
 	"testing"
 )
 
 func TestTagsContainHyphens(t *testing.T) {
-	err := extractor(tagsContainHyphens)
+	err := extractor([]string{tagsContainHyphens})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestSameNameDifferentNameSpaceXML(t *testing.T) {
-	err := extractor(sameNameDifferentNameSpaceXML)
+func TestTagsWithSameNameDifferentNameSpaceXML(t *testing.T) {
+	err := extractor([]string{sameNameDifferentNameSpaceXML})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestMixedCaseSameNameXML(t *testing.T) {
-	err := extractor(mixedCaseSameNameXML)
+func TestMixedCaseSameNameTagsXML(t *testing.T) {
+	err := extractor([]string{mixedCaseSameNameXML})
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,13 +36,14 @@ func TestMixedCaseSameNameXML(t *testing.T) {
 
 //https://github.com/gnewton/chidley/issues/14
 func TestGithubIssue14(t *testing.T) {
-	err := extractor(githubIssue14)
+	err := extractor([]string{githubIssue14})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func extractor(xmlString string) error {
+/////////////////////////////////////////////////////////////////////////////
+func extractor(xmlStrings []string) error {
 	ex := Extractor{
 		namePrefix:              namePrefix,
 		nameSuffix:              nameSuffix,
@@ -52,15 +53,14 @@ func extractor(xmlString string) error {
 	}
 
 	ex.init()
-	err := ex.extract(strings.NewReader(xmlString))
 
-	if err != nil {
-		return err
-	}
+	for i, _ := range xmlStrings {
+		log.Println(xmlStrings[i])
+		err := ex.extract(strings.NewReader(xmlStrings[i]))
 
-	err = ex.extract(strings.NewReader(xmlString))
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	ex.done()
@@ -70,10 +70,9 @@ func extractor(xmlString string) error {
 	fps[0] = "foo"
 	generateGoCode(buf, fps, &ex)
 
-	//log.Println(buf.String())
+	log.Println(buf.String())
 
-	err = parseAndType(buf.String())
-	return err
+	return parseAndType(buf.String())
 }
 
 // Derived from example at https://github.com/golang/example/tree/master/gotypes#an-example

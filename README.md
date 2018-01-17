@@ -1,6 +1,8 @@
 # `chidley`
 
+# NOTE: The below documentation is out of date with the most recent release. I will work to update these docs in the next week. 2018/10/17
 
+###############################################################################################################################################
 
 ## `chidley` converts *any* XML to Go structs (and therefor to JSON)
 * By *any*, any XML that can be read by the Go [xml package](http://golang.org/pkg/encoding/xml/) decoder. 
