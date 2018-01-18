@@ -133,7 +133,6 @@ func main() {
 	m.init()
 
 	for i, _ := range sources {
-		log.Println(i)
 		if DEBUG {
 			log.Println(i, "READER", sources[i])
 		}
@@ -290,7 +289,7 @@ func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Sourc
 			} else {
 				sources[i] = new(FileSource)
 				if DEBUG {
-					log.Print("Making FileSource")
+					//log.Print("Making FileSource")
 				}
 			}
 		}

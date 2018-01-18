@@ -97,24 +97,24 @@ func handleTokens(ex *Extractor) {
 		switch element := token.(type) {
 		case xml.Comment:
 			if DEBUG {
-				log.Print(thisNode.name)
-				log.Printf("Comment: %+v\n", string(element))
+				//log.Print(thisNode.name)
+				//log.Printf("Comment: %+v\n", string(element))
 			}
 
 		case xml.ProcInst:
 			if DEBUG {
-				log.Println("ProcInst: Target=" + element.Target + "  Inst=[" + string(element.Inst) + "]")
+				//log.Println("ProcInst: Target=" + element.Target + "  Inst=[" + string(element.Inst) + "]")
 			}
 
 		case xml.Directive:
 			if DEBUG {
-				log.Printf("Directive: %+v\n", string(element))
+				//log.Printf("Directive: %+v\n", string(element))
 			}
 
 		case xml.StartElement:
 			progressCounter += 1
 			if DEBUG {
-				log.Printf("StartElement: %+v\n", element)
+				//log.Printf("StartElement: %+v\n", element)
 			}
 			ex.hasStartElements = true
 
@@ -136,8 +136,8 @@ func handleTokens(ex *Extractor) {
 
 		case xml.CharData:
 			if DEBUG {
-				log.Print(thisNode.name)
-				log.Printf("CharData: [%+v]\n", string(element))
+				//log.Print(thisNode.name)
+				//log.Printf("CharData: [%+v]\n", string(element))
 			}
 
 			//if !thisNode.hasCharData {
@@ -152,9 +152,9 @@ func handleTokens(ex *Extractor) {
 			thisNode.charDataCount = 0
 
 			if DEBUG {
-				log.Printf("EndElement: %+v\n", element)
-				log.Printf("[[" + thisNode.tempCharData + "]]")
-				log.Println("Char is empty: ", isJustSpacesAndLinefeeds(thisNode.tempCharData))
+				//log.Printf("EndElement: %+v\n", element)
+				//log.Printf("[[" + thisNode.tempCharData + "]]")
+				//log.Println("Char is empty: ", isJustSpacesAndLinefeeds(thisNode.tempCharData))
 			}
 			if !thisNode.hasCharData && !isJustSpacesAndLinefeeds(thisNode.tempCharData) {
 				thisNode.hasCharData = true
