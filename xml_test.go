@@ -19,8 +19,8 @@ func TestTagsWithSameNameDifferentNameSpaceXML(t *testing.T) {
 	}
 }
 
-func TestMixedCaseSameNameTagsXML(t *testing.T) {
-	err := extractor([]string{mixedCaseSameNameXML})
+func TestMixedCaseSameNameTagsXML_Issue24(t *testing.T) {
+	err := extractor([]string{mixedCaseSameNameXML_Issue24})
 	if err != nil {
 		t.Error(err)
 	}

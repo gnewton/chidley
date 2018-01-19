@@ -11,12 +11,16 @@ const sameNameDifferentNameSpaceXML = `
 </kml>
 `
 
-const mixedCaseSameNameXML = `
+//https://github.com/gnewton/chidley/issues/24
+const mixedCaseSameNameXML_Issue24 = `
 <?xml version="1.0" encoding="UTF-8"?>
-<kml>
-	<name>MODIS Imagery Overlays</name>
-	<Name>MODIS Imagery Overlays</Name>
-</kml>
+<cluster ContinentType="Outlands" ClusterQuality="High">
+		  <RareState state="0" weight="1556" />
+		  <RareState state="1" weight="400" />
+		  <RareState state="2" weight="40" />
+		  <RareState state="3" weight="4" />
+ </cluster>
+<Cluster default="0.05" minimum="0" maximum="0.05"/>
 `
 
 const tagsContainHyphens = `
