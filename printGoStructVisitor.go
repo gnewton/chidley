@@ -130,7 +130,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
-		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
+		charField := "\t" + cdataName + " " + findType(n.nodeTypeInfo, useType) + xmlString
 
 		if flattenStrings {
 			//charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)

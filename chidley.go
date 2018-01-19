@@ -40,6 +40,7 @@ func init() {
 
 	flag.BoolVar(&keepXmlFirstLetterCase, "K", keepXmlFirstLetterCase, "Do not change the case of the first letter of the XML tag names")
 
+	flag.StringVar(&cdataName, "M", cdataName, "Set name of CDATA string field")
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
