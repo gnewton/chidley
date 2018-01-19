@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/bzip2"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -106,7 +107,7 @@ func isStringOnlyField(n *Node, nattributes int) bool {
 	return (len(n.children) == 0 && nattributes == 0)
 }
 
-func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap map[string]string) {
+func makeAttributes(writer io.Writer, attributes []*FQN, nameSpaceTagMap map[string]string) {
 	sort.Sort(fqnSorter(attributes))
 
 	for _, fqn := range attributes {
@@ -130,7 +131,8 @@ func makeAttributes(lineChannel chan string, attributes []*FQN, nameSpaceTagMap 
 		variableName := goVariableNameSanitize(attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name))
 		variableType := "string"
 
-		lineChannel <- "\t" + variableName + " " + variableType + "`xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
+		//lineChannel <- "\t" + variableName + " " + variableType + "`xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
+		fmt.Fprintln(writer, "\t"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`"+"  // maxLength="+strconv.Itoa(fqn.maxLength))
 	}
 }
 

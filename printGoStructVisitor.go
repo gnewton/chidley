@@ -1,28 +1,31 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"sort"
-	//"strconv"
+	"strconv"
 )
 
 type PrintGoStructVisitor struct {
 	alreadyVisited      map[string]bool
 	alreadyVisitedNodes map[string]*Node
 	globalTagAttributes map[string]([]*FQN)
-	lineChannel         chan string
+
 	maxDepth            int
 	depth               int
 	nameSpaceTagMap     map[string]string
 	useType             bool
 	nameSpaceInJsonName bool
+	writer              io.Writer
 }
 
-func (v *PrintGoStructVisitor) init(lineChannel chan string, maxDepth int, globalTagAttributes map[string]([]*FQN), nameSpaceTagMap map[string]string, useType bool, nameSpaceInJsonName bool) {
+func (v *PrintGoStructVisitor) init(writer io.Writer, maxDepth int, globalTagAttributes map[string]([]*FQN), nameSpaceTagMap map[string]string, useType bool, nameSpaceInJsonName bool) {
 	v.alreadyVisited = make(map[string]bool)
 	v.alreadyVisitedNodes = make(map[string]*Node)
 	v.globalTagAttributes = make(map[string]([]*FQN))
 	v.globalTagAttributes = globalTagAttributes
-	v.lineChannel = lineChannel
+	v.writer = writer
 	v.maxDepth = maxDepth
 	v.depth = 0
 	v.nameSpaceTagMap = nameSpaceTagMap
@@ -53,13 +56,16 @@ func print(v *PrintGoStructVisitor, node *Node) {
 	}
 
 	attributes := v.globalTagAttributes[nk(node)]
-	v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
-	makeAttributes(v.lineChannel, attributes, v.nameSpaceTagMap)
+	//v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
+	fmt.Fprintln(v.writer, "type "+node.makeType(namePrefix, nameSuffix)+" struct {")
+	makeAttributes(v.writer, attributes, v.nameSpaceTagMap)
 	v.printInternalFields(len(attributes), node)
 	if node.space != "" {
-		v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
+		//v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
+		fmt.Fprintln(v.writer, "\tXMLName  xml.Name `"+makeXmlAnnotation(node.space, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
 	}
-	v.lineChannel <- "}\n"
+	//v.lineChannel <- "}\n"
+	fmt.Fprintln(v.writer, "}\n")
 
 }
 
@@ -125,18 +131,21 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
 		charField := "\t" + "Text" + " " + findType(n.nodeTypeInfo, useType) + xmlString
-		//charField += "   // maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+
 		if flattenStrings {
 			//charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
 			if len(n.children) == 0 && nattributes == 0 {
 				charField += "// *******************"
 			}
 		}
+		charField += "   // maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+
 		fields = append(fields, charField)
 	}
 	sort.Strings(fields)
 	for i := 0; i < len(fields); i++ {
-		v.lineChannel <- fields[i]
+		//v.lineChannel <- fields[i]
+		fmt.Fprintln(v.writer, fields[i])
 	}
 }
 

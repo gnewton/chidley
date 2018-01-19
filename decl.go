@@ -50,11 +50,6 @@ type structSortFunc func(v *PrintGoStructVisitor)
 
 var structSort = printStructsAlphabetical
 
-type Writer interface {
-	open(s string, lineChannel chan string) error
-	close()
-}
-
 var outputs = []*bool{
 	&codeGenConvert,
 	&structsToStdout,

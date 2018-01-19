@@ -5,6 +5,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -394,32 +395,21 @@ func printStructsAlphabetical(v *PrintGoStructVisitor) {
 }
 
 func generateGoStructs(out io.Writer, sourceName string, ex *Extractor) {
-	lineChannel := make(chan string, 100)
-	var writer Writer
-	writer = new(stdoutWriter)
-	writer.open("", lineChannel)
 	printGoStructVisitor := new(PrintGoStructVisitor)
-	printGoStructVisitor.init(lineChannel, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+
+	printGoStructVisitor.init(os.Stdout, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 	printGoStructVisitor.Visit(ex.root)
 	structSort(printGoStructVisitor)
-	close(lineChannel)
-	writer.close()
 }
 
+//Writes structs to a string then uses this in a template to generate Go code
 func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) {
-	lineChannel := make(chan string, 100)
-	var writer Writer
-	sWriter := new(stringWriter)
-	writer = sWriter
-	writer.open("", lineChannel)
+	buf := bytes.NewBufferString("")
 	printGoStructVisitor := new(PrintGoStructVisitor)
-	printGoStructVisitor.init(lineChannel, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	printGoStructVisitor.init(buf, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 	printGoStructVisitor.Visit(ex.root)
 
 	structSort(printGoStructVisitor)
-
-	close(lineChannel)
-	sWriter.close()
 
 	xt := XMLType{NameType: ex.firstNode.makeType(namePrefix, nameSuffix),
 		XMLName:      ex.firstNode.name,
@@ -432,7 +422,7 @@ func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) {
 		OneLevelDownXML: makeOneLevelDown(ex.root, ex.globalTagAttributes),
 		Filenames:       getFullPaths(sourceNames),
 		Filename:        getFullPath(sourceNames[0]),
-		Structs:         sWriter.s,
+		Structs:         buf.String(),
 	}
 	t := template.Must(template.New("chidleyGen").Parse(codeTemplate))
 
