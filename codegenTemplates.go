@@ -17,7 +17,7 @@ type XMLType struct {
 }
 
 //     b := [5]int{1, 2, 3, 4, 5}
-func (xi *XmlInfo) makeFilenamesDeclaration() {
+func (xi *XmlInfo) init() {
 	xi.Filename = "[" + strconv.Itoa(len(xi.Filenames)) + "]string{"
 	for i, _ := range xi.Filenames {
 		if i != 0 {
@@ -68,7 +68,7 @@ var uniqueFlags = []*bool{
 	&toXml,
 	&countAll}
 
-var filename = "{{.Filename}}"
+var filenames = {{.Filename}}
 
 
 
@@ -79,7 +79,7 @@ func init() {
 	flag.BoolVar(&countAll, "c", countAll, "Count each instance of XML tags")
 	flag.BoolVar(&oneLevelDown, "s", oneLevelDown, "Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/")
 	flag.BoolVar(&musage, "h", musage, "Usage")
-	flag.StringVar(&filename, "f", filename, "XML file or URL to read in")
+	//flag.StringVar(&filename, "f", filename, "XML file or URL to read in")
 }
 
 var out int = -1
@@ -106,27 +106,31 @@ func main() {
 		log.Fatal("Only one of ", uniqueFlags, " can be set at once")
 	}
 
-	reader, xmlFile, err := genericReader(filename)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	decoder := xml.NewDecoder(reader)
 	counters = make(map[string]*int)
-	for {
-		token, _ := decoder.Token()
-		if token == nil {
-			break
+	for i, _ := range filenames {
+		filename := filenames[i]
+		reader, xmlFile, err := genericReader(filename)
+		if err != nil {
+			log.Fatal(err)
+			return
 		}
-		switch se := token.(type) {
-		case xml.StartElement:
-			handleFeed(se, decoder, outFlag)
+
+		decoder := xml.NewDecoder(reader)
+
+		for {
+			token, _ := decoder.Token()
+			if token == nil {
+				break
+			}
+			switch se := token.(type) {
+			case xml.StartElement:
+				handleFeed(se, decoder, outFlag)
+			}
+		}
+		if xmlFile != nil {
+			defer xmlFile.Close()
 		}
 	}
-        if xmlFile != nil{
-	    defer xmlFile.Close()
-        }
 	if countAll {
 		for k, v := range counters {
 			fmt.Println(*v, k)

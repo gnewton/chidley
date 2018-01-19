@@ -424,6 +424,7 @@ func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) {
 		Filename:        getFullPath(sourceNames[0]),
 		Structs:         buf.String(),
 	}
+	x.init()
 	t := template.Must(template.New("chidleyGen").Parse(codeTemplate))
 
 	err := t.Execute(out, x)
