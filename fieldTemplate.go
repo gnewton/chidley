@@ -2,16 +2,18 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	//"fmt"
+	"strconv"
 	"text/template"
 )
 
 type OutVariableDef struct {
-	XMLName      string
-	XMLNameSpace string
-	GoName       string
-	GoType       string
-	Length       int
+	XMLName              string
+	XMLNameSpace         string
+	GoName               string
+	GoType               string
+	GoTypeArrayOrPointer string
+	Length               int64
 	//Foo          bool
 }
 
@@ -23,33 +25,23 @@ var fieldTemplate *template.Template
 // }
 // `
 
-const fieldTemplateString = `
-       {{.GoName}} {{.GoType}} ` + "`" + `xml:"{{if notEmpty .XMLNameSpace}}{{.XMLNameSpace}} {{end}}{{.XMLName}},omitempty" json:"{{.XMLName}},omitempty"` + "`" + `
-`
+var fieldTemplateString = `{{.GoName}} {{.GoTypeArrayOrPointer}}{{.GoType}} ` + "`" + `xml:"{{if notEmpty .XMLNameSpace}}{{.XMLNameSpace}} {{end}}{{.XMLName}},omitempty" json:"{{.XMLName}},omitempty"` + "`" + ``
 
-func render() {
+func render(otd OutVariableDef) string {
 	fieldTemplate = template.Must(template.New("fieldTemplate").Funcs(template.FuncMap{
 		"notEmpty": func(feature string) bool {
 			return len(feature) > 0
 		},
 	}).Parse(fieldTemplateString))
 
-	ot := OutVariableDef{
-		"author",
-		"", //"http://w3/org/mmm",
-		"Author",
-		"string",
-		16,
-		//	false
-	}
-
 	var buf bytes.Buffer
 
 	//err := t.Execute(os.Stdout, ot)
-	err := fieldTemplate.Execute(&buf, ot)
+	err := fieldTemplate.Execute(&buf, otd)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(buf.String())
+	//fmt.Println(buf.String())
+	return "\t" + buf.String() + "   // ZZmaxLength=" + strconv.FormatInt(otd.Length, 10)
 
 }

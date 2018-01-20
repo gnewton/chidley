@@ -94,7 +94,9 @@ func handleTokens(ex *Extractor) {
 	var progressCounter int64 = 0
 
 	for token := range tChannel {
+		//log.Println(token)
 		switch element := token.(type) {
+
 		case xml.Comment:
 			if DEBUG {
 				//log.Print(thisNode.name)

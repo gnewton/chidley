@@ -79,6 +79,7 @@ func handleParameters() error {
 }
 
 func main() {
+	//log.Println(fieldTemplateString)
 
 	//EXP()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)

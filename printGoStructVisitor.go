@@ -82,13 +82,12 @@ func (v *PrintGoStructVisitor) SetAlreadyVisited(n *Node) {
 func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 	var fields []string
 
-	var field string
-
+	// Fields in this struct
 	for i, _ := range n.children {
 		child := n.children[i]
 		var def OutVariableDef
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-			field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
+			//field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
 			def.GoName = child.makeType(namePrefix, nameSuffix)
 			def.GoType = "string"
 			def.XMLName = child.name
@@ -103,31 +102,19 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 			def.XMLName = child.name
 			def.XMLNameSpace = child.space
 
-			field = "\t" + nameAndType + " "
 			if child.repeats {
-				field += "[]*"
+				def.GoTypeArrayOrPointer = "[]*"
 			} else {
-				field += "*"
-			}
-			field += nameAndType
-
-			jsonAnnotation := makeJsonAnnotation(child.spaceTag, v.nameSpaceInJsonName, child.name)
-			xmlAnnotation := makeXmlAnnotation(child.space, false, child.name)
-			dbAnnotation := ""
-			if addDbMetadata {
-				dbAnnotation = " " + makeDbAnnotation(child.space, false, child.name)
-			}
-
-			annotation := " `" + xmlAnnotation + " " + jsonAnnotation + dbAnnotation + "`"
-
-			field += annotation
-			if flattenStrings {
-				//field += "   // maxLength=" + strconv.FormatInt(child.nodeTypeInfo.maxLength, 10)
+				def.GoTypeArrayOrPointer = "*"
 			}
 		}
-		fields = append(fields, field)
+		if flattenStrings {
+			def.Length = child.nodeTypeInfo.maxLength
+		}
+		fields = append(fields, render(def))
 	}
 
+	// Is this chardata Field (string)
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
 		charField := "\t" + cdataName + " " + findType(n.nodeTypeInfo, useType) + xmlString
@@ -142,6 +129,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 
 		fields = append(fields, charField)
 	}
+
 	sort.Strings(fields)
 	for i := 0; i < len(fields); i++ {
 		//v.lineChannel <- fields[i]
