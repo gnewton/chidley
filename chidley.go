@@ -37,19 +37,20 @@ func init() {
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
 	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
-
 	flag.BoolVar(&keepXmlFirstLetterCase, "K", keepXmlFirstLetterCase, "Do not change the case of the first letter of the XML tag names")
+	flag.BoolVar(&validateFieldTemplate, "m", validateFieldTemplate, "Validate the field template. Useful to make sure the template defined with -T is valid")
 
-	flag.StringVar(&cdataName, "M", cdataName, "Set name of CDATA string field")
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
+	flag.StringVar(&cdataName, "M", cdataName, "Set name of CDATA string field")
+	flag.StringVar(&fieldTemplateString, "T", fieldTemplateString, "Field template for the struct field definition. Can include annotations. Default is for XML and JSON")
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
+	flag.StringVar(&lengthTagAttribute, "A", lengthTagAttribute, "The tag name attribute to use for the max length Go annotations")
+	flag.StringVar(&lengthTagName, "N", lengthTagName, "The tag name to use for the max length Go annotations")
+	flag.StringVar(&lengthTagSeparator, "S", lengthTagSeparator, "The tag name separator to use for the max length Go annotations")
 	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
 	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
 
-	flag.StringVar(&lengthTagName, "N", lengthTagName, "The tag name to use for the max length Go annotations")
-	flag.StringVar(&lengthTagAttribute, "A", lengthTagAttribute, "The tag name attribute to use for the max length Go annotations")
-	flag.StringVar(&lengthTagSeparator, "S", lengthTagSeparator, "The tag name separator to use for the max length Go annotations")
 	flag.Int64Var(&lengthTagPadding, "Z", lengthTagPadding, "The padding on the max length tag attribute")
 
 }
@@ -92,8 +93,16 @@ func main() {
 		return
 	}
 
+	err = runValidateFieldTemplate(validateFieldTemplate)
+	if err != nil {
+
+		return
+	}
+	if validateFieldTemplate {
+		return
+	}
+
 	if len(flag.Args()) == 0 && !readFromStandardIn {
-		log.Println("********")
 		fmt.Println("chidley <flags> xmlFileName|url")
 		fmt.Println("xmlFileName can be .gz or .bz2: uncompressed transparently")
 		flag.Usage()
@@ -366,7 +375,7 @@ func printChildrenChildren(node *Node) {
 }
 
 // Order Xml is encountered
-func printStructsByXml(v *PrintGoStructVisitor) {
+func printStructsByXml(v *PrintGoStructVisitor) error {
 	orderNodes := make(map[int]*Node)
 	var order []int
 
@@ -378,12 +387,16 @@ func printStructsByXml(v *PrintGoStructVisitor) {
 	sort.Ints(order)
 
 	for o := range order {
-		print(v, orderNodes[o])
+		err := print(v, orderNodes[o])
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // Alphabetical order
-func printStructsAlphabetical(v *PrintGoStructVisitor) {
+func printStructsAlphabetical(v *PrintGoStructVisitor) error {
 	var keys []string
 	for k := range v.alreadyVisitedNodes {
 		keys = append(keys, k)
@@ -391,8 +404,12 @@ func printStructsAlphabetical(v *PrintGoStructVisitor) {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		print(v, v.alreadyVisitedNodes[k])
+		err := print(v, v.alreadyVisitedNodes[k])
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 
 }
 

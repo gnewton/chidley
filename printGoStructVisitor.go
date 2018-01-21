@@ -49,17 +49,20 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	return true
 }
 
-func print(v *PrintGoStructVisitor, node *Node) {
+func print(v *PrintGoStructVisitor, node *Node) error {
 	if flattenStrings && isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])) {
 		//v.lineChannel <- "//type " + node.makeType(namePrefix, nameSuffix)
-		return
+		return nil
 	}
 
 	attributes := v.globalTagAttributes[nk(node)]
 	//v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
 	fmt.Fprintln(v.writer, "type "+node.makeType(namePrefix, nameSuffix)+" struct {")
 	makeAttributes(v.writer, attributes, v.nameSpaceTagMap)
-	v.printInternalFields(len(attributes), node)
+	err := v.printInternalFields(len(attributes), node)
+	if err != nil {
+		return err
+	}
 	if node.space != "" {
 		//v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
 		fmt.Fprintln(v.writer, "\tXMLName  xml.Name `"+makeXmlAnnotation(node.space, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
@@ -67,6 +70,7 @@ func print(v *PrintGoStructVisitor, node *Node) {
 	//v.lineChannel <- "}\n"
 	fmt.Fprintln(v.writer, "}\n")
 
+	return nil
 }
 
 func (v *PrintGoStructVisitor) AlreadyVisited(n *Node) bool {
@@ -79,13 +83,13 @@ func (v *PrintGoStructVisitor) SetAlreadyVisited(n *Node) {
 	v.alreadyVisitedNodes[nk(n)] = n
 }
 
-func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
+func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) error {
 	var fields []string
 
 	// Fields in this struct
 	for i, _ := range n.children {
 		child := n.children[i]
-		var def OutVariableDef
+		var def FieldDef
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
 			//field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
 			def.GoName = child.makeType(namePrefix, nameSuffix)
@@ -111,7 +115,11 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 		if flattenStrings {
 			def.Length = child.nodeTypeInfo.maxLength
 		}
-		fields = append(fields, render(def))
+		fieldDefString, err := render(def)
+		if err != nil {
+			return err
+		}
+		fields = append(fields, fieldDefString)
 	}
 
 	// Is this chardata Field (string)
@@ -135,6 +143,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) {
 		//v.lineChannel <- fields[i]
 		fmt.Fprintln(v.writer, fields[i])
 	}
+	return nil
 }
 
 func makeJsonAnnotation(spaceTag string, useSpaceTagInName bool, name string) string {

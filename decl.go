@@ -14,6 +14,7 @@ var progress = false
 var readFromStandardIn = false
 var sortByXmlOrder = false
 var structsToStdout = true
+var validateFieldTemplate = false
 
 var ignoreXmlDecodingErrors = false
 
