@@ -144,17 +144,20 @@ func main() {
 	m := &ex
 	m.init()
 
-	for i, _ := range sources {
+	for source := range sources {
 		if DEBUG {
-			log.Println(i, "READER", sources[i])
+			log.Println("READER", source)
 		}
-		err = m.extract(sources[i].getReader())
+		err = m.extract(source.getReader())
 
 		if err != nil {
 			log.Println("ERROR: " + err.Error())
 			if !ignoreXmlDecodingErrors {
 				log.Fatal("FATAL ERROR: " + err.Error())
 			}
+		}
+		if DEBUG {
+			log.Println("DONE READER", source)
 		}
 	}
 
@@ -283,38 +286,45 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 
 }
 
-func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Source, error) {
+//func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Source, error) {
+func makeSourceReaders(sourceNames []string, url bool, standardIn bool) (chan Source, error) {
 	var err error
-	sources := make([]Source, len(sourceNames))
-	for i, _ := range sourceNames {
-		if url {
-			sources[i] = new(UrlSource)
-			if DEBUG {
-				log.Print("Making UrlSource")
-			}
-		} else {
-			if standardIn {
-				sources[i] = new(StdinSource)
+	//sources := make([]Source, len(sourceNames))
+	sources := make(chan Source, 1)
+
+	go func() {
+		var newSource Source
+		for i, _ := range sourceNames {
+			if url {
+				newSource = new(UrlSource)
 				if DEBUG {
-					log.Print("Making StdinSource")
+					log.Print("Making UrlSource")
 				}
 			} else {
-				sources[i] = new(FileSource)
-				if DEBUG {
-					//log.Print("Making FileSource")
+				if standardIn {
+					newSource = new(StdinSource)
+					if DEBUG {
+						log.Print("Making StdinSource")
+					}
+				} else {
+					newSource = new(FileSource)
+					if DEBUG {
+						//log.Print("Making FileSource")
+					}
 				}
 			}
-		}
-		if DEBUG {
 
-			log.Print("Making Source:[" + sourceNames[i] + "]")
+			err = newSource.newSource(sourceNames[i])
+			if err != nil {
+				log.Fatal(err)
+			}
+			sources <- newSource
+			if DEBUG {
+				log.Print("Making Source:[" + sourceNames[i] + "]")
+			}
 		}
-		err = sources[i].newSource(sourceNames[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-
+		close(sources)
+	}()
 	return sources, err
 }
 
