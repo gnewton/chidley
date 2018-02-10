@@ -19,13 +19,12 @@ var nameMapper = map[string]string{
 var DiscoveredOrder = 0
 
 type Extractor struct {
-	globalTagAttributes    map[string]([]*FQN)
-	globalTagAttributesMap map[string]bool
-	globalNodeMap          map[string]*Node
-	namePrefix             string
-	nameSpaceTagMap        map[string]string
-	nameSuffix             string
-	//reader                  io.Reader
+	globalTagAttributes     map[string]([]*FQN)
+	globalTagAttributesMap  map[string]bool
+	globalNodeMap           map[string]*Node
+	namePrefix              string
+	nameSpaceTagMap         map[string]string
+	nameSuffix              string
 	root                    *Node
 	firstNode               *Node
 	hasStartElements        bool
@@ -125,6 +124,8 @@ func handleTokens(ex *Extractor) {
 			}
 			thisNode = ex.handleStartElement(element, thisNode)
 			thisNode.tempCharData = ""
+			thisNode.ignoredTag = isIgnoredTag(element.Name.Local)
+
 			if first {
 				first = false
 				ex.firstNode = thisNode
@@ -149,6 +150,10 @@ func handleTokens(ex *Extractor) {
 		//}
 
 		case xml.EndElement:
+			//if ignoredTag(element.Name.Local) {
+			//continue
+			//}
+
 			thisNode.nodeTypeInfo.checkFieldType(thisNode.tempCharData)
 			thisNode.nodeTypeInfo.addFieldLength(thisNode.charDataCount)
 			thisNode.charDataCount = 0

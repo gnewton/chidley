@@ -40,6 +40,8 @@ func init() {
 	flag.BoolVar(&keepXmlFirstLetterCase, "K", keepXmlFirstLetterCase, "Do not change the case of the first letter of the XML tag names")
 	flag.BoolVar(&validateFieldTemplate, "m", validateFieldTemplate, "Validate the field template. Useful to make sure the template defined with -T is valid")
 
+	flag.BoolVar(&ignoreLowerCaseXmlTags, "L", ignoreLowerCaseXmlTags, "Ignore lower case XML tags")
+
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
 	flag.StringVar(&cdataName, "M", cdataName, "Set name of CDATA string field")
@@ -50,6 +52,8 @@ func init() {
 	flag.StringVar(&lengthTagSeparator, "S", lengthTagSeparator, "The tag name separator to use for the max length Go annotations")
 	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
 	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
+
+	flag.StringVar(&ignoredXmlTags, "h", ignoredXmlTags, "List of XML tags to ignore; comma separated")
 
 	flag.Int64Var(&lengthTagPadding, "Z", lengthTagPadding, "The padding on the max length tag attribute")
 
@@ -70,6 +74,12 @@ func handleParameters() error {
 	}
 	if sortByXmlOrder {
 		structSort = printStructsByXml
+	}
+
+	var err error
+	ignoredXmlTagsMap, err = extractExcludedTags(ignoredXmlTags)
+	if err != nil {
+		return err
 	}
 
 	if lengthTagName == "" && lengthTagAttribute == "" || lengthTagName != "" && lengthTagAttribute != "" {

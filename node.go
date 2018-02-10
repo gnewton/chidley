@@ -19,6 +19,7 @@ type Node struct {
 	tempCharData    string
 	charDataCount   int64
 	discoveredOrder int
+	ignoredTag      bool
 }
 
 type NodeVisitor interface {
@@ -39,6 +40,7 @@ func (n *Node) initialize(name string, space string, spaceTag string, parent *No
 	n.nodeTypeInfo = new(NodeTypeInfo)
 	n.nodeTypeInfo.initialize()
 	n.hasCharData = false
+	n.ignoredTag = false
 }
 
 func (n *Node) makeName() string {

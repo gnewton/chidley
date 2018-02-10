@@ -36,7 +36,7 @@ func (v *PrintGoStructVisitor) init(writer io.Writer, maxDepth int, globalTagAtt
 func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	v.depth += 1
 
-	if v.AlreadyVisited(node) {
+	if v.AlreadyVisited(node) || node.ignoredTag {
 		v.depth += 1
 		return false
 	}
@@ -50,6 +50,9 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 }
 
 func print(v *PrintGoStructVisitor, node *Node) error {
+	if node.ignoredTag {
+		return nil
+	}
 	if flattenStrings && isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])) {
 		//v.lineChannel <- "//type " + node.makeType(namePrefix, nameSuffix)
 		return nil
@@ -89,6 +92,9 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 	// Fields in this struct
 	for i, _ := range n.children {
 		child := n.children[i]
+		if child.ignoredTag {
+			continue
+		}
 		var def FieldDef
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
 			//field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
