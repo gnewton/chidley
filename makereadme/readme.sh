@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 pubmed_filename="pubmedsample18n0001.xml.gz"
-#pubmed_filename="pubmed18n0001.xml.gz"
-#pubmed_url="ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
-pubmed_url="ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline-2018-sample/"
+pubmed_filename="pubmed18n0001.xml.gz"
+pubmed_url="ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
+#pubmed_url="ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline-2018-sample/"
 pubmed_url+=$pubmed_filename
 
 test_filename="../data/test.xml"
@@ -104,10 +104,16 @@ out "#### Default"
 out "#### Types turned on -t"
 exe "../chidley -t ./${test_filename}"
 
-exit
-out "## Larger & more complex example"
+out "Note the \`Number int16\` in \`Chiyear\`"
 
-out "### Generate Go structs from pubmed_xml_12750255.xml.bz2: -G"
+out "## Larger  more complex example"
+
+
+out "Using the large pubmed XML file, $pubmed_url "
+cmd="../chidley -t -F ./${pubmed_filename}"
+out "\`\$ ${cmd}"
+exe "$cmd"
+
 
 out "Timings"
 out "### Generate Go program: -W"
