@@ -16,6 +16,10 @@ var sortByXmlOrder = false
 var structsToStdout = true
 var validateFieldTemplate = false
 
+var ignoreLowerCaseXmlTags = false
+var ignoredXmlTags = ""
+var ignoredXmlTagsMap *map[string]struct{}
+
 var ignoreXmlDecodingErrors = false
 
 var codeGenDir = "codegen"

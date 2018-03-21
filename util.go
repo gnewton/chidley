@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/bzip2"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	//"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/xi2/xz"
 )
@@ -242,4 +244,52 @@ func findThisAttribute(local, nameSpace string, attrs []*FQN) *FQN {
 func makeAttributeName(key, namespace, local string) string {
 	return key + "_" + local + "_" + namespace
 
+}
+
+func containsUnicodeSpace(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	for _, rune := range s {
+		//log.Printf("*** %#U ****", rune)
+		if unicode.IsSpace(rune) {
+			return true
+		}
+	}
+	return false
+}
+
+func isIgnoredTag(tag string) bool {
+	var ignored bool
+	if ignoredXmlTagsMap == nil {
+		return false
+	}
+	_, ignored = (*ignoredXmlTagsMap)[tag]
+
+	if ignored || (ignoreLowerCaseXmlTags && tag == strings.ToLower(tag)) {
+		return true
+	}
+
+	return false
+
+}
+
+func extractExcludedTags(tagsString string) (*map[string]struct{}, error) {
+	ignoredMap := make(map[string]struct{})
+	if tagsString == "" {
+		return &ignoredMap, nil
+	}
+
+	tags := strings.Split(tagsString, ",")
+
+	for i, _ := range tags {
+		tag := strings.TrimSpace(tags[i])
+		if containsUnicodeSpace(tag) {
+			return nil, errors.New("Excluded tag contains space: [" + tag + "] in list of excluded tags:" + tagsString + "]")
+		}
+		ignoredMap[tag] = struct{}{}
+
+	}
+	return &ignoredMap, nil
 }

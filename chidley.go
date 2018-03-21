@@ -40,6 +40,8 @@ func init() {
 	flag.BoolVar(&keepXmlFirstLetterCase, "K", keepXmlFirstLetterCase, "Do not change the case of the first letter of the XML tag names")
 	flag.BoolVar(&validateFieldTemplate, "m", validateFieldTemplate, "Validate the field template. Useful to make sure the template defined with -T is valid")
 
+	flag.BoolVar(&ignoreLowerCaseXmlTags, "L", ignoreLowerCaseXmlTags, "Ignore lower case XML tags")
+
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
 	flag.StringVar(&cdataStringName, "M", cdataStringName, "Set name of CDATA string field")
@@ -50,6 +52,8 @@ func init() {
 	flag.StringVar(&lengthTagSeparator, "S", lengthTagSeparator, "The tag name separator to use for the max length Go annotations")
 	flag.StringVar(&namePrefix, "e", namePrefix, "Prefix to struct (element) names; must start with a capital")
 	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
+
+	flag.StringVar(&ignoredXmlTags, "h", ignoredXmlTags, "List of XML tags to ignore; comma separated")
 
 	flag.Int64Var(&lengthTagPadding, "Z", lengthTagPadding, "The padding on the max length tag attribute")
 
@@ -70,6 +74,12 @@ func handleParameters() error {
 	}
 	if sortByXmlOrder {
 		structSort = printStructsByXml
+	}
+
+	var err error
+	ignoredXmlTagsMap, err = extractExcludedTags(ignoredXmlTags)
+	if err != nil {
+		return err
 	}
 
 	if lengthTagName == "" && lengthTagAttribute == "" || lengthTagName != "" && lengthTagAttribute != "" {
@@ -144,17 +154,20 @@ func main() {
 	m := &ex
 	m.init()
 
-	for i, _ := range sources {
+	for source := range sources {
 		if DEBUG {
-			log.Println(i, "READER", sources[i])
+			log.Println("READER", source)
 		}
-		err = m.extract(sources[i].getReader())
+		err = m.extract(source.getReader())
 
 		if err != nil {
 			log.Println("ERROR: " + err.Error())
 			if !ignoreXmlDecodingErrors {
 				log.Fatal("FATAL ERROR: " + err.Error())
 			}
+		}
+		if DEBUG {
+			log.Println("DONE READER", source)
 		}
 	}
 
@@ -287,38 +300,45 @@ func printJavaJaxbMain(rootElementName string, javaDir string, javaPackage strin
 
 }
 
-func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Source, error) {
+//func makeSourceReaders(sourceNames []string, url bool, standardIn bool) ([]Source, error) {
+func makeSourceReaders(sourceNames []string, url bool, standardIn bool) (chan Source, error) {
 	var err error
-	sources := make([]Source, len(sourceNames))
-	for i, _ := range sourceNames {
-		if url {
-			sources[i] = new(UrlSource)
-			if DEBUG {
-				log.Print("Making UrlSource")
-			}
-		} else {
-			if standardIn {
-				sources[i] = new(StdinSource)
+	//sources := make([]Source, len(sourceNames))
+	sources := make(chan Source, 1)
+
+	go func() {
+		var newSource Source
+		for i, _ := range sourceNames {
+			if url {
+				newSource = new(UrlSource)
 				if DEBUG {
-					log.Print("Making StdinSource")
+					log.Print("Making UrlSource")
 				}
 			} else {
-				sources[i] = new(FileSource)
-				if DEBUG {
-					//log.Print("Making FileSource")
+				if standardIn {
+					newSource = new(StdinSource)
+					if DEBUG {
+						log.Print("Making StdinSource")
+					}
+				} else {
+					newSource = new(FileSource)
+					if DEBUG {
+						//log.Print("Making FileSource")
+					}
 				}
 			}
-		}
-		if DEBUG {
 
-			log.Print("Making Source:[" + sourceNames[i] + "]")
+			err = newSource.newSource(sourceNames[i])
+			if err != nil {
+				log.Fatal(err)
+			}
+			sources <- newSource
+			if DEBUG {
+				log.Print("Making Source:[" + sourceNames[i] + "]")
+			}
 		}
-		err = sources[i].newSource(sourceNames[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-
+		close(sources)
+	}()
 	return sources, err
 }
 

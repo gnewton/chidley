@@ -6,7 +6,7 @@ pubmed_filename="pubmedsample18n0001.xml.gz"
 pubmed_url="ftp://ftp.ncbi.nlm.nih.gov/pubmed/baseline-2018-sample/"
 pubmed_url+=$pubmed_filename
 
-test_filename="../test.xml"
+test_filename="../data/test.xml"
 
 #echo "" > foo
 
@@ -74,7 +74,7 @@ fi
 
 
 
-eval "../chidley -W ./${pubmed_filename} > test1/t.go"
+eval "../chidley -W ./${test_filename} > test1/t.go"
 
 cd test1
 go build
@@ -102,7 +102,7 @@ out "### Example chidley -G:"
 out "#### Default"
 
 out "#### Types turned on -t"
-exe "../chidley -t ./${pubmed_filename}"
+exe "../chidley -t ./${test_filename}"
 
 exit
 out "## Larger & more complex example"

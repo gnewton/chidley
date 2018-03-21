@@ -37,7 +37,7 @@ func extractor(xmlStrings []string) error {
 
 	buf := bytes.NewBufferString("")
 	fps := make([]string, 1)
-	fps[0] = "foo"
+	//fps[0] = "foo"
 	generateGoCode(buf, fps, &ex)
 
 	//log.Println(buf.String())
