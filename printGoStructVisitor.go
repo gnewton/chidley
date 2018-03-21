@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strconv"
+	//"strconv"
 )
 
 type PrintGoStructVisitor struct {
@@ -125,7 +125,16 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 	// Is this chardata Field (string)
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
-		charField := "\t" + cdataName + " " + findType(n.nodeTypeInfo, useType) + xmlString
+		thisType := findType(n.nodeTypeInfo, useType)
+		thisVariableName := cdataStringName
+
+		switch thisType {
+		case IntType, Int8Type, Int16Type, Int32Type, Int64Type, Float32Type, Float64Type:
+			thisVariableName = cdataNumberName
+		case BoolType:
+			thisVariableName = cdataBooleanName
+		}
+		charField := "\t" + thisVariableName + " " + thisType + xmlString
 
 		if flattenStrings {
 			//charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
@@ -133,7 +142,8 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 				charField += "// *******************"
 			}
 		}
-		charField += "   // maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
+		//GOOD
+		//charField += "   // maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
 
 		fields = append(fields, charField)
 	}

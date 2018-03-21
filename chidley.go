@@ -42,7 +42,7 @@ func init() {
 
 	flag.StringVar(&attributePrefix, "a", attributePrefix, "Prefix to attribute names")
 	flag.StringVar(&baseJavaDir, "D", baseJavaDir, "Base directory for generated Java code (root of maven project)")
-	flag.StringVar(&cdataName, "M", cdataName, "Set name of CDATA string field")
+	flag.StringVar(&cdataStringName, "M", cdataStringName, "Set name of CDATA string field")
 	flag.StringVar(&fieldTemplateString, "T", fieldTemplateString, "Field template for the struct field definition. Can include annotations. Default is for XML and JSON")
 	flag.StringVar(&javaAppName, "k", javaAppName, "App name for Java code (appended to ca.gnewton.chidley Java package name))")
 	flag.StringVar(&lengthTagAttribute, "A", lengthTagAttribute, "The tag name attribute to use for the max length Go annotations")
@@ -194,7 +194,11 @@ func main() {
 			// Bad: assume only one base element
 			onlyChild = child
 		}
-		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, getFullPath(sourceNames[0]), date)
+		fullPath, err := getFullPath(sourceNames[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		printJavaJaxbMain(onlyChild.makeJavaType(namePrefix, ""), javaDir, javaPackage, fullPath, date)
 		printPackageInfo(onlyChild, javaDir, javaPackage, ex.globalTagAttributes, ex.nameSpaceTagMap)
 
 		printMavenPom(baseJavaDir+"/pom.xml", javaAppName)
@@ -422,7 +426,7 @@ func generateGoStructs(out io.Writer, sourceName string, ex *Extractor) {
 }
 
 //Writes structs to a string then uses this in a template to generate Go code
-func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) {
+func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) error {
 	buf := bytes.NewBufferString("")
 	printGoStructVisitor := new(PrintGoStructVisitor)
 	printGoStructVisitor.init(buf, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
@@ -436,19 +440,29 @@ func generateGoCode(out io.Writer, sourceNames []string, ex *Extractor) {
 		XMLSpace:     ex.firstNode.space,
 	}
 
+	fullPath, err := getFullPath(sourceNames[0])
+	if err != nil {
+		return err
+	}
+
+	fullPaths, err := getFullPaths(sourceNames)
+	if err != nil {
+		return err
+	}
 	x := XmlInfo{
 		BaseXML:         &xt,
 		OneLevelDownXML: makeOneLevelDown(ex.root, ex.globalTagAttributes),
-		Filenames:       getFullPaths(sourceNames),
-		Filename:        getFullPath(sourceNames[0]),
+		Filenames:       fullPaths,
+		Filename:        fullPath,
 		Structs:         buf.String(),
 	}
 	x.init()
 	t := template.Must(template.New("chidleyGen").Parse(codeTemplate))
 
-	err := t.Execute(out, x)
+	err = t.Execute(out, x)
 	if err != nil {
 		log.Println("executing template:", err)
+		return err
 	}
-
+	return err
 }

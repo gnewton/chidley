@@ -47,7 +47,9 @@ var lengthTagPadding int64 = 0
 var lengthTagAttribute = ""
 var lengthTagSeparator = ":"
 
-var cdataName = "Text"
+var cdataStringName = "Text"
+var cdataNumberName = "Number"
+var cdataBooleanName = "Flag"
 
 type structSortFunc func(v *PrintGoStructVisitor)
 

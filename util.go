@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 	"sort"
-	"strconv"
+	//"strconv"
 	"strings"
 
 	"github.com/xi2/xz"
@@ -66,39 +66,49 @@ func cleanName(name string) string {
 	return name
 }
 
+const BoolType = "bool"
+const StringType = "string"
+const IntType = "int"
+const Int8Type = "int8"
+const Int16Type = "int16"
+const Int32Type = "int32"
+const Int64Type = "int64"
+const Float32Type = "float32"
+const Float64Type = "float64"
+
 func findType(nti *NodeTypeInfo, useType bool) string {
 	if !useType {
-		return "string"
+		return StringType
 	}
 
 	if nti.alwaysBool {
-		return "bool"
+		return BoolType
 	}
 
 	if nti.alwaysInt08 {
-		return "int8"
+		return Int8Type
 	}
 	if nti.alwaysInt16 {
-		return "int16"
+		return Int16Type
 	}
 	if nti.alwaysInt32 {
-		return "int32"
+		return Int32Type
 	}
 	if nti.alwaysInt64 {
-		return "int64"
+		return Int64Type
 	}
 
 	if nti.alwaysInt0 {
-		return "int"
+		return IntType
 	}
 
 	if nti.alwaysFloat32 {
-		return "float32"
+		return Float32Type
 	}
 	if nti.alwaysFloat64 {
-		return "float64"
+		return Float64Type
 	}
-	return "string"
+	return StringType
 }
 
 type fqnSorter []*FQN
@@ -132,7 +142,8 @@ func makeAttributes(writer io.Writer, attributes []*FQN, nameSpaceTagMap map[str
 		variableType := "string"
 
 		//lineChannel <- "\t" + variableName + " " + variableType + "`xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
-		fmt.Fprintln(writer, "\t"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`"+"  // maxLength="+strconv.Itoa(fqn.maxLength))
+		//fmt.Fprintln(writer, "\t"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`"+"  // maxLength="+strconv.Itoa(fqn.maxLength))
+		fmt.Fprintln(writer, "\t"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`")
 	}
 }
 
@@ -171,26 +182,29 @@ func nks(space, name string) string {
 	return space + "NS" + name
 }
 
-func getFullPaths(filenames []string) []string {
+func getFullPaths(filenames []string) ([]string, error) {
 	fps := make([]string, len(filenames))
-
+	var err error
 	for i, _ := range filenames {
-		fps[i] = getFullPath(filenames[i])
+		fps[i], err = getFullPath(filenames[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return fps
+	return fps, nil
 }
 
-func getFullPath(filename string) string {
+func getFullPath(filename string) (string, error) {
 	if filename == "" {
-		return ""
+		return "", nil
 	}
 	file, err := os.Open(filename) // For read access.
 	if err != nil {
 		log.Print("Error opening: " + filename)
-		log.Fatal(err)
+		return "", err
 	}
-	return file.Name()
+	return file.Name(), nil
 }
 
 type alterer func(string) string

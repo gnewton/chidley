@@ -8,10 +8,12 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
+	"log"
 	"strings"
 )
 
 func extractor(xmlStrings []string) error {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	ex := Extractor{
 		namePrefix:              namePrefix,
 		nameSuffix:              nameSuffix,

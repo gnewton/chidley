@@ -106,6 +106,8 @@ func main() {
 		log.Fatal("Only one of ", uniqueFlags, " can be set at once")
 	}
 
+	counter := 0
+	stop := false
 	counters = make(map[string]*int)
 	for i, _ := range filenames {
 		filename := filenames[i]
@@ -124,7 +126,14 @@ func main() {
 			}
 			switch se := token.(type) {
 			case xml.StartElement:
+				if counter == 1 && se.Name.Local == "PubmedArticle" {
+					stop = true
+				}
+				counter++
 				handleFeed(se, decoder, outFlag)
+			}
+			if stop {
+				break
 			}
 		}
 		if xmlFile != nil {

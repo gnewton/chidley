@@ -4,7 +4,7 @@ import (
 	"bytes"
 	//"fmt"
 	"log"
-	"strconv"
+	//"strconv"
 	"text/template"
 )
 
@@ -43,7 +43,8 @@ func render(otd FieldDef) (string, error) {
 		return "", err
 	}
 	//fmt.Println(buf.String())
-	return "\t" + buf.String() + "   // ZZmaxLength=" + strconv.FormatInt(otd.Length, 10), nil
+	//return "\t" + buf.String() + "   // ZZmaxLength=" + strconv.FormatInt(otd.Length, 10), nil
+	return "\t" + buf.String(), nil
 }
 
 func runValidateFieldTemplate(printToLog bool) error {
