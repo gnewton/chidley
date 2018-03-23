@@ -35,7 +35,7 @@ var writeJava = false
 var baseJavaDir = "java"
 var userJavaPackageName = ""
 
-var namePrefix = "Chi"
+var namePrefix = "C"
 var nameSuffix = ""
 var xmlName = false
 var url = false
