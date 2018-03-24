@@ -48,10 +48,11 @@ For example, if all instances of a tag contain a number, and all instances are -
 ## `chidley` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
-## Usage
+## Usage 
 
-```
-chidley <flags> xmlFileName|url
+
+
+```chidley <flags> xmlFileName|url
 xmlFileName can be .gz or .bz2: uncompressed transparently
 Usage of ./chidley:
   -A string
@@ -85,7 +86,7 @@ Usage of ./chidley:
   -c	Read XML from standard input
   -d	Debug; prints out much information
   -e string
-    	Prefix to struct (element) names; must start with a capital (default "Chi")
+    	Prefix to struct (element) names; must start with a capital (default "C")
   -h string
     	List of XML tags to ignore; comma separated
   -k string
@@ -98,22 +99,22 @@ Usage of ./chidley:
   -u	Filename interpreted as an URL
   -x	Add XMLName (Space, Local) for each XML element, to JSON
 
-
 $
-
 
 ```
 
 ### Specific Usages:
-* `chidley -W ...`: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
+* `chidley -W `: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
     * convert the XML file to JSON
     * or convert the XML file to XML (useful for validation)
     * or count the # of elements (space, local) in the XML file
 * `chidley -G ...`: writes just the Go structs that represent the input XML. For incorporation into the user's code base.
 
 
-### Example `chidley data/test.xml`:
-####  `data/test.xml`:
+### Example
+####  `data/test.xml`: 
+
+
 
 ```
 <books>
@@ -143,56 +144,54 @@ $
 
 
 
-
 ```
-
 
 #### Generated Go structs:
+ 
 
 
-```
-type ChiChidleyRoot314159 struct {
-	Chibooks *Chibooks `xml:"books,omitempty" json:"books,omitempty"`   // ZZmaxLength=0
+
+```type CChidleyRoot314159 struct {
+	Cbooks *Cbooks `xml:"books,omitempty" json:"books,omitempty"`
 }
 
-type Chiauthor struct {
-	ChifirstName *ChifirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`   // ZZmaxLength=0
-	ChilastName *ChilastName `xml:"lastName,omitempty" json:"lastName,omitempty"`   // ZZmaxLength=0
+type Cauthor struct {
+	CfirstName *CfirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`
+	ClastName *ClastName `xml:"lastName,omitempty" json:"lastName,omitempty"`
 }
 
-type Chiauthors struct {
-	Chiauthor *Chiauthor `xml:"author,omitempty" json:"author,omitempty"`   // ZZmaxLength=0
+type Cauthors struct {
+	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 }
 
-type Chibook struct {
-	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`  // maxLength=4
-	Chiauthor *Chiauthor `xml:"author,omitempty" json:"author,omitempty"`   // ZZmaxLength=0
-	Chiauthors *Chiauthors `xml:"authors,omitempty" json:"authors,omitempty"`   // ZZmaxLength=0
-	Chititle *Chititle `xml:"title,omitempty" json:"title,omitempty"`   // ZZmaxLength=0
-	Chiyear *Chiyear `xml:"year,omitempty" json:"year,omitempty"`   // ZZmaxLength=0
+type Cbook struct {
+	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`
+	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
+	Cauthors *Cauthors `xml:"authors,omitempty" json:"authors,omitempty"`
+	Ctitle *Ctitle `xml:"title,omitempty" json:"title,omitempty"`
+	Cyear *Cyear `xml:"year,omitempty" json:"year,omitempty"`
 }
 
-type Chibooks struct {
-	Chibook []*Chibook `xml:"book,omitempty" json:"book,omitempty"`   // ZZmaxLength=0
+type Cbooks struct {
+	Cbook []*Cbook `xml:"book,omitempty" json:"book,omitempty"`
 }
 
-type ChifirstName struct {
-	Attrorder string`xml:"order,attr"  json:",omitempty"`  // maxLength=12
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=5
+type CfirstName struct {
+	Attrorder string`xml:"order,attr"  json:",omitempty"`
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
-type ChilastName struct {
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=9
+type ClastName struct {
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
-type Chititle struct {
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=8
+type Ctitle struct {
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
-type Chiyear struct {
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=4
+type Cyear struct {
+	Text string `xml:",chardata" json:",omitempty"`
 }
-
 
 
 
@@ -201,133 +200,178 @@ type Chiyear struct {
 Notice that all XMl tags are converted to Go structs. However, for those that always correspond to a single element, like title:`<title>Footfall</title>` is is a bit of a waste
 It is possible to have `chidley`collapse these into inline strings with the `-F`flag. However, if your example XML is not canonical (i.e. it does not exhibit all uses of all XML tags), it may result in Go structs that do not capture everything that is needed.
 
-Example:
+Example: 
+
+
 
 ```
 `$chidley -F data/test.xml`:
-
-type ChiChidleyRoot314159 struct {
-	Chibooks *Chibooks `xml:"books,omitempty" json:"books,omitempty"`   // ZZmaxLength=3
+type CChidleyRoot314159 struct {
+	Cbooks *Cbooks `xml:"books,omitempty" json:"books,omitempty"`
 }
 
-type Chiauthor struct {
-	ChifirstName *ChifirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`   // ZZmaxLength=5
-	ChilastName string `xml:"lastName,omitempty" json:"lastName,omitempty"`   // ZZmaxLength=9
+type Cauthor struct {
+	CfirstName *CfirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`
+	ClastName string `xml:"lastName,omitempty" json:"lastName,omitempty"`
 }
 
-type Chiauthors struct {
-	Chiauthor *Chiauthor `xml:"author,omitempty" json:"author,omitempty"`   // ZZmaxLength=13
+type Cauthors struct {
+	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 }
 
-type Chibook struct {
-	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`  // maxLength=4
-	Chiauthor *Chiauthor `xml:"author,omitempty" json:"author,omitempty"`   // ZZmaxLength=13
-	Chiauthors *Chiauthors `xml:"authors,omitempty" json:"authors,omitempty"`   // ZZmaxLength=9
-	Chititle string `xml:"title,omitempty" json:"title,omitempty"`   // ZZmaxLength=8
-	Chiyear string `xml:"year,omitempty" json:"year,omitempty"`   // ZZmaxLength=4
+type Cbook struct {
+	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`
+	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
+	Cauthors *Cauthors `xml:"authors,omitempty" json:"authors,omitempty"`
+	Ctitle string `xml:"title,omitempty" json:"title,omitempty"`
+	Cyear string `xml:"year,omitempty" json:"year,omitempty"`
 }
 
-type Chibooks struct {
-	Chibook []*Chibook `xml:"book,omitempty" json:"book,omitempty"`   // ZZmaxLength=10
+type Cbooks struct {
+	Cbook []*Cbook `xml:"book,omitempty" json:"book,omitempty"`
 }
 
-type ChifirstName struct {
-	Attrorder string`xml:"order,attr"  json:",omitempty"`  // maxLength=12
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=5
+type CfirstName struct {
+	Attrorder string`xml:"order,attr"  json:",omitempty"`
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
 
+
+```
+
+#### Generating code to read XML
+`chidley` can generate Go code that will read in the XML and output a number of things, including the equivalent JSON, XML (XML to XML useful for validation), and a count total for each XML tag in the source file
+
+Generating code:
+ 
+
+
+
+```
+$ mkdir gencode
+$ chidley -W data/test.xml> gencode/main.go
 
 
 ```
 
 #### Usage of generated code
+ 
+
+
+
 ```
-$ cd examples/test1
+$ cd gencode
 $ go build
-$ ./test1
+$ ./gencode
+Usage of ./gencode:
+  -c	Count each instance of XML tags
+  -h	Usage
+  -j	Convert to JSON
+  -s	Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/
+  -x	Convert to XML
 
-Usage of ./test1:
-  -c=false: Count each instance of XML tags
-  -f="/home/gnewton/work/chidley/xml/test1.xml": XML file or URL to read in
-  -h=false: Usage
-  -j=false: Convert to JSON
-  -s=false: Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/
-  -x=false: Convert to XML
+
+
 ```
 
-##### Generated code: Convert XML to JSON `-j`
+##### Generated code: Convert XML to JSON `-j` 
+
+
+
 ```
 $ ./test1 -j -f ../../xml/test1.xml 
-
 {
- "doc": [
+ "book": [
   {
-   "Attr_type": "book",
+   "AttrisLong": "true",
    "author": {
     "firstName": {
+     "Attrorder": "first author",
      "Text": "Frank"
     },
-    "last-name": {
+    "lastName": {
      "Text": "Herbert"
     }
    },
    "title": {
     "Text": "Dune"
+   },
+   "year": {
+    "Text": "1966"
    }
   },
   {
-   "Attr_type": "article",
-   "author": {
-    "firstName": {
-     "Text": "Aldous"
-    },
-    "last-name": {
-     "Text": "Huxley"
+   "authors": {
+    "author": {
+     "firstName": {
+      "Attrorder": "first author",
+      "Text": "Jerry"
+     },
+     "lastName": {
+      "Text": "Pournelle"
+     }
     }
    },
    "title": {
-    "Text": "Brave New Wold"
+    "Text": "Footfall"
+   },
+   "year": {
+    "Text": "1972"
    }
   }
  ]
 }
+
+
 ```
 
 ##### Generated code: Convert XML to XML `-x`
-```
-$ ./test1 -x -f ../../xml/test1.xml 
+ 
 
-  <Chi_docs>
-      <doc type="book">
+
+
+```$ ./test1 -x -f ../../xml/test1.xml 
+  <Cbooks>
+      <book isLong="true">
           <author>
-              <firstName>Frank</firstName>
-              <last-name>Herbert</last-name>
+              <firstName order="first author">Frank</firstName>
+              <lastName>Herbert</lastName>
           </author>
           <title>Dune</title>
-      </doc>
-      <doc type="article">
-          <author>
-              <firstName>Aldous</firstName>
-              <last-name>Huxley</last-name>
-          </author>
-          <title>Brave New Wold</title>
-      </doc>
-  </Chi_docs>
+          <year>1966</year>
+      </book>
+      <book isLong="">
+          <authors>
+              <author>
+                  <firstName order="first author">Jerry</firstName>
+                  <lastName>Pournelle</lastName>
+              </author>
+          </authors>
+          <title>Footfall</title>
+          <year>1972</year>
+      </book>
+  </Cbooks>
+
 ```
 
 ##### Generated code: Count elements `-c`
 XML elements (or tags) are counted in the source file (space,local) and are printed-out, unsorted
+ 
 
-```
 
-$ ./test1 -c
-1 _:docs
-2 _:doc
+
+```$ gencode -c
+2 _:book
+3 _:author
+3 _:firstName
+3 _:lastName
 2 _:title
-2 _:author
-2 _:last-name
-2 _:firstName
+2 _:year
+1 _:authors
+1 _:books
+
+
 ```
 
 **Note**: the underscore before the colon indicates there is no (or the default) namespace for the element. 
@@ -337,6 +381,7 @@ Just prints out the Go structs to standard out:
 ```
 $ chidley -G xml/test1.xml
 
+    ***********EMPTY
 type Chi_root struct {
 	Chi_docs *Chi_docs `xml:" docs,omitempty" json:"docs,omitempty"`
 }
@@ -410,46 +455,46 @@ Note that the original XML name strings are used in the struct XML and JSON anno
 #### Default
 ```
 $ ./chidley -G xml/testType.xml
-type ChiChidleyRoot314159 struct {
-	Chibooks *Chibooks `xml:"books,omitempty" json:"books,omitempty"`   // ZZmaxLength=0
+type CChidleyRoot314159 struct {
+	Cbooks *Cbooks `xml:"books,omitempty" json:"books,omitempty"`
 }
 
-type Chiauthor struct {
-	ChifirstName *ChifirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`   // ZZmaxLength=0
-	ChilastName *ChilastName `xml:"lastName,omitempty" json:"lastName,omitempty"`   // ZZmaxLength=0
+type Cauthor struct {
+	CfirstName *CfirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`
+	ClastName *ClastName `xml:"lastName,omitempty" json:"lastName,omitempty"`
 }
 
-type Chiauthors struct {
-	Chiauthor *Chiauthor `xml:"author,omitempty" json:"author,omitempty"`   // ZZmaxLength=0
+type Cauthors struct {
+	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 }
 
-type Chibook struct {
-	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`  // maxLength=4
-	Chiauthor *Chiauthor `xml:"author,omitempty" json:"author,omitempty"`   // ZZmaxLength=0
-	Chiauthors *Chiauthors `xml:"authors,omitempty" json:"authors,omitempty"`   // ZZmaxLength=0
-	Chititle *Chititle `xml:"title,omitempty" json:"title,omitempty"`   // ZZmaxLength=0
-	Chiyear *Chiyear `xml:"year,omitempty" json:"year,omitempty"`   // ZZmaxLength=0
+type Cbook struct {
+	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`
+	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
+	Cauthors *Cauthors `xml:"authors,omitempty" json:"authors,omitempty"`
+	Ctitle *Ctitle `xml:"title,omitempty" json:"title,omitempty"`
+	Cyear *Cyear `xml:"year,omitempty" json:"year,omitempty"`
 }
 
-type Chibooks struct {
-	Chibook []*Chibook `xml:"book,omitempty" json:"book,omitempty"`   // ZZmaxLength=0
+type Cbooks struct {
+	Cbook []*Cbook `xml:"book,omitempty" json:"book,omitempty"`
 }
 
-type ChifirstName struct {
-	Attrorder string`xml:"order,attr"  json:",omitempty"`  // maxLength=12
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=5
+type CfirstName struct {
+	Attrorder string`xml:"order,attr"  json:",omitempty"`
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
-type ChilastName struct {
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=9
+type ClastName struct {
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
-type Chititle struct {
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=8
+type Ctitle struct {
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
-type Chiyear struct {
-	Text string `xml:",chardata" json:",omitempty"`   // maxLength=4
+type Cyear struct {
+	Text string `xml:",chardata" json:",omitempty"`
 }
 
 
@@ -460,6 +505,7 @@ type Chiyear struct {
 ```
 $ ./chidley -G -t xml/testType.xml
 
+    ***********EMPTY
 $ type Chi_root struct {
 	Chi_people *Chi_people `xml:" people,omitempty" json:"people,omitempty"`
 }
@@ -515,15 +561,18 @@ It is possible that this method might be used in the future to extend `chidley` 
 `chidley` is named after [Cape Chidley](https://en.wikipedia.org/wiki/Cape_Chidley), Canada
 
 ## Larger & more complex example
-Using the file ``. Generated from a query to pubmed (similar but much larger than [http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml](http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml)), returning a document in the [MEDLINE/Pubmed XML format](http://www.nlm.nih.gov/bsd/licensee/data_elements_doc.html).
+Using the file `
+    ***********EMPTY`. Generated from a query to pubmed (similar but much larger than [http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml](http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=20598978,444444,455555&retmode=xml)), returning a document in the [MEDLINE/Pubmed XML format](http://www.nlm.nih.gov/bsd/licensee/data_elements_doc.html).
 * Compressed size: 27M
 * Uncompressed size: 337M
 
-### Generate Go structs from : `-G`
+### Generate Go structs from 
+    ***********EMPTY: `-G`
 
 ```
 $ /usr/bin/time -f "%E %M" ./chidley -G xml/pubmed_xml_12750255.xml.bz2 
 
+    ***********EMPTY
 type Chi_root struct {
 	Chi_PubmedArticleSet *Chi_PubmedArticleSet `xml:" PubmedArticleSet,omitempty" json:"PubmedArticleSet,omitempty"`
 }
@@ -1137,6 +1186,7 @@ type Chi_PubmedBookData struct {
 }
 
 
+    ***********EMPTY
 0:48.21 15044
 $
 ```
@@ -1165,6 +1215,7 @@ o$
 $ /usr/bin/time -f "%E %M" ./pubmed -c | sort -n
 0:36.58 10460
 
+    ***********EMPTY
 1 _:Edition
 1 _:Identifier
 1 _:PubmedArticleSet
@@ -1292,6 +1343,7 @@ $
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j > /dev/null
 
+    ***********EMPTY
 0:57.26 2866408
 $
 ```
@@ -1301,6 +1353,7 @@ $
 Streaming decodes using the XML elements that are one level down from the top level container element.
 ```
 
+    ***********EMPTY
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
 0:58.72 15944
 ```
@@ -1310,6 +1363,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s > /dev/null
 ```
 $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
 
+    ***********EMPTY
 {
  "MedlineCitation": {
   "Attr_Owner": "NLM",
@@ -1626,6 +1680,7 @@ $ /usr/bin/time -f "%E %M" ./pubmed -j -s |head -310
 ```
 $ ./pubmed -x -s |head -100
 
+    ***********EMPTY
   <Chi_PubmedArticle>
       <MedlineCitation Owner="NLM" Status="MEDLINE" VersionDate="" VersionID="">
           <Article PubModel="Print">
@@ -1739,6 +1794,7 @@ It creates a `Main.java` in `src/main/java/ca/gnewton/chidley/jaxb`
 ```
 $ chidley -J xml/test1.xml
 
+    ***********EMPTY
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiDocs.java
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiDoc.java
 2014/09/02 10:22:27 printJavaJaxbVisitor.go:100: Writing java Class file: java/src/main/java/ca/gnewton/chidley/jaxb/xml/ChiTitle.java
@@ -1753,6 +1809,7 @@ Changing the package with "-P":
 ```
 $ chidley -J -P testFoo xml/test1.xml
 
+    ***********EMPTY
 2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiDocs.java
 2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiDoc.java
 2015/07/24 15:56:52 printJavaJaxbVisitor.go:103: Writing java Class file: java/src/main/java/ca/gnewton/chidley/testFoo/xml/ChiTitle.java
@@ -1770,6 +1827,7 @@ $ ls
 pom.xml  src
 $ $ mvn package
 
+    ***********EMPTY
 [INFO] Scanning for projects...
 [INFO]                                                                         
 [INFO] ------------------------------------------------------------------------
@@ -1810,7 +1868,8 @@ $
 ```
 $ export CLASSPATH=./target/chidley-jaxb-1.0-SNAPSHOT.jar:/home/myhome/.m2/repository/com/google/code/gson/gson/2.3/gson-2.3.jar:$CLASSPATH
 $ java ca.gnewton.chidley.jaxb.Main
-zzzzzz  mmmmm
+zzzzzz 
+    ***********EMPTY mmmmm
 {
   "language": "eng",
   "doc": [
