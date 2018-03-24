@@ -49,6 +49,7 @@ For example, if all instances of a tag contain a number, and all instances are -
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
 ## Usage
+
 ```
 
 chidley <flags> xmlFileName|url
@@ -114,6 +115,7 @@ $
 
 ### Example `chidley data/test.xml`:
 ####`data/test.xml`:
+
 ```
 <books>
 <book isLong="true">
@@ -139,6 +141,7 @@ $
   <year>1972</year>
 </book>
 </books>
+
 
 
 ```
@@ -196,7 +199,10 @@ It is possible to have `chidley`collapse these into inline strings with the `-F`
 
 Example:
 
-``` `$chidley -F data/test.xml`:
+```
+
+
+`$chidley -F data/test.xml`:
 
 type ChiChidleyRoot314159 struct {
 	Chibooks *Chibooks `xml:"books,omitempty" json:"books,omitempty"`   // ZZmaxLength=3
