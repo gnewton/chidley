@@ -52,6 +52,7 @@ Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
 ```
 
+
 chidley <flags> xmlFileName|url
 xmlFileName can be .gz or .bz2: uncompressed transparently
 Usage of ./chidley:
@@ -101,6 +102,8 @@ Usage of ./chidley:
 
 
 $
+
+
 ```
 
 
@@ -117,6 +120,8 @@ $
 ####  `data/test.xml`:
 
 ```
+
+
 <books>
 <book isLong="true">
   <author>
@@ -144,11 +149,18 @@ $
 
 
 
+
 ```
 
 
-####Generated Go structs:
+
+
+#### Generated Go structs:
+
+
 ```
+
+
 type ChiChidleyRoot314159 struct {
 	Chibooks *Chibooks `xml:"books,omitempty" json:"books,omitempty"`   // ZZmaxLength=0
 }
@@ -192,7 +204,11 @@ type Chiyear struct {
 }
 
 
+
+
 ```
+
+
 
 Notice that all XMl tags are converted to Go structs. However, for those that always correspond to a single element, like title:`<title>Footfall</title>` is is a bit of a waste
 It is possible to have `chidley`collapse these into inline strings with the `-F`flag. However, if your example XML is not canonical (i.e. it does not exhibit all uses of all XML tags), it may result in Go structs that do not capture everything that is needed.
@@ -235,7 +251,11 @@ type ChifirstName struct {
 }
 
 
+
+
 ```
+
+
 
 #### Usage of generated code
 ```
