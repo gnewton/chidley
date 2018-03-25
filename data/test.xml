@@ -1,13 +1,16 @@
 <books>
   <book isLong="true">
+    <title>Dune</title>
+    <year>1966</year>
     <authors>
       <author>
 	<firstName order="first author">Frank</firstName>
 	<lastName>Herbert</lastName>
       </author>
     </authors>
-    <title>Dune</title>
-    <year>1966</year>
+    <numpages>
+      678
+    </numpages>
   </book>
   <book>
     <authors>
@@ -22,6 +25,9 @@
     </authors>
     <title>Footfall</title>
     <year>1972</year>
+    <numpages>
+      451
+    </numpages>
   </book>
 </books>
 
