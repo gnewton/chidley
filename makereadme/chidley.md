@@ -118,28 +118,30 @@ $
 
 ```
 <books>
-<book isLong="true">
-  <author>
-    <firstName order="first author">Frank</firstName>
-    <lastName>Herbert</lastName>
-  </author>
-  <title>Dune</title>
-  <year>1966</year>
-</book>
-<book>
-  <authors>
-  <author>
-    <firstName order="first author">Larry</firstName>
-    <lastName>Niven</lastName>
-  </author>
-  <author>
-    <firstName>Jerry</firstName>
-    <lastName>Pournelle</lastName>
-  </author>
-  </authors>
-  <title>Footfall</title>
-  <year>1972</year>
-</book>
+  <book isLong="true">
+    <authors>
+      <author>
+	<firstName order="first author">Frank</firstName>
+	<lastName>Herbert</lastName>
+      </author>
+    </authors>
+    <title>Dune</title>
+    <year>1966</year>
+  </book>
+  <book>
+    <authors>
+      <author>
+	<firstName order="first author">Larry</firstName>
+	<lastName>Niven</lastName>
+      </author>
+      <author>
+	<firstName>Jerry</firstName>
+	<lastName>Pournelle</lastName>
+      </author>
+    </authors>
+    <title>Footfall</title>
+    <year>1972</year>
+  </book>
 </books>
 
 
@@ -151,45 +153,54 @@ $
 
 
 
-```type CChidleyRoot314159 struct {
+```
+type CChidleyRoot314159 struct {
+	XMLName xml.Name`xml:"ChidleyRoot314159,omitempty" json:"ChidleyRoot314159,omitempty"`
 	Cbooks *Cbooks `xml:"books,omitempty" json:"books,omitempty"`
 }
 
 type Cauthor struct {
+	XMLName xml.Name`xml:"author,omitempty" json:"author,omitempty"`
 	CfirstName *CfirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`
 	ClastName *ClastName `xml:"lastName,omitempty" json:"lastName,omitempty"`
 }
 
 type Cauthors struct {
-	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
+	XMLName xml.Name`xml:"authors,omitempty" json:"authors,omitempty"`
+	Cauthor []*Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 }
 
 type Cbook struct {
+	XMLName xml.Name`xml:"book,omitempty" json:"book,omitempty"`
 	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`
-	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 	Cauthors *Cauthors `xml:"authors,omitempty" json:"authors,omitempty"`
 	Ctitle *Ctitle `xml:"title,omitempty" json:"title,omitempty"`
 	Cyear *Cyear `xml:"year,omitempty" json:"year,omitempty"`
 }
 
 type Cbooks struct {
+	XMLName xml.Name`xml:"books,omitempty" json:"books,omitempty"`
 	Cbook []*Cbook `xml:"book,omitempty" json:"book,omitempty"`
 }
 
 type CfirstName struct {
+	XMLName xml.Name`xml:"firstName,omitempty" json:"firstName,omitempty"`
 	Attrorder string`xml:"order,attr"  json:",omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
 type ClastName struct {
+	XMLName xml.Name`xml:"lastName,omitempty" json:"lastName,omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
 type Ctitle struct {
+	XMLName xml.Name`xml:"title,omitempty" json:"title,omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
 type Cyear struct {
+	XMLName xml.Name`xml:"year,omitempty" json:"year,omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
@@ -200,38 +211,44 @@ type Cyear struct {
 Notice that all XMl tags are converted to Go structs. However, for those that always correspond to a single element, like title:`<title>Footfall</title>` is is a bit of a waste
 It is possible to have `chidley`collapse these into inline strings with the `-F`flag. However, if your example XML is not canonical (i.e. it does not exhibit all uses of all XML tags), it may result in Go structs that do not capture everything that is needed.
 
-Example: 
+Example:
+ 
 
 
 
 ```
 `$chidley -F data/test.xml`:
 type CChidleyRoot314159 struct {
+	XMLName xml.Name`xml:"ChidleyRoot314159,omitempty" json:"ChidleyRoot314159,omitempty"`
 	Cbooks *Cbooks `xml:"books,omitempty" json:"books,omitempty"`
 }
 
 type Cauthor struct {
+	XMLName xml.Name`xml:"author,omitempty" json:"author,omitempty"`
 	CfirstName *CfirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`
 	ClastName string `xml:"lastName,omitempty" json:"lastName,omitempty"`
 }
 
 type Cauthors struct {
-	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
+	XMLName xml.Name`xml:"authors,omitempty" json:"authors,omitempty"`
+	Cauthor []*Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 }
 
 type Cbook struct {
+	XMLName xml.Name`xml:"book,omitempty" json:"book,omitempty"`
 	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`
-	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 	Cauthors *Cauthors `xml:"authors,omitempty" json:"authors,omitempty"`
 	Ctitle string `xml:"title,omitempty" json:"title,omitempty"`
 	Cyear string `xml:"year,omitempty" json:"year,omitempty"`
 }
 
 type Cbooks struct {
+	XMLName xml.Name`xml:"books,omitempty" json:"books,omitempty"`
 	Cbook []*Cbook `xml:"book,omitempty" json:"book,omitempty"`
 }
 
 type CfirstName struct {
+	XMLName xml.Name`xml:"firstName,omitempty" json:"firstName,omitempty"`
 	Attrorder string`xml:"order,attr"  json:",omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
@@ -268,6 +285,8 @@ Usage of ./gencode:
   -c	Count each instance of XML tags
   -h	Usage
   -j	Convert to JSON
+  -n int
+    	Limit # records output (default 9223372036854775807)
   -s	Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/
   -x	Convert to XML
 
@@ -282,41 +301,127 @@ Usage of ./gencode:
 ```
 $ ./test1 -j -f ../../xml/test1.xml 
 {
+ "books": {
+  "Space": "",
+  "Local": "books"
+ },
  "book": [
   {
+   "book": {
+    "Space": "",
+    "Local": "book"
+   },
    "AttrisLong": "true",
-   "author": {
-    "firstName": {
-     "Attrorder": "first author",
-     "Text": "Frank"
+   "authors": {
+    "authors": {
+     "Space": "",
+     "Local": "authors"
     },
-    "lastName": {
-     "Text": "Herbert"
-    }
+    "author": [
+     {
+      "author": {
+       "Space": "",
+       "Local": "author"
+      },
+      "firstName": {
+       "firstName": {
+        "Space": "",
+        "Local": "firstName"
+       },
+       "Attrorder": "first author",
+       "Text": "Frank"
+      },
+      "lastName": {
+       "lastName": {
+        "Space": "",
+        "Local": "lastName"
+       },
+       "Text": "Herbert"
+      }
+     }
+    ]
    },
    "title": {
+    "title": {
+     "Space": "",
+     "Local": "title"
+    },
     "Text": "Dune"
    },
    "year": {
+    "year": {
+     "Space": "",
+     "Local": "year"
+    },
     "Text": "1966"
    }
   },
   {
+   "book": {
+    "Space": "",
+    "Local": "book"
+   },
    "authors": {
-    "author": {
-     "firstName": {
-      "Attrorder": "first author",
-      "Text": "Jerry"
+    "authors": {
+     "Space": "",
+     "Local": "authors"
+    },
+    "author": [
+     {
+      "author": {
+       "Space": "",
+       "Local": "author"
+      },
+      "firstName": {
+       "firstName": {
+        "Space": "",
+        "Local": "firstName"
+       },
+       "Attrorder": "first author",
+       "Text": "Larry"
+      },
+      "lastName": {
+       "lastName": {
+        "Space": "",
+        "Local": "lastName"
+       },
+       "Text": "Niven"
+      }
      },
-     "lastName": {
-      "Text": "Pournelle"
+     {
+      "author": {
+       "Space": "",
+       "Local": "author"
+      },
+      "firstName": {
+       "firstName": {
+        "Space": "",
+        "Local": "firstName"
+       },
+       "Text": "Jerry"
+      },
+      "lastName": {
+       "lastName": {
+        "Space": "",
+        "Local": "lastName"
+       },
+       "Text": "Pournelle"
+      }
      }
-    }
+    ]
    },
    "title": {
+    "title": {
+     "Space": "",
+     "Local": "title"
+    },
     "Text": "Footfall"
    },
    "year": {
+    "year": {
+     "Space": "",
+     "Local": "year"
+    },
     "Text": "1972"
    }
   }
@@ -332,26 +437,32 @@ $ ./test1 -j -f ../../xml/test1.xml
 
 
 ```$ ./test1 -x -f ../../xml/test1.xml 
-  <Cbooks>
+  <books>
       <book isLong="true">
-          <author>
-              <firstName order="first author">Frank</firstName>
-              <lastName>Herbert</lastName>
-          </author>
+          <authors>
+              <author>
+                  <firstName order="first author">Frank</firstName>
+                  <lastName>Herbert</lastName>
+              </author>
+          </authors>
           <title>Dune</title>
           <year>1966</year>
       </book>
       <book isLong="">
           <authors>
               <author>
-                  <firstName order="first author">Jerry</firstName>
+                  <firstName order="first author">Larry</firstName>
+                  <lastName>Niven</lastName>
+              </author>
+              <author>
+                  <firstName order="">Jerry</firstName>
                   <lastName>Pournelle</lastName>
               </author>
           </authors>
           <title>Footfall</title>
           <year>1972</year>
       </book>
-  </Cbooks>
+  </books>
 
 ```
 
@@ -362,14 +473,14 @@ XML elements (or tags) are counted in the source file (space,local) and are prin
 
 
 ```$ gencode -c
-2 _:book
+2 _:authors
 3 _:author
 3 _:firstName
 3 _:lastName
 2 _:title
 2 _:year
-1 _:authors
 1 _:books
+2 _:book
 
 
 ```
@@ -424,28 +535,30 @@ Note that the original XML name strings are used in the struct XML and JSON anno
 ## Type example
 ```
 <books>
-<book isLong="true">
-  <author>
-    <firstName order="first author">Frank</firstName>
-    <lastName>Herbert</lastName>
-  </author>
-  <title>Dune</title>
-  <year>1966</year>
-</book>
-<book>
-  <authors>
-  <author>
-    <firstName order="first author">Larry</firstName>
-    <lastName>Niven</lastName>
-  </author>
-  <author>
-    <firstName>Jerry</firstName>
-    <lastName>Pournelle</lastName>
-  </author>
-  </authors>
-  <title>Footfall</title>
-  <year>1972</year>
-</book>
+  <book isLong="true">
+    <authors>
+      <author>
+	<firstName order="first author">Frank</firstName>
+	<lastName>Herbert</lastName>
+      </author>
+    </authors>
+    <title>Dune</title>
+    <year>1966</year>
+  </book>
+  <book>
+    <authors>
+      <author>
+	<firstName order="first author">Larry</firstName>
+	<lastName>Niven</lastName>
+      </author>
+      <author>
+	<firstName>Jerry</firstName>
+	<lastName>Pournelle</lastName>
+      </author>
+    </authors>
+    <title>Footfall</title>
+    <year>1972</year>
+  </book>
 </books>
 
 
@@ -456,44 +569,52 @@ Note that the original XML name strings are used in the struct XML and JSON anno
 ```
 $ ./chidley -G xml/testType.xml
 type CChidleyRoot314159 struct {
+	XMLName xml.Name`xml:"ChidleyRoot314159,omitempty" json:"ChidleyRoot314159,omitempty"`
 	Cbooks *Cbooks `xml:"books,omitempty" json:"books,omitempty"`
 }
 
 type Cauthor struct {
+	XMLName xml.Name`xml:"author,omitempty" json:"author,omitempty"`
 	CfirstName *CfirstName `xml:"firstName,omitempty" json:"firstName,omitempty"`
 	ClastName *ClastName `xml:"lastName,omitempty" json:"lastName,omitempty"`
 }
 
 type Cauthors struct {
-	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
+	XMLName xml.Name`xml:"authors,omitempty" json:"authors,omitempty"`
+	Cauthor []*Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 }
 
 type Cbook struct {
+	XMLName xml.Name`xml:"book,omitempty" json:"book,omitempty"`
 	AttrisLong string`xml:"isLong,attr"  json:",omitempty"`
-	Cauthor *Cauthor `xml:"author,omitempty" json:"author,omitempty"`
 	Cauthors *Cauthors `xml:"authors,omitempty" json:"authors,omitempty"`
 	Ctitle *Ctitle `xml:"title,omitempty" json:"title,omitempty"`
 	Cyear *Cyear `xml:"year,omitempty" json:"year,omitempty"`
 }
 
 type Cbooks struct {
+	XMLName xml.Name`xml:"books,omitempty" json:"books,omitempty"`
 	Cbook []*Cbook `xml:"book,omitempty" json:"book,omitempty"`
 }
 
 type CfirstName struct {
+	XMLName xml.Name`xml:"firstName,omitempty" json:"firstName,omitempty"`
 	Attrorder string`xml:"order,attr"  json:",omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
 type ClastName struct {
+	XMLName xml.Name`xml:"lastName,omitempty" json:"lastName,omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
 type Ctitle struct {
+	XMLName xml.Name`xml:"title,omitempty" json:"title,omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
 type Cyear struct {
+	XMLName xml.Name`xml:"year,omitempty" json:"year,omitempty"`
 	Text string `xml:",chardata" json:",omitempty"`
 }
 
