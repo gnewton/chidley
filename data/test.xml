@@ -1,25 +1,27 @@
 <books>
-<book isLong="true">
-  <author>
-    <firstName order="first author">Frank</firstName>
-    <lastName>Herbert</lastName>
-  </author>
-  <title>Dune</title>
-  <year>1966</year>
-</book>
-<book>
-  <authors>
-  <author>
-    <firstName order="first author">Larry</firstName>
-    <lastName>Niven</lastName>
-  </author>
-  <author>
-    <firstName>Jerry</firstName>
-    <lastName>Pournelle</lastName>
-  </author>
-  </authors>
-  <title>Footfall</title>
-  <year>1972</year>
-</book>
+  <book isLong="true">
+    <authors>
+      <author>
+	<firstName order="first author">Frank</firstName>
+	<lastName>Herbert</lastName>
+      </author>
+    </authors>
+    <title>Dune</title>
+    <year>1966</year>
+  </book>
+  <book>
+    <authors>
+      <author>
+	<firstName order="first author">Larry</firstName>
+	<lastName>Niven</lastName>
+      </author>
+      <author>
+	<firstName>Jerry</firstName>
+	<lastName>Pournelle</lastName>
+      </author>
+    </authors>
+    <title>Footfall</title>
+    <year>1972</year>
+  </book>
 </books>
 
