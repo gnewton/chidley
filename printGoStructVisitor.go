@@ -94,18 +94,6 @@ func (v *PrintGoStructVisitor) SetAlreadyVisited(n *Node) {
 func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) error {
 	var fields []string
 
-	// var xmlNameField FieldDef
-	// xmlNameField.GoName = "XMLName"
-	// xmlNameField.GoType = "xml.Name"
-	// xmlNameField.XMLName = n.name
-	// xmlNameField.XMLNameSpace = n.space
-
-	// fieldDefString, err := render(xmlNameField)
-	// if err != nil {
-	// 	return err
-	// }
-	//fields = append(fields, fieldDefString)
-
 	// Fields in this struct
 	for i, _ := range n.children {
 		child := n.children[i]
@@ -116,7 +104,8 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
 			//field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
 			def.GoName = child.makeType(namePrefix, nameSuffix)
-			def.GoType = "string"
+			//def.GoType = "string"
+			def.GoType = findType(child.nodeTypeInfo, useType)
 			def.XMLName = child.name
 			def.XMLNameSpace = child.space
 		} else {
@@ -149,14 +138,8 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 	if n.hasCharData {
 		xmlString := " `xml:\",chardata\" " + makeJsonAnnotation("", false, "") + "`"
 		thisType := findType(n.nodeTypeInfo, useType)
-		thisVariableName := cdataStringName
+		thisVariableName := findFieldNameFromTypeInfo(thisType)
 
-		switch thisType {
-		case IntType, Int8Type, Int16Type, Int32Type, Int64Type, Float32Type, Float64Type:
-			thisVariableName = cdataNumberName
-		case BoolType:
-			thisVariableName = cdataBooleanName
-		}
 		charField := "\t" + thisVariableName + " " + thisType + xmlString
 
 		if flattenStrings {

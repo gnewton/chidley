@@ -293,3 +293,14 @@ func extractExcludedTags(tagsString string) (*map[string]struct{}, error) {
 	}
 	return &ignoredMap, nil
 }
+
+func findFieldNameFromTypeInfo(t string) string {
+	switch t {
+	case IntType, Int8Type, Int16Type, Int32Type, Int64Type, Float32Type, Float64Type:
+		return cdataNumberName
+	case BoolType:
+		return cdataBooleanName
+	}
+	return "string"
+
+}

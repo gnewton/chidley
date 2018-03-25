@@ -1,4 +1,6 @@
 <record>
   <name>Bill Smith</name>
   <age>42</age>
+  <isalive>true</isalive>
+  <weight>55.7</weight>
 </record>
