@@ -47,7 +47,7 @@ import (
 	"io"
 	"log"
 	"os"
-	"runtime"
+	"math"
 	"strings"
 )
 
@@ -80,14 +80,18 @@ func init() {
 	flag.BoolVar(&oneLevelDown, "s", oneLevelDown, "Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/")
 	flag.BoolVar(&musage, "h", musage, "Usage")
 	//flag.StringVar(&filename, "f", filename, "XML file or URL to read in")
+
+	flag.Int64Var(&recordLimit, "n", recordLimit, "Limit # records output")
 }
 
 var out int = -1
 
 var counters map[string]*int
 
+var recordLimit int64 = int64(math.MaxInt64)
+var recordCounter = int64(0)
+
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	flag.Parse()
 
 	if musage {
@@ -120,21 +124,25 @@ func main() {
 		decoder := xml.NewDecoder(reader)
 
 		for {
+			if stop {
+				break
+			}
 			token, _ := decoder.Token()
 			if token == nil {
 				break
 			}
 			switch se := token.(type) {
 			case xml.StartElement:
-				if counter == 1 && se.Name.Local == "PubmedArticle" {
-					stop = true
-				}
 				counter++
 				handleFeed(se, decoder, outFlag)
+				if recordCounter == recordLimit {
+					stop = true
+				}
 			}
-			if stop {
-				break
-			}
+
+		}
+		if stop {
+			break
 		}
 		if xmlFile != nil {
 			defer xmlFile.Close()
@@ -165,6 +173,7 @@ func handleFeed(se xml.StartElement, decoder *xml.Decoder, outFlag *bool) {
                 }else{
                    {{ range .OneLevelDownXML }}
         		if se.Name.Local == "{{.XMLName}}" && se.Name.Space == "{{.XMLSpace}}" {
+			      recordCounter++
 	        	      var item {{.NameType}}
 			      decoder.DecodeElement(&item, &se)
 			      switch outFlag {
