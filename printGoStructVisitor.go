@@ -61,15 +61,20 @@ func print(v *PrintGoStructVisitor, node *Node) error {
 	attributes := v.globalTagAttributes[nk(node)]
 	//v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
 	fmt.Fprintln(v.writer, "type "+node.makeType(namePrefix, nameSuffix)+" struct {")
+
+	//	fmt.Fprintln(v.writer, "\tXMLName xml.Name`"+makeXmlAnnotation(node.space, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
+
+	fmt.Fprintln(v.writer, "\tXMLName xml.Name `"+makeAnnotation("xml", node.space, false, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
+
+	//return makeAnnotation("xml", spaceTag, true, false, name)
+
 	makeAttributes(v.writer, attributes, v.nameSpaceTagMap)
+
 	err := v.printInternalFields(len(attributes), node)
 	if err != nil {
 		return err
 	}
-	if node.space != "" {
-		//v.lineChannel <- "\tXMLName  xml.Name `" + makeXmlAnnotation(node.space, false, node.name) + " " + makeJsonAnnotation(node.spaceTag, false, node.name) + "`"
-		fmt.Fprintln(v.writer, "\tXMLName  xml.Name `"+makeXmlAnnotation(node.space, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
-	}
+
 	//v.lineChannel <- "}\n"
 	fmt.Fprintln(v.writer, "}\n")
 
@@ -88,6 +93,18 @@ func (v *PrintGoStructVisitor) SetAlreadyVisited(n *Node) {
 
 func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) error {
 	var fields []string
+
+	// var xmlNameField FieldDef
+	// xmlNameField.GoName = "XMLName"
+	// xmlNameField.GoType = "xml.Name"
+	// xmlNameField.XMLName = n.name
+	// xmlNameField.XMLNameSpace = n.space
+
+	// fieldDefString, err := render(xmlNameField)
+	// if err != nil {
+	// 	return err
+	// }
+	//fields = append(fields, fieldDefString)
 
 	// Fields in this struct
 	for i, _ := range n.children {

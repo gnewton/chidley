@@ -1,5 +1,13 @@
 package main
 
+const endInline = `
+
+` + "`" + `` + "`" + `` + "`"
+
+const beginInline = ` 
+
+` + endInline
+
 const readmeTemplate = `
 # ` + "`" + `chidley` + "`" + `
 
@@ -50,171 +58,89 @@ For example, if all instances of a tag contain a number, and all instances are -
 ## ` + "`" + `chidley` + "`" + ` binary
 Compiled for 64bit Linux Fedora18, go version go1.3 linux/amd64
 
-## Usage
-` + "`" + `` + "`" + `` + "`" + `
-
+## Usage` + beginInline + `
+$ chidley -h
 {{.ChidleyUsage}}
-
-$
-` + "`" + `` + "`" + `` + "`" + `
-
-
+$` + endInline + `
 
 ### Specific Usages:
-* ` + "`" + `chidley -W ...` + "`" + `: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
+* ` + "`" + `chidley -W ` + "`" + `: writes Go code to standard out, so this output should be directed to a filename and subsequently be compiled. When compiled, the resulting binary will:
     * convert the XML file to JSON
     * or convert the XML file to XML (useful for validation)
     * or count the # of elements (space, local) in the XML file
 * ` + "`" + `chidley -G ...` + "`" + `: writes just the Go structs that represent the input XML. For incorporation into the user's code base.
 
 
-### Example ` + "`" + `chidley data/test.xml` + "`" + `:
-####` + "`" + `data/test.xml` + "`:" + "`" + `` + "`" + `` + "`" + `
-{{.SimpleExampleXMLFile}}
-` + "`" + `` + "`" + `` + "`" + `
+### Example
+####  ` + "`" + `data/test.xml` + "`" + `:` + beginInline + `
+{{.SimpleExampleXMLFile}}` + endInline + `
+
+#### Generated Go structs:
+` + beginInline + `
+{{.SimpleExampleXMLChidleyGoStructs}}` + endInline + `
+
+Note that ` + "`" + `chidley` + "`" + `prepends a ` + "`" + `C` + "`" + `in front of every Go struct that corresponds to an XML tag in the original XML. It also does not alter the tag part of the Go struct name (except where noted below in "Name Changes"). 
+The reason this is done is 1) The Go XML and JSON libraries only operate on public fields (name must start with a capital); and 2) To avoid name collisions.
+Here is a simple and contrived example of name collisions in XMK:
+` + beginInline + `
+<record>
+    <name>Fred</name>
+    <Name>Gone with the Wind</Name>
+</record>
+` + endInline + `
+In order to work` + "`" + `<name>` + "`" + ` would have to be capitalized, causing a collision with ` + "`" + `<Name>` + "`" + `
+Prefixing both with a capital c avoid this.
+
+This prefix can be changed with the ` + "`" + `-e` + "`" + ` flag
 
 
-####Generated Go structs:
-` + "`" + `` + "`" + `` + "`" + `
-{{.SimpleExampleXMLChidleyGoStructs}}
-` + "`" + `` + "`" + `` + "`" + `
 
-
-
-#### Usage of generated code
-` + "`" + `` + "`" + `` + "`" + `
-$ cd examples/test1
-$ go build
-$ ./test1
-{{.GeneratedUsage}}
-Usage of ./test1:
-  -c=false: Count each instance of XML tags
-  -f="/home/gnewton/work/chidley/xml/test1.xml": XML file or URL to read in
-  -h=false: Usage
-  -j=false: Convert to JSON
-  -s=false: Stream XML by using XML elements one down from the root tag. Good for huge XML files (see http://blog.davidsingleton.org/parsing-huge-xml-files-with-go/
-  -x=false: Convert to XML
-` + "`" + `` + "`" + `` + "`" + `
-
-##### Generated code: Convert XML to JSON ` + "`" + `-j` + "`" + `
-` + "`" + `` + "`" + `` + "`" + `
-$ ./test1 -j -f ../../xml/test1.xml 
-{{.GeneratedXMLToJson}}
-{
- "doc": [
-  {
-   "Attr_type": "book",
-   "author": {
-    "firstName": {
-     "Text": "Frank"
-    },
-    "last-name": {
-     "Text": "Herbert"
-    }
-   },
-   "title": {
-    "Text": "Dune"
-   }
-  },
-  {
-   "Attr_type": "article",
-   "author": {
-    "firstName": {
-     "Text": "Aldous"
-    },
-    "last-name": {
-     "Text": "Huxley"
-    }
-   },
-   "title": {
-    "Text": "Brave New Wold"
-   }
-  }
- ]
-}
-` + "`" + `` + "`" + `` + "`" + `
-
-##### Generated code: Convert XML to XML ` + "`" + `-x` + "`" + `
-` + "`" + `` + "`" + `` + "`" + `
-$ ./test1 -x -f ../../xml/test1.xml 
-{{.GeneratedXMLToXML}}
-  <Chi_docs>
-      <doc type="book">
-          <author>
-              <firstName>Frank</firstName>
-              <last-name>Herbert</last-name>
-          </author>
-          <title>Dune</title>
-      </doc>
-      <doc type="article">
-          <author>
-              <firstName>Aldous</firstName>
-              <last-name>Huxley</last-name>
-          </author>
-          <title>Brave New Wold</title>
-      </doc>
-  </Chi_docs>
-` + "`" + `` + "`" + `` + "`" + `
-
-##### Generated code: Count elements ` + "`" + `-c` + "`" + `
-XML elements (or tags) are counted in the source file (space,local) and are printed-out, unsorted
-
-` + "`" + `` + "`" + `` + "`" + `
-{{.GeneratedCountElements}}
-$ ./test1 -c
-1 _:docs
-2 _:doc
-2 _:title
-2 _:author
-2 _:last-name
-2 _:firstName
-` + "`" + `` + "`" + `` + "`" + `
-
-**Note**: the underscore before the colon indicates there is no (or the default) namespace for the element. 
-
-### Example ` + "`" + `chidley -G` + "`" + `:
-Just prints out the Go structs to standard out:
-` + "`" + `` + "`" + `` + "`" + `
-$ chidley -G xml/test1.xml
-{{.ChidleyOnlyStructOutput}}
-type Chi_root struct {
-	Chi_docs *Chi_docs ` + "`" + `xml:" docs,omitempty" json:"docs,omitempty"` + "`" + `
-}
-
-type Chi_docs struct {
-	Chi_doc []*Chi_doc ` + "`" + `xml:" doc,omitempty" json:"doc,omitempty"` + "`" + `
-}
-
-type Chi_doc struct {
-	Attr_type string ` + "`" + `xml:" type,attr"  json:",omitempty"` + "`" + `
-	Chi_author *Chi_author ` + "`" + `xml:" author,omitempty" json:"author,omitempty"` + "`" + `
-	Chi_title *Chi_title ` + "`" + `xml:" title,omitempty" json:"title,omitempty"` + "`" + `
-}
-
-type Chi_title struct {
-	Text string ` + "`" + `xml:",chardata" json:",omitempty"` + "`" + `
-}
-
-type Chi_author struct {
-	Chi_firstName *Chi_firstName ` + "`" + `xml:" firstName,omitempty" json:"firstName,omitempty"` + "`" + `
-	Chi_last_name *Chi_last_name ` + "`" + `xml:" last-name,omitempty" json:"last-name,omitempty"` + "`" + `
-}
-
-type Chi_last_name struct {
-	Text string ` + "`" + `xml:",chardata" json:",omitempty"` + "`" + `
-}
-
-type Chi_firstName struct {
-	Text string ` + "`" + `xml:",chardata" json:",omitempty"` + "`" + `
-}
-` + "`" + `` + "`" + `` + "`" + `
+Note that all XMl tags are converted to Go structs. 
+However, for those that always correspond to a single element (no sub-tags & no XML attributes), like title:` + "`" + `<title>Footfall</title>` + "`" + ` this is a bit of a waste.
+It is possible to have ` + "`" + `chidley` + "`" + `collapse these into inline strings with the ` + "`" + `-F` + "`" + `flag. However, if your example XML is not canonical (i.e. it does not exhibit all uses of all XML tags), it may result in Go structs that do not capture everything that is needed.
 
 ## Name changes: XML vs. Go structs
 XML names can contain dots ` + "`" + `.` + "`" + ` and hyphens or dashes ` + "`" + `-` + "`" + `. These are not valid identifiers for Go structs or variables. These are mapped as:
 * ` + "`" + `"-": "_"` + "`" + `
 * ` + "`" + `".": "_dot_"` + "`" + `
 
-Note that the original XML name strings are used in the struct XML and JSON annotations for the element.
+
+Example:
+` + beginInline + `
+` + "`$" + `chidley -F data/test.xml` + "`" + `:
+{{.SimpleExampleXMLChidleyGoStructsCollapsed}}` + endInline + `
+
+#### Generating code to read XML` + `
+` + "`chidley`" + ` can generate Go code that will read in the XML and output a number of things, including the equivalent JSON, XML (XML to XML useful for validation), and a count total for each XML tag in the source file
+
+Generating code:
+` + beginInline + `
+$ mkdir gencode
+$ chidley -W data/test.xml> gencode/main.go
+` + endInline + `
+
+#### Usage of generated code
+` + beginInline + `
+$ cd gencode
+$ go build
+$ ./gencode
+{{.GeneratedUsage}}
+` + endInline + `
+
+##### Generated code: Convert XML to JSON ` + "`" + `-j` + "`" + beginInline + `
+$ ./test1 -j -f ../../xml/test1.xml 
+{{.GeneratedXMLToJson}}` + endInline + `
+
+##### Generated code: Convert XML to XML ` + "`" + `-x` + "`" + `
+` + beginInline + `$ ./test1 -x -f ../../xml/test1.xml 
+{{.GeneratedXMLToXML}}` + endInline + `
+
+##### Generated code: Count elements ` + "`" + `-c` + "`" + `
+XML elements (or tags) are counted in the source file (space,local) and are printed-out, unsorted
+` + beginInline + `$ gencode -c
+{{.GeneratedCountElements}}` + endInline + `
+
+**Note**: the underscore before the colon indicates there is no (or the default) namespace for the element. 
 
 ## Type example
 ` + "`" + `` + "`" + `` + "`" + `
@@ -231,33 +157,9 @@ $ ./chidley -G xml/testType.xml
 
 #### Types turned on ` + "`" + `-t` + "`" + `
 ` + "`" + `` + "`" + `` + "`" + `
-$ ./chidley -G -t xml/testType.xml
+$ ./chidley -G -t data/xml.test
 {{.SimpleExampleXMLChidleyGoStructsWithTypes}}
-$ type Chi_root struct {
-	Chi_people *Chi_people ` + "`" + `xml:" people,omitempty" json:"people,omitempty"` + "`" + `
-}
 
-type Chi_people struct {
-	Chi_person []*Chi_person ` + "`" + `xml:" person,omitempty" json:"person,omitempty"` + "`" + `
-}
-
-type Chi_person struct {
-	Chi_age *Chi_age ` + "`" + `xml:" age,omitempty" json:"age,omitempty"` + "`" + `
-	Chi_married *Chi_married ` + "`" + `xml:" married,omitempty" json:"married,omitempty"` + "`" + `
-	Chi_name *Chi_name ` + "`" + `xml:" name,omitempty" json:"name,omitempty"` + "`" + `
-}
-
-type Chi_name struct {
-	Text string ` + "`" + `xml:",chardata" json:",omitempty"` + "`" + `
-}
-
-type Chi_age struct {
-	Text int8 ` + "`" + `xml:",chardata" json:",omitempty"` + "`" + `
-}
-
-type Chi_married struct {
-	Text bool ` + "`" + `xml:",chardata" json:",omitempty"` + "`" + `
-}
 ` + "`" + `` + "`" + `` + "`" + `
 
 Notice:

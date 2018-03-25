@@ -34,6 +34,7 @@ func run(stderr, stdout, seperate bool, dir, name string, arg ...string) (string
 	if err != nil {
 		log.Println("Error running:", name, arg)
 		log.Println(err)
+		return "", "", err
 	}
 	return string(stdoutStderr), "", err
 }
