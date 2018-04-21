@@ -44,7 +44,8 @@ func (ex *Extractor) init() {
 	ex.nameSpaceTagMap = make(map[string]string)
 	ex.globalNodeMap = make(map[string]*Node)
 	ex.root = new(Node)
-	ex.root.initialize(RootName, "", "", nil)
+	//ex.root.initialize(RootName, "", "", nil)
+	ex.root.initialize("", "", "", nil)
 	ex.hasStartElements = false
 	ex.initted = true
 	ex.tokenChannel = make(chan xml.Token, 100)

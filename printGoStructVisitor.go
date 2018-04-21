@@ -34,6 +34,7 @@ func (v *PrintGoStructVisitor) init(writer io.Writer, maxDepth int, globalTagAtt
 }
 
 func (v *PrintGoStructVisitor) Visit(node *Node) bool {
+
 	v.depth += 1
 
 	if v.AlreadyVisited(node) || node.ignoredTag {
@@ -50,7 +51,7 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 }
 
 func print(v *PrintGoStructVisitor, node *Node) error {
-	if node.ignoredTag {
+	if node.ignoredTag || node.name == "" {
 		return nil
 	}
 	if flattenStrings && isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])) {
