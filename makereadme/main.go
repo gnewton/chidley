@@ -11,17 +11,18 @@ import (
 )
 
 type ReadmeInfo struct {
-	ChidleyUsage                                   string
-	GeneratedUsage                                 string
-	GeneratedXMLToJson                             string
-	GeneratedXMLToXML                              string
-	GeneratedCountElements                         string
-	ChidleyOnlyStructOutput                        string
-	SimpleExampleXMLFile                           string
-	SimpleExampleXMLChidleyGoStructs               string
-	SimpleExampleXMLChidleyGoStructsCollapsed      string
-	SimpleExampleXMLChidleyGoStructsWithTypes      string
-	PubmedXMLFileName                              string
+	ChidleyUsage                              string
+	GeneratedUsage                            string
+	GeneratedXMLToJson                        string
+	GeneratedXMLToXML                         string
+	GeneratedCountElements                    string
+	ChidleyOnlyStructOutput                   string
+	SimpleExampleXMLFile                      string
+	SimpleExampleXMLChidleyGoStructs          string
+	SimpleExampleXMLChidleyGoStructsCollapsed string
+	SimpleExampleXMLChidleyGoStructsWithTypes string
+	PubmedXMLFileName                         string
+
 	PubmedExampleXMLChidleyGoStructsWithTypes      string
 	PubmedExampleXMLChidleyGoStructsWithTypeTiming string
 	GeneratedPubmedCount                           string
@@ -44,16 +45,17 @@ func main() {
 	var tmp []byte
 
 	ri := ReadmeInfo{
-		ChidleyUsage:                                   empty,
-		GeneratedUsage:                                 empty,
-		GeneratedXMLToJson:                             empty,
-		GeneratedXMLToXML:                              empty,
-		GeneratedCountElements:                         empty,
-		ChidleyOnlyStructOutput:                        empty,
-		SimpleExampleXMLFile:                           empty,
-		SimpleExampleXMLChidleyGoStructs:               empty,
-		SimpleExampleXMLChidleyGoStructsCollapsed:      empty,
-		SimpleExampleXMLChidleyGoStructsWithTypes:      empty,
+		ChidleyUsage:                              empty,
+		GeneratedUsage:                            empty,
+		GeneratedXMLToJson:                        empty,
+		GeneratedXMLToXML:                         empty,
+		GeneratedCountElements:                    empty,
+		ChidleyOnlyStructOutput:                   empty,
+		SimpleExampleXMLFile:                      empty,
+		SimpleExampleXMLChidleyGoStructs:          empty,
+		SimpleExampleXMLChidleyGoStructsCollapsed: empty,
+		SimpleExampleXMLChidleyGoStructsWithTypes: empty,
+
 		PubmedXMLFileName:                              empty,
 		PubmedExampleXMLChidleyGoStructsWithTypes:      empty,
 		PubmedExampleXMLChidleyGoStructsWithTypeTiming: empty,
@@ -94,6 +96,44 @@ func main() {
 	}
 
 	ri.SimpleExampleXMLChidleyGoStructsWithTypes, err = runCaptureStdout("..", "./chidley", "-G", "-t", "data/test.xml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ri.PubmedXMLFileName = "xml/pubmed_xml_12750255.xml.bz2"
+	ri.PubmedExampleXMLChidleyGoStructsWithTypes, err = runCaptureStdout("..", "./chidley", "-G", "-t", ri.PubmedXMLFileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ri.PubmedExampleXMLChidleyGoStructsWithTypeTiming, err = runCaptureStderr("..", "/usr/bin/time", "-f", "\"Seconds: %E Resident size: %M\"", "./chidley", "-G", ri.PubmedXMLFileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dirName := "example1"
+	err = os.MkdirAll(dirName, 0700)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var str string
+
+	str, err = runCaptureStdout("..", "./chidley", "-W", ri.PubmedXMLFileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(dirName+"/main.go", []byte(str), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	str, err = runCaptureStdout(dirName, "bash", "-c", "go build")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ri.GeneratedPubmedCount, err = runCaptureStdout(dirName, "bash", "-c", "./"+dirName+" -c | sort -n")
 	if err != nil {
 		log.Fatal(err)
 	}
