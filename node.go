@@ -60,7 +60,7 @@ func (n *Node) renderSpaceTag() string {
 	if len(strings.TrimSpace(n.spaceTag)) == 0 {
 		return ""
 	} else {
-		return "__" + n.spaceTag
+		return capitalizeFirstLetter(n.spaceTag)
 	}
 }
 
