@@ -150,12 +150,16 @@ func makeAttributes(writer io.Writer, attributes []*FQN, nameSpaceTagMap map[str
 }
 
 func goVariableNameSanitize(s string) string {
-	s = strings.Replace(s, ":", "_colon_", -1)
-	s = strings.Replace(s, "/", "_slash_", -1)
-	s = strings.Replace(s, ".", "_dot_", -1)
-	s = strings.Replace(s, "-", "_dash_", -1)
-	s = strings.Replace(s, " ", "_space_", -1)
-	s = strings.Replace(s, "-", "_dash_", -1)
+	s = strings.Replace(s, ":", "Colon", -1)
+	s = strings.Replace(s, "/", "Slash", -1)
+	s = strings.Replace(s, ".", "Dot", -1)
+	s = strings.Replace(s, "-", "Dash", -1)
+	s = strings.Replace(s, " ", "Space", -1)
+	s = strings.Replace(s, "-", "Dash", -1)
+	// TODO: create better checks if the following words/abbreviations are really standalone, and not only substrings of another word
+	s = strings.Replace(s, "Id", "ID", -1)
+	s = strings.Replace(s, "Api", "API", -1)
+	s = strings.Replace(s, "Http", "HTTP", -1)
 
 	return s
 }
