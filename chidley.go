@@ -36,6 +36,7 @@ func init() {
 	flag.BoolVar(&url, "u", url, "Filename interpreted as an URL")
 	flag.BoolVar(&useType, "t", useType, "Use type info obtained from XML (int, bool, etc); default is to assume everything is a string; better chance at working if XMl sample is not complete")
 	flag.BoolVar(&writeJava, "J", writeJava, "Generated Java code for Java/JAXB")
+	flag.BoolVar(&writeOtira, "O", writeOtira, "Generated Go code for Otira")
 	flag.BoolVar(&xmlName, "x", xmlName, "Add XMLName (Space, Local) for each XML element, to JSON")
 	flag.BoolVar(&keepXmlFirstLetterCase, "K", keepXmlFirstLetterCase, "Do not change the case of the first letter of the XML tag names")
 	flag.BoolVar(&validateFieldTemplate, "m", validateFieldTemplate, "Validate the field template. Useful to make sure the template defined with -T is valid")
@@ -68,15 +69,16 @@ func handleParameters() error {
 
 	numBoolsSet := countNumberOfBoolsSet(outputs)
 	if numBoolsSet > 1 {
-		log.Print("  ERROR: Only one of -W -J -X -V -c can be set")
+		log.Print("  ERROR: Only one of -O -W -J -X -V -c can be set")
 	} else if numBoolsSet == 0 {
-		log.Print("  ERROR: At least one of -W -J -X -V -c must be set")
+		log.Print("  ERROR: At least one of -O -W -J -X -V -c must be set")
 	}
 	if sortByXmlOrder {
 		structSort = printStructsByXml
 	}
 
 	var err error
+
 	ignoredXmlTagsMap, err = extractExcludedTags(ignoredXmlTags)
 	if err != nil {
 		return err
@@ -174,6 +176,11 @@ func main() {
 	ex.done()
 
 	switch {
+
+	case writeOtira:
+		fmt.Println("Otira")
+		generateOtiraCode(os.Stdout, sourceNames, &ex)
+
 	case codeGenConvert:
 		generateGoCode(os.Stdout, sourceNames, &ex)
 
@@ -419,6 +426,34 @@ func printStructsByXml(v *PrintGoStructVisitor) error {
 	return nil
 }
 
+type ByDepth []*Node
+
+func (a ByDepth) Len() int           { return len(a) }
+func (a ByDepth) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByDepth) Less(i, j int) bool { return a[i].minDepth > a[j].minDepth }
+
+func printOtiraByXml(v *PrintOtiraVisitor) error {
+	nodes := make([]*Node, len(v.alreadyVisitedNodes))
+
+	i := 0
+	for k := range v.alreadyVisitedNodes {
+		nodes[i] = v.alreadyVisitedNodes[k]
+		log.Println(v.alreadyVisitedNodes[k].name)
+		log.Println(v.alreadyVisitedNodes[k].minDepth)
+		i++
+	}
+	log.Println(nodes)
+	sort.Sort(ByDepth(nodes))
+
+	for o := range nodes {
+		err := printOtira(v, nodes[o])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Alphabetical order
 func printStructsAlphabetical(v *PrintGoStructVisitor) error {
 	var keys []string
@@ -443,6 +478,21 @@ func generateGoStructs(out io.Writer, sourceName string, ex *Extractor) {
 	printGoStructVisitor.init(os.Stdout, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 	printGoStructVisitor.Visit(ex.root)
 	structSort(printGoStructVisitor)
+}
+
+func generateOtiraCode(out io.Writer, sourceNames []string, ex *Extractor) error {
+	// buf := bytes.NewBufferString("")
+	// printGoStructVisitor := new(PrintGoStructVisitor)
+	// printGoStructVisitor.init(buf, 9999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	// printGoStructVisitor.Visit(ex.root)
+
+	// fmt.Println(buf)
+
+	printOtiraVisitor := new(PrintOtiraVisitor)
+	printOtiraVisitor.init(os.Stdout, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	printOtiraVisitor.Visit(ex.root)
+	printOtiraByXml(printOtiraVisitor)
+	return nil
 }
 
 //Writes structs to a string then uses this in a template to generate Go code

@@ -14,12 +14,14 @@ type Node struct {
 	children        map[string]*Node
 	childCount      map[string]int
 	repeats         bool
+	maxNumInstances int
 	nodeTypeInfo    *NodeTypeInfo
 	hasCharData     bool
 	tempCharData    string
 	charDataCount   int64
 	discoveredOrder int
 	ignoredTag      bool
+	minDepth        int
 }
 
 type NodeVisitor interface {
@@ -41,6 +43,7 @@ func (n *Node) initialize(name string, space string, spaceTag string, parent *No
 	n.nodeTypeInfo.initialize()
 	n.hasCharData = false
 	n.ignoredTag = false
+	n.minDepth = 999999
 }
 
 func (n *Node) makeName() string {

@@ -116,7 +116,17 @@ func findType(nti *NodeTypeInfo, useType bool) string {
 type fqnSorter []*FQN
 
 func isStringOnlyField(n *Node, nattributes int) bool {
-	return (len(n.children) == 0 && nattributes == 0)
+	l := len(n.children)
+	if l == 0 {
+		return nattributes == 0
+	}
+	for child := range n.children {
+		if !n.children[child].ignoredTag {
+			return false
+		}
+	}
+	return nattributes == 0
+
 }
 
 func makeAttributes(writer io.Writer, attributes []*FQN, nameSpaceTagMap map[string]string) {

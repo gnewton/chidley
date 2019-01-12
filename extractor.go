@@ -126,12 +126,15 @@ func handleTokens(ex *Extractor) {
 			thisNode = ex.handleStartElement(element, thisNode)
 			thisNode.tempCharData = ""
 			thisNode.ignoredTag = isIgnoredTag(element.Name.Local)
+			thisNode.minDepth = depth
 
 			if first {
 				first = false
 				ex.firstNode = thisNode
 			}
+
 			depth += 1
+
 			if progress {
 				if progressCounter%50000 == 0 {
 					log.Print(progressCounter)
@@ -176,6 +179,7 @@ func handleTokens(ex *Extractor) {
 			for key, c := range thisNode.childCount {
 				if c > 1 {
 					thisNode.children[key].repeats = true
+					thisNode.children[key].maxNumInstances = c
 				}
 				thisNode.childCount[key] = 0
 			}

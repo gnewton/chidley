@@ -20,6 +20,9 @@ var ignoreLowerCaseXmlTags = false
 var ignoredXmlTags = ""
 var ignoredXmlTagsMap *map[string]struct{}
 
+var stopLevelXmlTags = ""
+var stopLevelXmlTagsMap *map[string]struct{}
+
 var ignoreXmlDecodingErrors = false
 
 var codeGenDir = "codegen"
@@ -32,6 +35,8 @@ const mavenJavaBase = "src/main/java"
 var javaBasePackagePath = strings.Replace(javaBasePackage, ".", "/", -1)
 var javaAppName = "jaxb"
 var writeJava = false
+var writeOtira = false
+
 var baseJavaDir = "java"
 var userJavaPackageName = ""
 
@@ -63,4 +68,5 @@ var outputs = []*bool{
 	&codeGenConvert,
 	&structsToStdout,
 	&writeJava,
+	&writeOtira,
 }
