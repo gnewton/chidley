@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"strconv"
 	"strings"
 )
@@ -21,6 +22,7 @@ type NodeTypeInfo struct {
 	alwaysUint32 bool
 	alwaysUint64 bool
 	maxLength    int64
+	minLength    int64
 }
 
 func (nti *NodeTypeInfo) initialize() {
@@ -39,11 +41,15 @@ func (nti *NodeTypeInfo) initialize() {
 	nti.alwaysUint32 = true
 	nti.alwaysUint64 = true
 	nti.maxLength = 0
+	nti.minLength = math.MaxInt64
 }
 
 func (n *NodeTypeInfo) addFieldLength(l int64) {
 	if n.maxLength < l {
 		n.maxLength = l
+	}
+	if n.minLength > l {
+		n.minLength = l
 	}
 }
 

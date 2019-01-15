@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"sort"
 	"strconv"
 )
@@ -75,34 +74,37 @@ func (v *PrintOtiraVisitor) Visit(node *Node) bool {
 	return true
 }
 
-func makeOtiraAttributes(writer io.Writer, attributes []*FQN, nameSpaceTagMap map[string]string) {
+func makeOtiraAttributes(writer io.Writer, tableName string, attributes []*FQN, nameSpaceTagMap map[string]string) {
 	sort.Sort(fqnSorter(attributes))
 
 	for _, fqn := range attributes {
-
-		name := fqn.name
-		nameSpace := fqn.space
-
+		// Because golang/xml does not properly handle name spaces....
+		//if fqn.space == "xmlns" || fqn.name == "xmlns" {
+		//continue
+		//}
 		fmt.Fprintln(writer, "\t ATTRIBUTES")
-		fmt.Fprintln(writer, "\t tmp:= new(FieldDefString)")
-		fmt.Fprintln(writer, "\t tmp.SetName(\""+name+"\")")
-		//fmt.Fprintln(writer, "\n"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`")
-
-		nameSpaceTag, ok := nameSpaceTagMap[nameSpace]
-		if ok && nameSpaceTag != "" {
-			nameSpaceTag = nameSpaceTag + "Space"
-		} else {
-			nameSpaceTag = nameSpace
-		}
-
-		nameSpaceTag = goVariableNameSanitize(nameSpaceTag)
-		if len(nameSpace) > 0 {
-			nameSpace = nameSpace + " "
-		}
+		// Attributes have no namespaces
+		printStringField(writer, tableName, fqn.space, fqn.name, 33)
 	}
 }
 
-func printOtira(v *PrintOtiraVisitor, node *Node) error {
+func printStringField(writer io.Writer, tableName, nameSpace, localName string, length int) {
+	var name string
+	if nameSpace == "" {
+		name = localName
+	} else {
+		name = nameSpace + "__" + localName
+	}
+	name = lowerFirstLetter(name)
+	fmt.Fprintln(writer, "\t "+name+" := new(FieldDefString)"+"  // *****************")
+	fmt.Fprintln(writer, "\t "+name+".SetName(\""+name+"\")")
+	if length > 0 {
+		fmt.Fprintln(writer, "\t "+name+".SetLength(\""+strconv.Itoa(length)+"\")")
+	}
+	fmt.Fprintln(writer, "\t "+tableName+".Add(\""+name+"\")")
+}
+
+func printOtiraNode(v *PrintOtiraVisitor, node *Node) error {
 	if node == nil {
 		return nil
 	}
@@ -124,17 +126,19 @@ func printOtira(v *PrintOtiraVisitor, node *Node) error {
 	fmt.Fprintln(v.writer, "\treturn err")
 	fmt.Fprintln(v.writer, "}")
 
+	// Start anoymous function
+	fmt.Fprintln(v.writer, "func(){")
 	fmt.Fprintln(v.writer, "START ATTRIBUTES")
-	makeOtiraAttributes(v.writer, attributes, v.nameSpaceTagMap)
+	makeOtiraAttributes(v.writer, zz, attributes, v.nameSpaceTagMap)
 
 	fmt.Fprintln(v.writer, "START INTERNAL")
-	err := v.printInternalFields(len(attributes), node)
+	err := v.printInternalFields(zz, len(attributes), node)
 	if err != nil {
 		return err
 	}
 
-	//v.lineChannel <- "}\n"
-	fmt.Fprint(v.writer, "}\n\n")
+	// END Anonymous function
+	fmt.Fprintln(v.writer, "}()")
 
 	fmt.Fprint(v.writer, "**************************\n")
 	return nil
@@ -150,7 +154,7 @@ func (v *PrintOtiraVisitor) SetAlreadyVisited(n *Node) {
 	v.alreadyVisitedNodes[nk(n)] = n
 }
 
-func (v *PrintOtiraVisitor) printInternalFields(nattributes int, n *Node) error {
+func (v *PrintOtiraVisitor) printInternalFields(tableName string, nattributes int, n *Node) error {
 	var fields []string
 
 	// Fields in this struct
@@ -170,10 +174,9 @@ func (v *PrintOtiraVisitor) printInternalFields(nattributes int, n *Node) error 
 			def.XMLName = child.name
 			def.XMLNameSpace = child.space
 			fields = append(fields, child.name+" simpleField "+strconv.FormatInt(child.nodeTypeInfo.maxLength, 10))
+			printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength))
 		} else {
 			fields = append(fields, child.name+" complexField")
-			log.Println(child.name + " complexField: ")
-			log.Println(v.globalTagAttributes[nk(child)])
 			// Field name and type are the same: i.e. Person *Person or Persons []Persons
 			nameAndType := child.makeType(namePrefix, nameSuffix)
 
@@ -183,8 +186,11 @@ func (v *PrintOtiraVisitor) printInternalFields(nattributes int, n *Node) error 
 			def.XMLNameSpace = child.space
 
 			if child.repeats {
-				def.GoTypeArrayOrPointer = "[]*"
+				fmt.Fprintln(v.writer, "\t "+child.name+":repeats "+strconv.Itoa(child.maxNumInstances))
+				printManyToMany(v.writer, n.name, child.name)
 			} else {
+				printOneToMany(v.writer, n.name, child.name)
+				fmt.Fprintln(v.writer, "\t "+child.name+":single "+strconv.Itoa(child.maxNumInstances))
 				def.GoTypeArrayOrPointer = "*"
 			}
 		}
@@ -219,4 +225,28 @@ func (v *PrintOtiraVisitor) printInternalFields(nattributes int, n *Node) error 
 		fmt.Fprintln(v.writer, fields[i])
 	}
 	return nil
+}
+
+func printManyToMany(w io.Writer, left, right string) {
+	l := lowerFirstLetter(left)
+	r := lowerFirstLetter(right)
+	fmt.Fprintln(w, "m2m := NewManyToMany()")
+	fmt.Fprintln(w, "m2m.leftTable = "+l+"Table")
+	fmt.Fprintln(w, "m2m.rightTable = "+r+"Table")
+	fmt.Fprintln(w, l+"Table.AddManyToMany(m2m)")
+}
+
+func printOneToMany(w io.Writer, left, right string) {
+	l := lowerFirstLetter(left)
+	r := lowerFirstLetter(right)
+	fmt.Fprintln(w, "one2m := NewOneToMany()")
+	fmt.Fprintln(w, "one2m.leftTable = "+l+"Table")
+	fmt.Fprintln(w, "one2m.rightTable = "+r+"Table")
+	fmt.Fprintln(w, "leftField := new(FieldDefUint64)")
+	fmt.Fprintln(w, "leftField.SetName(\""+r+"\")")
+	fmt.Fprintln(w, l+"Table.Add(leftField)")
+
+	fmt.Fprintln(w, "one2m.leftKeyField = leftField")
+	fmt.Fprintln(w, "one2m.rightKeyField = "+r+"Table.PrimaryKey()")
+	fmt.Fprintln(w, l+"Table.AddOneToMany(one2m)")
 }

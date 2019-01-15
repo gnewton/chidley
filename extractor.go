@@ -179,7 +179,10 @@ func handleTokens(ex *Extractor) {
 			for key, c := range thisNode.childCount {
 				if c > 1 {
 					thisNode.children[key].repeats = true
-					thisNode.children[key].maxNumInstances = c
+					nowMax := thisNode.children[key].maxNumInstances
+					if c > nowMax {
+						thisNode.children[key].maxNumInstances = c
+					}
 				}
 				thisNode.childCount[key] = 0
 			}

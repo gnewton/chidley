@@ -446,7 +446,7 @@ func printOtiraByXml(v *PrintOtiraVisitor) error {
 	sort.Sort(ByDepth(nodes))
 
 	for o := range nodes {
-		err := printOtira(v, nodes[o])
+		err := printOtiraNode(v, nodes[o])
 		if err != nil {
 			return err
 		}
