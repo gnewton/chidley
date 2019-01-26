@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"sort"
 	"strconv"
+	"text/template"
 )
 
 const OFloat = "FieldDefFloat"
@@ -74,73 +76,111 @@ func (v *PrintOtiraVisitor) Visit(node *Node) bool {
 	return true
 }
 
-func makeOtiraAttributes(writer io.Writer, tableName string, attributes []*FQN, nameSpaceTagMap map[string]string) {
+func makeOtiraAttributes(writer io.Writer, tableName string, attributes []*FQN, nameSpaceTagMap map[string]string, fieldCounter *int, template *template.Template, namePrefix string) {
 	sort.Sort(fqnSorter(attributes))
 
 	for _, fqn := range attributes {
-		// Because golang/xml does not properly handle name spaces....
-		//if fqn.space == "xmlns" || fqn.name == "xmlns" {
-		//continue
-		//}
-		fmt.Fprintln(writer, "\t ATTRIBUTES")
-		// Attributes have no namespaces
-		printStringField(writer, tableName, fqn.space, fqn.name, 33)
+		fmt.Fprintln(writer, "\t// Attribute")
+		printStringField(writer, tableName, fqn.space, fqn.name, 33, fieldCounter, template, namePrefix, "Attribute")
 	}
+
 }
 
-func printStringField(writer io.Writer, tableName, nameSpace, localName string, length int) {
+type TStringField struct {
+	FieldVariableName, FieldName, TableVariableName string
+	FieldLength                                     int
+	Comment                                         string
+}
+
+func printStringField(writer io.Writer, tableName, nameSpace, localName string, length int, fieldCounter *int, template *template.Template, namePrefix string, comment string) {
 	var name string
 	if nameSpace == "" {
 		name = localName
 	} else {
 		name = nameSpace + "__" + localName
 	}
-	name = lowerFirstLetter(name)
-	fmt.Fprintln(writer, "\t "+name+" := new(FieldDefString)"+"  // *****************")
-	fmt.Fprintln(writer, "\t "+name+".SetName(\""+name+"\")")
-	if length > 0 {
-		fmt.Fprintln(writer, "\t "+name+".SetLength(\""+strconv.Itoa(length)+"\")")
+	//name =
+	if namePrefix != "" {
+		namePrefix = namePrefix + "_"
 	}
-	fmt.Fprintln(writer, "\t "+tableName+".Add(\""+name+"\")")
+	name = namePrefix + name
+	sqlName := sqlizeString(name)
+
+	name = "v" + name + strconv.Itoa(*fieldCounter)
+	*fieldCounter = *fieldCounter + 1
+
+	data := TStringField{name, sqlName, tableName, length, comment}
+
+	err := template.Execute(writer, data)
+	if err != nil {
+		log.Fatal("executing template:", err)
+	}
 }
 
-func printOtiraNode(v *PrintOtiraVisitor, node *Node) error {
+func printOtiraTables(v *PrintOtiraVisitor, node *Node, fieldCounter *int, template *template.Template, collapsedXmlTagsList []string) error {
 	if node == nil {
 		return nil
 	}
 	if node.ignoredTag || node.name == "" {
 		return nil
 	}
+
 	if flattenStrings && isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])) {
-		//v.lineChannel <- "//type " + node.makeType(namePrefix, nameSuffix)
 		return nil
 	}
 
-	attributes := v.globalTagAttributes[nk(node)]
-	//v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
-	//fmt.Fprintln(v.writer, "type "+node.makeType(namePrefix, nameSuffix)+" struct {")
+	if contains(collapsedXmlTagsList, node.name) {
+		return nil
+	}
 
 	zz := lowerFirstLetter(node.makeType("", nameSuffix))
-	fmt.Fprintln(v.writer, zz+"Table, err := NewTable(\""+zz+"\")"+"//  minDepth="+strconv.Itoa(node.minDepth))
-	fmt.Fprintln(v.writer, "if err != nil{")
-	fmt.Fprintln(v.writer, "\treturn err")
-	fmt.Fprintln(v.writer, "}")
+	if zz == "" {
+		return nil
+	}
+
+	tableName := zz + "Table"
+
+	fmt.Fprintln(v.writer, "\n\t// Table "+tableName)
+	fmt.Fprintln(v.writer, "\t//")
+	fmt.Fprintln(v.writer, "\t"+tableName+", err := otira.NewTableDef(\""+sqlizeString(zz)+"\")")
+	fmt.Fprintln(v.writer, "\tif err != nil{")
+	fmt.Fprintln(v.writer, "\t\treturn")
+	fmt.Fprintln(v.writer, "\t}")
+
+	makePrimaryKey(v.writer, zz)
 
 	// Start anoymous function
-	fmt.Fprintln(v.writer, "func(){")
-	fmt.Fprintln(v.writer, "START ATTRIBUTES")
-	makeOtiraAttributes(v.writer, zz, attributes, v.nameSpaceTagMap)
+	attributes := v.globalTagAttributes[nk(node)]
+	makeOtiraAttributes(v.writer, zz, attributes, v.nameSpaceTagMap, fieldCounter, template, "")
 
-	fmt.Fprintln(v.writer, "START INTERNAL")
-	err := v.printInternalFields(zz, len(attributes), node)
+	if node.hasCharData {
+		printStringField(v.writer, tableName, node.space, zz, int(node.nodeTypeInfo.maxLength), fieldCounter, template, "", "CharContent")
+	}
+	err := v.printInternalFields(zz, len(attributes), node, fieldCounter, template)
 	if err != nil {
 		return err
 	}
 
-	// END Anonymous function
-	fmt.Fprintln(v.writer, "}()")
+	return nil
+}
 
-	fmt.Fprint(v.writer, "**************************\n")
+func makePrimaryKey(w io.Writer, tablename string) {
+	printUint64Field(w, tablename)
+}
+
+func printUint64Field(w io.Writer, tablename string) {
+	fmt.Fprintln(w, "pk = new(otira.FieldDefUint64)")
+	fmt.Fprintln(w, "pk.SetName(\"id\")")
+	fmt.Fprintln(w, tablename+"Table.Add(pk)")
+}
+
+func printOtiraRelations(v *PrintOtiraVisitor, node *Node, one2mT, m2mT *template.Template, collapsedXmlTagsList []string) error {
+	zz := lowerFirstLetter(node.makeType("", nameSuffix))
+
+	err := v.printInternalRelationFields(zz, node, one2mT, m2mT, collapsedXmlTagsList)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -154,8 +194,38 @@ func (v *PrintOtiraVisitor) SetAlreadyVisited(n *Node) {
 	v.alreadyVisitedNodes[nk(n)] = n
 }
 
-func (v *PrintOtiraVisitor) printInternalFields(tableName string, nattributes int, n *Node) error {
-	var fields []string
+func (v *PrintOtiraVisitor) printInternalRelationFields(tableName string, n *Node, one2mT, m2mT *template.Template, collapsedXmlTagsList []string) error {
+	if n.name == "" {
+		return nil
+	}
+	m2mCounter, one2mCounter := 0, 0
+	// Fields in this struct
+	for i, _ := range n.children {
+
+		child := n.children[i]
+		if child.ignoredTag || contains(collapsedXmlTagsList, child.name) {
+			continue
+		}
+
+		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
+
+		} else {
+			fmt.Fprintln(v.writer, "\t//"+child.name+" complexField")
+			if child.repeats {
+				fmt.Fprintln(v.writer, "\t//"+child.name+":repeats "+strconv.Itoa(child.maxNumInstances))
+				printManyToMany(v.writer, n.name, child.name, m2mCounter, m2mT)
+				m2mCounter += 1
+			} else {
+				printOneToMany(v.writer, n.name, child.name, one2mCounter, one2mT)
+				fmt.Fprintln(v.writer, "\t //"+child.name+":single "+strconv.Itoa(child.maxNumInstances))
+				one2mCounter += 1
+			}
+		}
+	}
+	return nil
+}
+
+func (v *PrintOtiraVisitor) printInternalFields(tableName string, nattributes int, n *Node, fieldCounter *int, template *template.Template) error {
 
 	// Fields in this struct
 	for i, _ := range n.children {
@@ -164,89 +234,67 @@ func (v *PrintOtiraVisitor) printInternalFields(tableName string, nattributes in
 		if child.ignoredTag {
 			continue
 		}
-		fields = append(fields, "\n INTERNAL----- "+child.name+"   maxNumInstances: "+strconv.Itoa(child.maxNumInstances)+" :"+findOtiraType(child.nodeTypeInfo, useType))
 
-		var def FieldDef
-		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-			def.GoName = child.makeType(namePrefix, nameSuffix)
+		// Collapsed tags
+		if contains(collapsedXmlTagsList, child.name) {
+			fmt.Fprintln(v.writer, "\t //Collapsed Field")
 
-			def.GoType = findType(child.nodeTypeInfo, useType)
-			def.XMLName = child.name
-			def.XMLNameSpace = child.space
-			fields = append(fields, child.name+" simpleField "+strconv.FormatInt(child.nodeTypeInfo.maxLength, 10))
-			printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength))
+			printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength), fieldCounter, template, "", "Collapsed field")
+			v.printInternalFields(tableName, nattributes, child, fieldCounter, template)
+			attributes := v.globalTagAttributes[nk(child)]
+			zz := lowerFirstLetter(child.makeType("", nameSuffix))
+			if zz == "" {
+				return nil
+			}
+
+			makeOtiraAttributes(v.writer, tableName, attributes, v.nameSpaceTagMap, fieldCounter, template, child.name)
 		} else {
-			fields = append(fields, child.name+" complexField")
-			// Field name and type are the same: i.e. Person *Person or Persons []Persons
-			nameAndType := child.makeType(namePrefix, nameSuffix)
-
-			def.GoName = nameAndType
-			def.GoType = nameAndType
-			def.XMLName = child.name
-			def.XMLNameSpace = child.space
-
-			if child.repeats {
-				fmt.Fprintln(v.writer, "\t "+child.name+":repeats "+strconv.Itoa(child.maxNumInstances))
-				printManyToMany(v.writer, n.name, child.name)
-			} else {
-				printOneToMany(v.writer, n.name, child.name)
-				fmt.Fprintln(v.writer, "\t "+child.name+":single "+strconv.Itoa(child.maxNumInstances))
-				def.GoTypeArrayOrPointer = "*"
+			if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
+				printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength), fieldCounter, template, "", "DOES THIS HAPPEN")
 			}
 		}
-		if flattenStrings {
-			def.Length = child.nodeTypeInfo.maxLength
-		}
-		fieldDefString, err := render(def)
-		if err != nil {
-			return err
-		}
-		fields = append(fields, fieldDefString)
-	}
-
-	// Is this chardata Field (string)
-	if n.hasCharData {
-		thisType := findType(n.nodeTypeInfo, useType)
-		thisVariableName := findFieldNameFromTypeInfo(thisType)
-
-		if flattenStrings {
-			//charField += "// maxLength=" + strconv.FormatInt(n.nodeTypeInfo.maxLength, 10)
-			if len(n.children) == 0 && nattributes == 0 {
-				//charField += "// *******************"
-			}
-		}
-		fields = append(fields, "===== "+thisVariableName)
-
-	}
-
-	sort.Strings(fields)
-	for i := 0; i < len(fields); i++ {
-		//v.lineChannel <- fields[i]
-		fmt.Fprintln(v.writer, fields[i])
 	}
 	return nil
 }
 
-func printManyToMany(w io.Writer, left, right string) {
+func printManyToMany(w io.Writer, left, right string, counter int, m2mT *template.Template) {
 	l := lowerFirstLetter(left)
 	r := lowerFirstLetter(right)
-	fmt.Fprintln(w, "m2m := NewManyToMany()")
-	fmt.Fprintln(w, "m2m.leftTable = "+l+"Table")
-	fmt.Fprintln(w, "m2m.rightTable = "+r+"Table")
-	fmt.Fprintln(w, l+"Table.AddManyToMany(m2m)")
+
+	//t := template.Must(template.New(many2manyTemplateName).Parse(many2manyTemplate))
+	data := TRelations{r, l, "", counter}
+	err := m2mT.Execute(w, data)
+	if err != nil {
+		log.Fatal("executing template:", err)
+	}
+
 }
 
-func printOneToMany(w io.Writer, left, right string) {
+type TRelations struct {
+	Right, Left, RightSql string
+	Counter               int
+}
+
+func printOneToMany(w io.Writer, left, right string, counter int, one2mT *template.Template) {
 	l := lowerFirstLetter(left)
 	r := lowerFirstLetter(right)
-	fmt.Fprintln(w, "one2m := NewOneToMany()")
-	fmt.Fprintln(w, "one2m.leftTable = "+l+"Table")
-	fmt.Fprintln(w, "one2m.rightTable = "+r+"Table")
-	fmt.Fprintln(w, "leftField := new(FieldDefUint64)")
-	fmt.Fprintln(w, "leftField.SetName(\""+r+"\")")
-	fmt.Fprintln(w, l+"Table.Add(leftField)")
 
-	fmt.Fprintln(w, "one2m.leftKeyField = leftField")
-	fmt.Fprintln(w, "one2m.rightKeyField = "+r+"Table.PrimaryKey()")
-	fmt.Fprintln(w, l+"Table.AddOneToMany(one2m)")
+	//t := template.Must(template.New(one2manyTemplateName).Parse(one2manyTemplate))
+	data := TRelations{r, l, sqlizeString(right), counter}
+	err := one2mT.Execute(w, data)
+	if err != nil {
+		log.Fatal("executing template:", err)
+	}
+}
+
+func printRelation(w io.Writer, left, right string, counter int, template *template.Template) {
+	l := lowerFirstLetter(left)
+	r := lowerFirstLetter(right)
+
+	data := TRelations{r, l, "", counter}
+	err := template.Execute(w, data)
+	if err != nil {
+		log.Fatal("executing template:", err)
+	}
+
 }

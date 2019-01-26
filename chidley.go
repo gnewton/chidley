@@ -55,6 +55,7 @@ func init() {
 	flag.StringVar(&userJavaPackageName, "P", userJavaPackageName, "Java package name (rightmost in full package name")
 
 	flag.StringVar(&ignoredXmlTags, "h", ignoredXmlTags, "List of XML tags to ignore; comma separated")
+	flag.StringVar(&collapsedXmlTags, "Y", collapsedXmlTags, "Collapse down one level these tags. I.e. <PMID Version=\"1\">30516271</PMID> becomes fields pmid_version, pmid")
 
 	flag.Int64Var(&lengthTagPadding, "Z", lengthTagPadding, "The padding on the max length tag attribute")
 
@@ -83,6 +84,13 @@ func handleParameters() error {
 	if err != nil {
 		return err
 	}
+
+	collapsedXmlTagsList, err = extractCollapsedTags(collapsedXmlTags)
+	if err != nil {
+		return err
+	}
+
+	log.Println(collapsedXmlTagsList)
 
 	if lengthTagName == "" && lengthTagAttribute == "" || lengthTagName != "" && lengthTagAttribute != "" {
 		return nil
@@ -432,21 +440,30 @@ func (a ByDepth) Len() int           { return len(a) }
 func (a ByDepth) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByDepth) Less(i, j int) bool { return a[i].minDepth > a[j].minDepth }
 
-func printOtiraByXml(v *PrintOtiraVisitor) error {
+func printOtiraByDepth(v *PrintOtiraVisitor) error {
 	nodes := make([]*Node, len(v.alreadyVisitedNodes))
 
 	i := 0
 	for k := range v.alreadyVisitedNodes {
 		nodes[i] = v.alreadyVisitedNodes[k]
-		log.Println(v.alreadyVisitedNodes[k].name)
-		log.Println(v.alreadyVisitedNodes[k].minDepth)
 		i++
 	}
-	log.Println(nodes)
 	sort.Sort(ByDepth(nodes))
 
+	one2mT := template.Must(template.New(one2manyTemplateName).Parse(one2manyTemplate))
+	m2mT := template.Must(template.New(many2manyTemplateName).Parse(many2manyTemplate))
+	stringFieldT := template.Must(template.New(stringFieldTemplateName).Parse(stringFieldTemplate))
+
+	fieldCounter := 0
 	for o := range nodes {
-		err := printOtiraNode(v, nodes[o])
+		err := printOtiraTables(v, nodes[o], &fieldCounter, stringFieldT, collapsedXmlTagsList)
+		if err != nil {
+			return err
+		}
+	}
+
+	for o := range nodes {
+		err := printOtiraRelations(v, nodes[o], one2mT, m2mT, collapsedXmlTagsList)
 		if err != nil {
 			return err
 		}
@@ -491,7 +508,7 @@ func generateOtiraCode(out io.Writer, sourceNames []string, ex *Extractor) error
 	printOtiraVisitor := new(PrintOtiraVisitor)
 	printOtiraVisitor.init(os.Stdout, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 	printOtiraVisitor.Visit(ex.root)
-	printOtiraByXml(printOtiraVisitor)
+	printOtiraByDepth(printOtiraVisitor)
 	return nil
 }
 

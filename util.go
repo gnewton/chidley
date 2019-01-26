@@ -10,9 +10,9 @@ import (
 	"log"
 	"os"
 	"sort"
+	"unicode"
 	//"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/xi2/xz"
 )
@@ -304,6 +304,25 @@ func extractExcludedTags(tagsString string) (*map[string]struct{}, error) {
 	return &ignoredMap, nil
 }
 
+func extractCollapsedTags(tagsString string) ([]string, error) {
+	collapsedList := make([]string, 0)
+	if tagsString == "" {
+		return collapsedList, nil
+	}
+
+	tags := strings.Split(tagsString, ",")
+
+	for i, _ := range tags {
+		tag := strings.TrimSpace(tags[i])
+		if containsUnicodeSpace(tag) {
+			return nil, errors.New("Excluded tag contains space: [" + tag + "] in list of excluded tags:" + tagsString + "]")
+		}
+		collapsedList = append(collapsedList, tag)
+
+	}
+	return collapsedList, nil
+}
+
 func findFieldNameFromTypeInfo(t string) string {
 	switch t {
 	case IntType, Int8Type, Int16Type, Int32Type, Int64Type, Float32Type, Float64Type:
@@ -313,4 +332,28 @@ func findFieldNameFromTypeInfo(t string) string {
 	}
 	return "string"
 
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func sqlizeString(s string) string {
+	var sb strings.Builder
+	prev := 'M'
+	for pos, char := range s {
+		if pos > 0 && unicode.IsUpper(char) && !unicode.IsUpper(prev) {
+			if string(char) != "_" && string(prev) != "_" {
+				sb.WriteString("_")
+			}
+		}
+		sb.WriteRune(unicode.ToLower(char))
+		prev = char
+	}
+	return sb.String()
 }

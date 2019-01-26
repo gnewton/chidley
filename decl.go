@@ -19,6 +19,8 @@ var validateFieldTemplate = false
 var ignoreLowerCaseXmlTags = false
 var ignoredXmlTags = ""
 var ignoredXmlTagsMap *map[string]struct{}
+var collapsedXmlTags = ""
+var collapsedXmlTagsList []string
 
 var stopLevelXmlTags = ""
 var stopLevelXmlTagsMap *map[string]struct{}
