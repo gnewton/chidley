@@ -57,7 +57,7 @@ func init() {
 	flag.StringVar(&ignoredXmlTags, "h", ignoredXmlTags, "List of XML tags to ignore; comma separated")
 	flag.StringVar(&collapsedXmlTags, "Y", collapsedXmlTags, "Collapse down one level these tags. I.e. <PMID Version=\"1\">30516271</PMID> becomes fields pmid_version, pmid")
 
-	flag.Int64Var(&lengthTagPadding, "Z", lengthTagPadding, "The padding on the max length tag attribute")
+	flag.StringVar(&noDeeperThanTags, "H", noDeeperThanTags, "List of tags bekow which no tags are followed")
 
 }
 
@@ -90,7 +90,13 @@ func handleParameters() error {
 		return err
 	}
 
+	noDeeperThanTagsMap, err := extractCollapsedTags(noDeeperThanTags)
+	if err != nil {
+		return err
+	}
+
 	log.Println(collapsedXmlTagsList)
+	log.Println(noDeeperThanTagsMap)
 
 	if lengthTagName == "" && lengthTagAttribute == "" || lengthTagName != "" && lengthTagAttribute != "" {
 		return nil
@@ -505,10 +511,19 @@ func generateOtiraCode(out io.Writer, sourceNames []string, ex *Extractor) error
 
 	// fmt.Println(buf)
 
-	printOtiraVisitor := new(PrintOtiraVisitor)
-	printOtiraVisitor.init(os.Stdout, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	//printOtiraVisitor := new(PrintOtiraVisitor)
+	printOtiraVisitor := new(GenericVisitor)
+	//printOtiraVisitor.init(os.Stdout, 999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
+	printOtiraVisitor.init(999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 	printOtiraVisitor.Visit(ex.root)
-	printOtiraByDepth(printOtiraVisitor)
+	//printOtiraByDepth(printOtiraVisitor)
+	for i, _ := range printOtiraVisitor.nodeInfoList {
+		ni := printOtiraVisitor.nodeInfoList[i]
+		log.Printf("%+v\n", ni)
+		for j, _ := range ni.SubElements {
+			log.Printf("\t\t%+v\n", ni.SubElements[j])
+		}
+	}
 	return nil
 }
 

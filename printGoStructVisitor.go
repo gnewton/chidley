@@ -43,6 +43,7 @@ func (v *PrintGoStructVisitor) Visit(node *Node) bool {
 	}
 	v.SetAlreadyVisited(node)
 
+	// This needs to be sorted TODO
 	for _, child := range node.children {
 		v.Visit(child)
 	}
@@ -62,8 +63,6 @@ func print(v *PrintGoStructVisitor, node *Node) error {
 	attributes := v.globalTagAttributes[nk(node)]
 	//v.lineChannel <- "type " + node.makeType(namePrefix, nameSuffix) + " struct {"
 	fmt.Fprintln(v.writer, "type "+node.makeType(namePrefix, nameSuffix)+" struct {")
-
-	//	fmt.Fprintln(v.writer, "\tXMLName xml.Name`"+makeXmlAnnotation(node.space, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
 
 	fmt.Fprintln(v.writer, "\tXMLName xml.Name `"+makeAnnotation("xml", node.space, false, false, node.name)+" "+makeJsonAnnotation(node.spaceTag, false, node.name)+"`")
 
@@ -94,6 +93,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 	var fields []string
 
 	// Fields in this struct
+	// This needs to be sorted TODO
 	for i, _ := range n.children {
 		child := n.children[i]
 		if child.ignoredTag {
@@ -101,9 +101,7 @@ func (v *PrintGoStructVisitor) printInternalFields(nattributes int, n *Node) err
 		}
 		var def FieldDef
 		if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-			//field = "\t" + child.spaceTag + child.makeType(namePrefix, nameSuffix) + " string `" + makeXmlAnnotation(child.space, false, child.name) + "`" //+ "   // ********* " + lengthTagName + ":\"" + lengthTagAttribute + lengthTagSeparator + strconv.FormatInt(child.nodeTypeInfo.maxLength+lengthTagPadding, 10) + "\""
 			def.GoName = child.makeType(namePrefix, nameSuffix)
-			//def.GoType = "string"
 			def.GoType = findType(child.nodeTypeInfo, useType)
 			def.XMLName = child.name
 			def.XMLNameSpace = child.space

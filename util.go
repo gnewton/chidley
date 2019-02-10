@@ -153,10 +153,12 @@ func makeAttributes(writer io.Writer, attributes []*FQN, nameSpaceTagMap map[str
 		variableName := goVariableNameSanitize(attributePrefix + capitalizeFirstLetter(nameSpaceTag) + cleanName(name))
 		variableType := "string"
 
-		//lineChannel <- "\t" + variableName + " " + variableType + "`xml:\"" + nameSpace + name + ",attr\"  json:\",omitempty\"`" + "  // maxLength=" + strconv.Itoa(fqn.maxLength)
-		//fmt.Fprintln(writer, "\t"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`"+"  // maxLength="+strconv.Itoa(fqn.maxLength))
 		fmt.Fprintln(writer, "\t"+variableName+" "+variableType+"`xml:\""+nameSpace+name+",attr\"  json:\",omitempty\"`")
 	}
+}
+
+func makeGoTypeName(namePrefix, nameSuffix string) string {
+	return ""
 }
 
 func goVariableNameSanitize(s string) string {
@@ -330,7 +332,7 @@ func findFieldNameFromTypeInfo(t string) string {
 	case BoolType:
 		return cdataBooleanName
 	}
-	return "string"
+	return "String"
 
 }
 
@@ -356,4 +358,29 @@ func sqlizeString(s string) string {
 		prev = char
 	}
 	return sb.String()
+}
+
+func sortNodes(nodes map[string]*Node) NodeList {
+	pl := make(NodeList, len(nodes))
+	i := 0
+	for _, v := range nodes {
+		pl[i] = v
+		i++
+	}
+	sort.Sort(pl)
+	return pl
+}
+
+type NodeList []*Node
+
+func (n NodeList) Len() int           { return len(n) }
+func (n NodeList) Less(i, j int) bool { return n[i].name < n[j].name }
+func (n NodeList) Swap(i, j int)      { n[i], n[j] = n[j], n[i] }
+
+func fqnNames(fqns []*FQN) []string {
+	names := make([]string, len(fqns))
+	for i, _ := range fqns {
+		names[i] = fqns[i].name
+	}
+	return names
 }

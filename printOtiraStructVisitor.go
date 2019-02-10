@@ -69,21 +69,26 @@ func (v *PrintOtiraVisitor) Visit(node *Node) bool {
 	}
 	v.SetAlreadyVisited(node)
 
-	for _, child := range node.children {
-		v.Visit(child)
+	// This needs to be sorted first TODO
+	sortedChildren := sortNodes(node.children)
+	//for _, child := range node.children {
+	for i, _ := range sortedChildren {
+		v.Visit(sortedChildren[i])
 	}
 	v.depth += 1
 	return true
 }
 
-func makeOtiraAttributes(writer io.Writer, tableName string, attributes []*FQN, nameSpaceTagMap map[string]string, fieldCounter *int, template *template.Template, namePrefix string) {
-	sort.Sort(fqnSorter(attributes))
+func makeOtiraAttributes(writer io.Writer, tableName string, attributes []*FQN, nameSpaceTagMap map[string]string, fieldCounter *int, template *template.Template, namePrefix string) string {
 
+	chidleyStructToOtira := ""
+	sort.Sort(fqnSorter(attributes))
 	for _, fqn := range attributes {
-		fmt.Fprintln(writer, "\t// Attribute")
 		printStringField(writer, tableName, fqn.space, fqn.name, 33, fieldCounter, template, namePrefix, "Attribute")
+		chidleyStructToOtira += "\n\t// att: " + fqn.name
 	}
 
+	return chidleyStructToOtira
 }
 
 type TStringField struct {
@@ -93,23 +98,24 @@ type TStringField struct {
 }
 
 func printStringField(writer io.Writer, tableName, nameSpace, localName string, length int, fieldCounter *int, template *template.Template, namePrefix string, comment string) {
-	var name string
+	var baseName string
 	if nameSpace == "" {
-		name = localName
+		baseName = localName
 	} else {
-		name = nameSpace + "__" + localName
+		baseName = nameSpace + "__" + localName
 	}
 	//name =
 	if namePrefix != "" {
 		namePrefix = namePrefix + "_"
 	}
-	name = namePrefix + name
-	sqlName := sqlizeString(name)
+	baseName = namePrefix + baseName
+	sqlName := sqlizeString(baseName)
 
-	name = "v" + name + strconv.Itoa(*fieldCounter)
+	var fieldVariableName string
+	fieldVariableName = "v" + baseName + strconv.Itoa(*fieldCounter)
 	*fieldCounter = *fieldCounter + 1
 
-	data := TStringField{name, sqlName, tableName, length, comment}
+	data := TStringField{fieldVariableName, sqlName, tableName, length, comment}
 
 	err := template.Execute(writer, data)
 	if err != nil {
@@ -151,16 +157,22 @@ func printOtiraTables(v *PrintOtiraVisitor, node *Node, fieldCounter *int, templ
 
 	// Start anoymous function
 	attributes := v.globalTagAttributes[nk(node)]
-	makeOtiraAttributes(v.writer, zz, attributes, v.nameSpaceTagMap, fieldCounter, template, "")
+	chidleyStructToOtira := makeOtiraAttributes(v.writer, zz, attributes, v.nameSpaceTagMap, fieldCounter, template, "")
 
 	if node.hasCharData {
-		printStringField(v.writer, tableName, node.space, zz, int(node.nodeTypeInfo.maxLength), fieldCounter, template, "", "CharContent")
+		printStringField(v.writer, zz, node.space, zz, int(node.nodeTypeInfo.maxLength), fieldCounter, template, "", "CharContent")
+		chidleyStructToOtira += "\n\t// char content:  " + zz
+
 	}
-	err := v.printInternalFields(zz, len(attributes), node, fieldCounter, template)
+	tmpChidleyStructToOtira, err := v.printInternalFields(zz, len(attributes), node, fieldCounter, template, "")
 	if err != nil {
 		return err
 	}
 
+	chidleyStructToOtira += tmpChidleyStructToOtira
+
+	fmt.Println("//CCCCC chidleyStructToOtira")
+	fmt.Println(chidleyStructToOtira)
 	return nil
 }
 
@@ -169,9 +181,10 @@ func makePrimaryKey(w io.Writer, tablename string) {
 }
 
 func printUint64Field(w io.Writer, tablename string) {
-	fmt.Fprintln(w, "pk = new(otira.FieldDefUint64)")
-	fmt.Fprintln(w, "pk.SetName(\"id\")")
-	fmt.Fprintln(w, tablename+"Table.Add(pk)")
+	fmt.Fprintln(w, "\t//Primary Key")
+	fmt.Fprintln(w, "\tpk = new(otira.FieldDefUint64)")
+	fmt.Fprintln(w, "\tpk.SetName(\"id\")")
+	fmt.Fprintln(w, "\t"+tablename+"Table.Add(pk)")
 }
 
 func printOtiraRelations(v *PrintOtiraVisitor, node *Node, one2mT, m2mT *template.Template, collapsedXmlTagsList []string) error {
@@ -200,9 +213,12 @@ func (v *PrintOtiraVisitor) printInternalRelationFields(tableName string, n *Nod
 	}
 	m2mCounter, one2mCounter := 0, 0
 	// Fields in this struct
-	for i, _ := range n.children {
+	// This needs to be sorted TODO
+	sortedChildren := sortNodes(n.children)
+	for i, _ := range sortedChildren {
+		//for i, _ := range n.children {
 
-		child := n.children[i]
+		child := sortedChildren[i]
 		if child.ignoredTag || contains(collapsedXmlTagsList, child.name) {
 			continue
 		}
@@ -225,36 +241,56 @@ func (v *PrintOtiraVisitor) printInternalRelationFields(tableName string, n *Nod
 	return nil
 }
 
-func (v *PrintOtiraVisitor) printInternalFields(tableName string, nattributes int, n *Node, fieldCounter *int, template *template.Template) error {
-
+func (v *PrintOtiraVisitor) printInternalFields(tableName string, nattributes int, n *Node, fieldCounter *int, template *template.Template, collapsedFieldPrefix string) (string, error) {
+	var chidleyStructToOtira = ""
 	// Fields in this struct
-	for i, _ := range n.children {
+	// This needs to be sorted first TODO
+	sortedChildren := sortNodes(n.children)
+	for i, _ := range sortedChildren {
+		//for i, _ := range n.children {
 
-		child := n.children[i]
+		//child := n.children[i]
+		child := sortedChildren[i]
 		if child.ignoredTag {
 			continue
 		}
 
 		// Collapsed tags
 		if contains(collapsedXmlTagsList, child.name) {
-			fmt.Fprintln(v.writer, "\t //Collapsed Field")
+			fmt.Fprintln(v.writer, "\t //Collapsed Field: "+child.name)
 
-			printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength), fieldCounter, template, "", "Collapsed field")
-			v.printInternalFields(tableName, nattributes, child, fieldCounter, template)
+			//printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength), fieldCounter, template, "", "Collapsed field")
+			chidleyStructToOtira += "\n\t CCC: collapsed: " + child.name
+			tmp, err := v.printInternalFields(tableName, nattributes, child, fieldCounter, template, collapsedFieldPrefix)
+			if err != nil {
+				return "", err
+			}
+
+			chidleyStructToOtira += "\n\t CCC: collapsed children: " + tmp
 			attributes := v.globalTagAttributes[nk(child)]
 			zz := lowerFirstLetter(child.makeType("", nameSuffix))
 			if zz == "" {
-				return nil
+				return "", nil
 			}
 
-			makeOtiraAttributes(v.writer, tableName, attributes, v.nameSpaceTagMap, fieldCounter, template, child.name)
+			if collapsedFieldPrefix != "" {
+				zz = collapsedFieldPrefix + "_" + zz
+			}
+
+			tmp = makeOtiraAttributes(v.writer, tableName, attributes, v.nameSpaceTagMap, fieldCounter, template, child.name)
+			chidleyStructToOtira += "\n\t CCC2: " + tmp
 		} else {
 			if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-				printStringField(v.writer, tableName, child.space, child.name, int(child.nodeTypeInfo.maxLength), fieldCounter, template, "", "DOES THIS HAPPEN")
+				fieldName := child.name
+				if collapsedFieldPrefix != "" {
+					fieldName = collapsedFieldPrefix + "_" + fieldName
+				}
+				printStringField(v.writer, tableName, child.space, fieldName, int(child.nodeTypeInfo.maxLength), fieldCounter, template, collapsedFieldPrefix, "")
+				chidleyStructToOtira += "\n\t natural flattened: " + child.name + " fieldName:" + fieldName
 			}
 		}
 	}
-	return nil
+	return chidleyStructToOtira, nil
 }
 
 func printManyToMany(w io.Writer, left, right string, counter int, m2mT *template.Template) {

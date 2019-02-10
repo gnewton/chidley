@@ -147,11 +147,11 @@ func handleTokens(ex *Extractor) {
 				//log.Printf("CharData: [%+v]\n", string(element))
 			}
 
-			//if !thisNode.hasCharData {
-			charData := string(element)
-			thisNode.tempCharData += charData //strings.TrimSpace(charData)
-			thisNode.charDataCount += int64(len(charData))
-		//}
+			if thisNode.hasCharData {
+				charData := string(element)
+				thisNode.tempCharData += charData //strings.TrimSpace(charData)
+				thisNode.charDataCount += int64(len(charData))
+			}
 
 		case xml.EndElement:
 			//if ignoredTag(element.Name.Local) {

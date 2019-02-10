@@ -56,14 +56,14 @@ func (n *Node) makeName() string {
 }
 
 func (n *Node) makeType(prefix string, suffix string) string {
-	return goVariableNameSanitize(capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, !keepXmlFirstLetterCase)) + n.renderSpaceTag())
+	return goVariableNameSanitize(capitalizeFirstLetter(makeTypeGeneric(n.name, n.spaceTag, prefix, suffix, !keepXmlFirstLetterCase)) + renderSpaceTag(n.spaceTag))
 }
 
-func (n *Node) renderSpaceTag() string {
-	if len(strings.TrimSpace(n.spaceTag)) == 0 {
+func renderSpaceTag(spaceTag string) string {
+	if len(strings.TrimSpace(spaceTag)) == 0 {
 		return ""
 	} else {
-		return "__" + n.spaceTag
+		return "__" + spaceTag
 	}
 }
 

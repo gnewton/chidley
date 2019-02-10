@@ -22,6 +22,9 @@ var ignoredXmlTagsMap *map[string]struct{}
 var collapsedXmlTags = ""
 var collapsedXmlTagsList []string
 
+var noDeeperThanTags = ""
+var noDeeperThanTagsMap *map[string]struct{}
+
 var stopLevelXmlTags = ""
 var stopLevelXmlTagsMap *map[string]struct{}
 
