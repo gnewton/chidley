@@ -517,13 +517,35 @@ func generateOtiraCode(out io.Writer, sourceNames []string, ex *Extractor) error
 	printOtiraVisitor.init(999, ex.globalTagAttributes, ex.nameSpaceTagMap, useType, nameSpaceInJsonName)
 	printOtiraVisitor.Visit(ex.root)
 	//printOtiraByDepth(printOtiraVisitor)
-	for i, _ := range printOtiraVisitor.nodeInfoList {
-		ni := printOtiraVisitor.nodeInfoList[i]
-		log.Printf("%+v\n", ni)
-		for j, _ := range ni.SubElements {
-			log.Printf("\t\t%+v\n", ni.SubElements[j])
-		}
+
+	log.Println("====++++++++++++++++++++++++++")
+
+	sort.Sort(printOtiraVisitor.nodeInfoList)
+
+	if flattenStrings {
+		printOtiraVisitor.nodeInfoList = stripOutFlattenedStrings(printOtiraVisitor.nodeInfoList)
 	}
+
+	fixTypes(printOtiraVisitor.nodeInfoList)
+
+	log.Println("++++++++++++++++++++++++++")
+	t := template.Must(template.New("generic1").Parse(generic1))
+	err := t.Execute(out, printOtiraVisitor.nodeInfoList)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("++++++++++++++++++++++++++")
+
+	// otira
+
+	tableFields := makeTableFields(printOtiraVisitor.nodeInfoList)
+
+	otira2 := template.Must(template.New("otiraTemplate2").Parse(otiraTemplate2))
+	err = otira2.Execute(out, tableFields)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return nil
 }
 

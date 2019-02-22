@@ -4,6 +4,8 @@ import (
 	"log"
 )
 
+type NodeInfoList []*NodeInfo
+
 type GenericVisitor struct {
 	alreadyVisited      map[string]bool
 	alreadyVisitedNodes map[string]*Node
@@ -13,7 +15,7 @@ type GenericVisitor struct {
 	depth           int
 	nameSpaceTagMap map[string]string
 	useType         bool
-	nodeInfoList    []*NodeInfo
+	nodeInfoList    NodeInfoList
 }
 
 type NodeInfo struct {
@@ -22,6 +24,8 @@ type NodeInfo struct {
 	SubElements    []*SubElement
 	IsCompressed   bool
 	HasCharData    bool
+	Depth          int
+	CharDataName   string
 }
 
 type SubElement struct {
@@ -55,19 +59,26 @@ func (v *GenericVisitor) Visit(node *Node) bool {
 
 	v.SetAlreadyVisited(node)
 	ni := new(NodeInfo)
-	v.nodeInfoList = append(v.nodeInfoList, ni)
+	if node.name != "" {
+		v.nodeInfoList = append(v.nodeInfoList, ni)
+	}
+
 	ni.TypeName = node.name
 	ni.AttributeNames = fqnNames(v.globalTagAttributes[nk(node)])
+	ni.Depth = node.minDepth
 
 	ni.HasCharData = node.hasCharData
-	log.Println(node.name)
+	log.Println(node.name + " HasOnlyString")
 	log.Println(isStringOnlyField(node, len(v.globalTagAttributes[nk(node)])))
+	ni.HasCharData = isStringOnlyField(node, len(v.globalTagAttributes[nk(node)]))
 	if node.hasCharData {
 		log.Println("***************************")
 	}
 
 	ni.HasCharData = isStringOnlyField(node, len(v.globalTagAttributes[nk(node)]))
-	if !ni.HasCharData {
+	if ni.HasCharData {
+		ni.CharDataName = ni.TypeName
+	} else {
 		for i, _ := range node.children {
 			log.Println(i)
 			log.Println(" > " + node.children[i].name)
@@ -78,21 +89,24 @@ func (v *GenericVisitor) Visit(node *Node) bool {
 			if !node.children[i].ignoredTag {
 				child := node.children[i]
 				if contains(collapsedXmlTagsList, child.name) {
-					//log.Println("Collapsed")
+					log.Println("Collapsed")
 					ni.makeCollapsed(child, v.globalTagAttributes)
 				} else {
 					v.Visit(child)
 					sub := new(SubElement)
 					ni.SubElements = append(ni.SubElements, sub)
 					sub.Name = child.name
-					if isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
-						sub.TypeName = findType(child.nodeTypeInfo, true)
+					if flattenStrings && isStringOnlyField(child, len(v.globalTagAttributes[nk(child)])) {
+						sub.TypeName = findType(child.nodeTypeInfo, true) + "_FOO"
 						//sub.TypeName = "string"
 					} else {
 						sub.TypeName = child.makeType("", "")
-					}
-					if child.repeats {
-						sub.IsList = true
+
+						if child.repeats {
+							sub.IsList = true
+						} else {
+							sub.IsPointer = true
+						}
 					}
 				}
 			}

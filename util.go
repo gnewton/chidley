@@ -373,7 +373,8 @@ func sortNodes(nodes map[string]*Node) NodeList {
 
 type NodeList []*Node
 
-func (n NodeList) Len() int           { return len(n) }
+func (n NodeList) Len() int { return len(n) }
+
 func (n NodeList) Less(i, j int) bool { return n[i].name < n[j].name }
 func (n NodeList) Swap(i, j int)      { n[i], n[j] = n[j], n[i] }
 
@@ -383,4 +384,49 @@ func fqnNames(fqns []*FQN) []string {
 		names[i] = fqns[i].name
 	}
 	return names
+}
+
+func (n NodeInfoList) Len() int           { return len(n) }
+func (n NodeInfoList) Less(i, j int) bool { return n[i].Depth > n[j].Depth }
+func (n NodeInfoList) Swap(i, j int)      { n[i], n[j] = n[j], n[i] }
+
+func stripOutFlattenedStrings(l NodeInfoList) NodeInfoList {
+	stripped := make(NodeInfoList, 0)
+	for i, _ := range l {
+		nodeInfo := l[i]
+		if !nodeInfo.HasCharData {
+			stripped = append(stripped, nodeInfo)
+		}
+	}
+	return stripped
+}
+
+func fixTypes(l NodeInfoList) {
+	for i, _ := range l {
+		nodeInfo := l[i]
+		for j, _ := range nodeInfo.SubElements {
+			sl := nodeInfo.SubElements[j]
+			if sl.IsPointer {
+				sl.TypeName = "*" + sl.TypeName
+			} else {
+				if sl.IsList {
+					sl.TypeName = "[]*" + sl.TypeName
+				}
+			}
+		}
+	}
+}
+
+func makeTableFields(nodeInfoList NodeInfoList) []*TTableField {
+	tableFields := make([]*TTableField, len(nodeInfoList))
+
+	for i, _ := range nodeInfoList {
+		nodeInfo := nodeInfoList[i]
+		tableField := new(TTableField)
+		tableField.TableNameVariable = nodeInfo.TypeName
+		tableField.SqlTableName = sqlizeString(nodeInfo.TypeName)
+	}
+
+	return tableFields
+
 }

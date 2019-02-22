@@ -91,6 +91,11 @@ func makeOtiraAttributes(writer io.Writer, tableName string, attributes []*FQN, 
 	return chidleyStructToOtira
 }
 
+type TTableField struct {
+	TableNameVariable string
+	SqlTableName      string
+}
+
 type TStringField struct {
 	FieldVariableName, FieldName, TableVariableName string
 	FieldLength                                     int

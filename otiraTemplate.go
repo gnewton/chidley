@@ -90,3 +90,22 @@ var typeMap = map[string]string{
 	OString: stringFieldTemplate,
 	OByte:   byteFieldTemplate,
 }
+
+const otiraTemplate2 = `
+{{ range $value := . }}
+            {{$value.TableNameVariable}}, err := otira.NewTableDef("{{$value.SqlTableName}}")
+            if err != nil{
+                return
+            }
+
+            //Primary Key
+	    pk = new(otira.FieldDefUint64)
+	    pk.SetName("id")
+	    {{$value.TableNameVariable}}.Add(pk)
+
+            {{ range $index, $value := $value.Attributes }}
+                 {{template "stringFieldTemplate" $value}}
+            {{ end }}
+{{ end }}
+
+`

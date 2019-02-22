@@ -43,8 +43,10 @@ func (n *Node) initialize(name string, space string, spaceTag string, parent *No
 	n.nodeTypeInfo.initialize()
 	n.hasCharData = false
 	n.ignoredTag = false
-	n.minDepth = 999999
+	n.minDepth = StartDepth
 }
+
+const StartDepth = 999999
 
 func (n *Node) makeName() string {
 	spaceTag := ""
