@@ -77,7 +77,8 @@ func print(v *PrintGoStructVisitor, node *Node) error {
 	}
 
 	//v.lineChannel <- "}\n"
-	fmt.Fprintln(v.writer, "}\n")
+	fmt.Fprintln(v.writer, "}")
+	fmt.Fprintln(v.writer, "")
 
 	return nil
 }
