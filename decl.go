@@ -44,7 +44,8 @@ var addDbMetadata = false
 var flattenStrings = false
 
 //FIXXX: should not be global
-var keepXmlFirstLetterCase = true
+// Default value should be false if it's _enabled_ with argument '-K'
+var keepXmlFirstLetterCase = false
 
 var lengthTagName = ""
 var lengthTagPadding int64 = 0
